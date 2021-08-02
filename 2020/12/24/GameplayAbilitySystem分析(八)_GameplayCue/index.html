@@ -28,7 +28,7 @@
 <meta name="description" content="前言GameplayCueNotify(GCN)用于非逻辑层的效果，如音效,特效,相机震动等 CGN有两个基类,如下图    GameplayCue Class Event GE类型 Description    GameplayCueNotify_Static Execute Instant or Periodic 一般处理一次性触发的效果如打击效果   GameplayCueNotify_Ac">
 <meta property="og:type" content="article">
 <meta property="og:title" content="GameplayAbilitySystem入门与实战(八):GameplayCueNotify">
-<meta property="og:url" content="http://supervj.top/2020/12/26/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/index.html">
+<meta property="og:url" content="http://supervj.top/2020/12/24/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/index.html">
 <meta property="og:site_name" content="提瑞法斯议会">
 <meta property="og:description" content="前言GameplayCueNotify(GCN)用于非逻辑层的效果，如音效,特效,相机震动等 CGN有两个基类,如下图    GameplayCue Class Event GE类型 Description    GameplayCueNotify_Static Execute Instant or Periodic 一般处理一次性触发的效果如打击效果   GameplayCueNotify_Ac">
 <meta property="og:locale" content="zh_CN">
@@ -41,15 +41,15 @@
 <meta property="og:image" content="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2020_12_26_15_58_26_889.gif">
 <meta property="og:image" content="https://img.supervj.top//img/image-20201226160731595.png">
 <meta property="og:image" content="https://img.supervj.top//img/image-20201226160804931.png">
-<meta property="article:published_time" content="2020-12-25T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-03-26T06:08:17.618Z">
+<meta property="article:published_time" content="2020-12-23T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-02T08:37:10.092Z">
 <meta property="article:author" content="VJ东">
 <meta property="article:tag" content="GAS">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img.supervj.top//img/image-20201207174308746.png">
 
 
-<link rel="canonical" href="http://supervj.top/2020/12/26/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/">
+<link rel="canonical" href="http://supervj.top/2020/12/24/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/">
 
 
 <script class="page-configurations">
@@ -222,13 +222,13 @@
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">13</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">80</span>
+        <span class="site-state-item-count">82</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -279,7 +279,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/12/26/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/12/24/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
@@ -303,14 +303,14 @@
       </span>
       <span class="post-meta-item-text">发表于</span>
 
-      <time title="创建时间：2020-12-26 00:00:00" itemprop="dateCreated datePublished" datetime="2020-12-26T00:00:00+08:00">2020-12-26</time>
+      <time title="创建时间：2020-12-24 00:00:00" itemprop="dateCreated datePublished" datetime="2020-12-24T00:00:00+08:00">2020-12-24</time>
     </span>
       <span class="post-meta-item">
         <span class="post-meta-item-icon">
           <i class="far fa-calendar-check"></i>
         </span>
         <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-03-26 14:08:17" itemprop="dateModified" datetime="2021-03-26T14:08:17+08:00">2021-03-26</time>
+        <time title="修改时间：2021-08-02 16:37:10" itemprop="dateModified" datetime="2021-08-02T16:37:10+08:00">2021-08-02</time>
       </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -318,7 +318,7 @@
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/%E6%8A%80%E6%9C%AF%E7%AC%94%E8%AE%B0/" itemprop="url" rel="index"><span itemprop="name">技术笔记</span></a>
+          <a href="/categories/plugin/" itemprop="url" rel="index"><span itemprop="name">plugin</span></a>
         </span>
     </span>
 
@@ -339,8 +339,8 @@
       <span class="post-meta-item-text">Changyan：</span>
     
     
-      <a title="changyan" href="/2020/12/26/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/#SOHUCS" itemprop="discussionUrl">
-        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2020/12/26/GameplayAbilitySystem分析(八)_GameplayCue/" itemprop="commentCount"></span>
+      <a title="changyan" href="/2020/12/24/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/#SOHUCS" itemprop="discussionUrl">
+        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2020/12/24/GameplayAbilitySystem分析(八)_GameplayCue/" itemprop="commentCount"></span>
       </a>
     
   </span>
@@ -398,6 +398,8 @@
 <blockquote>
 <p>使用<code>GameplayCueNotify_Actor</code>时注意<code>Auto Destroy on Remove</code>选项,否则后续调用<code>add</code>可能不能正常工作</p>
 </blockquote>
+<a id="more"></a>
+
 <h2 id="Gameplay-Cue-Manager"><a href="#Gameplay-Cue-Manager" class="headerlink" title="Gameplay Cue Manager"></a>Gameplay Cue Manager</h2><p> <code>GameplayCueManager</code>会扫描指定路径的所有<code>GameplayCueNotifies</code> 然后加入到内存中,默认路径保存在<code>AbilitySystemGlobals</code>中</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Look in these paths for GameplayCueNotifies. These are your &quot;always loaded&quot; set. */</span></span><br><span class="line">	UPROPERTY(config)</span><br><span class="line">	TArray&lt;FString&gt;	GameplayCueNotifyPaths;</span><br></pre></td></tr></table></figure>
 
@@ -601,7 +603,7 @@
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="http://supervj.top/2020/12/26/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/" title="GameplayAbilitySystem入门与实战(八):GameplayCueNotify">http://supervj.top/2020/12/26/GameplayAbilitySystem分析(八)_GameplayCue/</a>
+      <a href="http://supervj.top/2020/12/24/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AB)_GameplayCue/" title="GameplayAbilitySystem入门与实战(八):GameplayCueNotify">http://supervj.top/2020/12/24/GameplayAbilitySystem分析(八)_GameplayCue/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -634,13 +636,13 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2020/12/25/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E4%B8%83)_GameplayEffect2/" rel="prev" title="GameplayAbilitySystem入门与实战(七):GameplayEffect(二)">
-                  <i class="fa fa-chevron-left"></i> GameplayAbilitySystem入门与实战(七):GameplayEffect(二)
+                <a href="/2020/12/23/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E4%BA%94)_GameplayAbility2/" rel="prev" title="GameplayAbilitySystem入门与实战(五):GameplayAbility(二)">
+                  <i class="fa fa-chevron-left"></i> GameplayAbilitySystem入门与实战(五):GameplayAbility(二)
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2020/12/29/AssetManager/" rel="next" title="AssetManager的使用">
-                  AssetManager的使用 <i class="fa fa-chevron-right"></i>
+                <a href="/2020/12/24/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AD)_GameplayEffect1/" rel="next" title="GameplayAbilitySystem入门与实战(六):GameplayEffect(一)">
+                  GameplayAbilitySystem入门与实战(六):GameplayEffect(一) <i class="fa fa-chevron-right"></i>
                 </a>
             </div>
           </div>
