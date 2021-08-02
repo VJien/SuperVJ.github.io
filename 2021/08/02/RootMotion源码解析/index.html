@@ -346,14 +346,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>2.5k</span>
+      <span>2.8k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
+      <span>3 分钟</span>
     </span>
 </div>
 
@@ -370,7 +370,7 @@
 
 
 <h2 id="伪代码"><a href="#伪代码" class="headerlink" title="伪代码"></a>伪代码</h2><p>先用伪代码简单的描述一下<code>RootMotion</code>的大概运行逻辑, 以单机蒙太奇动画示例</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">st&#x3D;&gt;start: 移动组件::PerformMovement</span><br><span class="line">cd1&#x3D;&gt;condition: 是否有RootMotion?</span><br><span class="line">c1&#x3D;&gt;operation: TickCharacterPose获取RootMotionParam</span><br><span class="line">c2&#x3D;&gt;operation: 通过RootMotionParam计算速度</span><br><span class="line">e&#x3D;&gt;end: 刷新位置</span><br><span class="line"></span><br><span class="line">st-&gt;cd1(yes)-&gt;c1-&gt;c2-&gt;e</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<div id="flowchart-0" class="flow-chart"></div>
 
 
 
@@ -438,7 +438,13 @@
 <li>除非是常规的线性运动的Rootmotion，其他的不规则的运动几乎无法预测, 导致同步效果不理想</li>
 <li>从性能上说，减少数据的同步和校验可以减少服务器的CPU和内存的压力，所以Rootmotion在网络游戏中的使用要慎重考虑。</li>
 </ul>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 移动组件::PerformMovement
+cd1=>condition: 是否有RootMotion?
+c1=>operation: TickCharacterPose获取RootMotionParam
+c2=>operation: 通过RootMotionParam计算速度
+e=>end: 刷新位置
 
+st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script>
     </div>
 
     
@@ -577,7 +583,7 @@
       <i class="fa fa-coffee"></i>
     </span>
       <span>站点阅读时长 &asymp;</span>
-    <span title="站点阅读时长">9:13</span>
+    <span title="站点阅读时长">9:14</span>
   </span>
 </div>
 <div class="busuanzi-count">
