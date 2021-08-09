@@ -201,7 +201,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-count">81</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -255,6 +255,899 @@
 
 
     <div class="main-inner index posts-expand">
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/06/24/LearnDX12_RenderPipline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
+      <meta itemprop="name" content="VJ东">
+      <meta itemprop="description" content=" 吃饭,睡觉,敲代码 ">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="翡翠梦境">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2020/06/24/LearnDX12_RenderPipline/" class="post-title-link" itemprop="url">DX学习笔记（三）：渲染流水线</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-06-24 00:00:00" itemprop="dateCreated datePublished" datetime="2020-06-24T00:00:00+08:00">2020-06-24</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-08-02 16:40:37" itemprop="dateModified" datetime="2021-08-02T16:40:37+08:00">2021-08-02</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/graphics/" itemprop="url" rel="index"><span itemprop="name">graphics</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Changyan：</span>
+    
+    
+      <a title="changyan" href="/2020/06/24/LearnDX12_RenderPipline/#SOHUCS" itemprop="discussionUrl">
+        <span id="url::http://supervj.top/2020/06/24/LearnDX12_RenderPipline/" class="cy_cmt_count" data-xid="2020/06/24/LearnDX12_RenderPipline/" itemprop="commentCount"></span>
+      </a>
+    
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>12k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>11 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="渲染流水线"><a href="#渲染流水线" class="headerlink" title="渲染流水线"></a>渲染流水线</h2><p>平行线最终会相交于<code>消失点</code>，又称为<code>灭点</code></p>
+<p><code>物体重叠</code>：即不同命的物体能够遮挡住其后侧物体的局部</p>
+<p>3D实体对象是通过<code>三角形网格</code>来近似表示的</p>
+<h3 id="颜色"><a href="#颜色" class="headerlink" title="颜色"></a>颜色</h3><p>分量式乘法:<code>(r,g,b)*(a,b,c)=(ra,gb,bc)</code></p>
+<h5 id="128位颜色"><a href="#128位颜色" class="headerlink" title="128位颜色"></a>128位颜色</h5><p>每个分量用浮点表示，即4D向量 (r,g,b,a)</p>
+<p><strong><em>0&lt;=r,g,b,a&lt;=1</em></strong></p>
+<p><code>DirectXMath</code>库对分量式乘法的支持</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">XMVECTOR XM_CAKKCIBV <span class="title">XMColorModulate</span> <span class="params">(FXMVECTOR C1,FXMVECTOR C2)</span></span>;<span class="comment">//返回C1*C2</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="32位颜色"><a href="#32位颜色" class="headerlink" title="32位颜色"></a>32位颜色</h5><p>每个分量仅分配1个字节，因此每个占用8字节的颜色分量就分别描述256种不同的颜色强度</p>
+<p>即0代表无强度，256代表最大强度</p>
+<p><code>DirectXMath</code>库<code>(include&lt;DirectXPackedVector.h&gt;)</code>在<code>DirectX::PackedVector</code>命名空间提供了相应函数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> DirectX</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">namespace</span> PackedVector</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">XMCOLOR</span></span></span><br><span class="line"><span class="class">        &#123;</span></span><br><span class="line">            <span class="class"><span class="keyword">union</span></span></span><br><span class="line"><span class="class">            &#123;</span></span><br><span class="line">                <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">                &#123;</span></span><br><span class="line">                    <span class="keyword">uint8_t</span> b;  <span class="comment">// Blue:    0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> g;  <span class="comment">// Green:   0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> r;  <span class="comment">// Red:     0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> a;  <span class="comment">// Alpha:   0/255 to 255/255</span></span><br><span class="line">                    </span><br><span class="line">                &#125;;<span class="keyword">uint32_t</span> c;</span><br><span class="line">                XMCOLOR() = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">    			XMCOLOR(<span class="keyword">const</span> XMCOLOR&amp;) = <span class="keyword">default</span>;</span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> XMCOLOR&amp;) = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">                XMCOLOR(XMCOLOR&amp;&amp;) = <span class="keyword">default</span>;</span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>=(XMCOLOR&amp;&amp;) = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">                <span class="function">XM_CONSTEXPR <span class="title">XMCOLOR</span><span class="params">(<span class="keyword">uint32_t</span> Color)</span> : <span class="title">c</span><span class="params">(Color)</span> </span>&#123;&#125;</span><br><span class="line">                XMCOLOR(<span class="keyword">float</span> _r, <span class="keyword">float</span> _g, <span class="keyword">float</span> _b, <span class="keyword">float</span> _a);</span><br><span class="line">                <span class="function"><span class="keyword">explicit</span> <span class="title">XMCOLOR</span><span class="params">(_In_reads_(<span class="number">4</span>) <span class="keyword">const</span> <span class="keyword">float</span> *pArray)</span></span>;</span><br><span class="line"></span><br><span class="line">                <span class="function"><span class="keyword">operator</span> <span class="title">uint32_t</span> <span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> c; &#125;</span><br><span class="line"></span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>= (<span class="keyword">const</span> <span class="keyword">uint32_t</span> Color) &#123; c = Color; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过将<code>[0,255]</code>映射到<code>[0,1]</code>即可完成32位到128位的转换</p>
+<p>转换函数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMLoadColor</span><span class="params">( <span class="keyword">const</span> XMCOLOR* pSource)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> XM_CALLCONV <span class="title">XMStoreColor</span><span class="params">( XMCOLOR* pDestination, FXMVECTOR V )</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="渲染流水线概述"><a href="#渲染流水线概述" class="headerlink" title="渲染流水线概述"></a>渲染流水线概述</h3><p>渲染流水线(rendering pipeline)是以摄像机位观察视角而生成的2D图像的一系列完整步骤</p>
+<p>​     </p>
+<p><img src="https://img.supervj.top/xuanran.png"></p>
+<h3 id="输入装配阶段"><a href="#输入装配阶段" class="headerlink" title="输入装配阶段"></a>输入装配阶段</h3><p>输入装配阶段：从显存中读取集合数据(顶点和索引，vertex and index)</p>
+<p>再装配为几何图元（几何基元），如三角形和线条</p>
+<ul>
+<li>顶点缓冲区：将顶点与渲染流水线绑定的特殊结构体</li>
+</ul>
+<h5 id="图元拓扑-primitive-topology"><a href="#图元拓扑-primitive-topology" class="headerlink" title="图元拓扑(primitive topology)"></a>图元拓扑(primitive topology)</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> STDMETHODCALLTYPE <span class="title">IASetPrimitiveTopology</span><span class="params">( </span></span></span><br><span class="line"><span class="function"><span class="params">            _In_  D3D12_PRIMITIVE_TOPOLOGY PrimitiveTopology)</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">typedef</span> </span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">D3D_PRIMITIVE_TOPOLOGY</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_UNDEFINED	= <span class="number">0</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_POINTLIST	= <span class="number">1</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINELIST	= <span class="number">2</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP	= <span class="number">3</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= <span class="number">4</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= <span class="number">5</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= <span class="number">10</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= <span class="number">11</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= <span class="number">12</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= <span class="number">13</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST	= <span class="number">33</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST	= <span class="number">34</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST	= <span class="number">35</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST	= <span class="number">36</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST	= <span class="number">37</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST	= <span class="number">38</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST	= <span class="number">39</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST	= <span class="number">40</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST	= <span class="number">41</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST	= <span class="number">42</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST	= <span class="number">43</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST	= <span class="number">44</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST	= <span class="number">45</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST	= <span class="number">46</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST	= <span class="number">47</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST	= <span class="number">48</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST	= <span class="number">49</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST	= <span class="number">50</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST	= <span class="number">51</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST	= <span class="number">52</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST	= <span class="number">53</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST	= <span class="number">54</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST	= <span class="number">55</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST	= <span class="number">56</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST	= <span class="number">57</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST	= <span class="number">58</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST	= <span class="number">59</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST	= <span class="number">60</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST	= <span class="number">61</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST	= <span class="number">62</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST	= <span class="number">63</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST	= <span class="number">64</span>,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED	= D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_POINTLIST	= D3D_PRIMITIVE_TOPOLOGY_POINTLIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINELIST	= D3D_PRIMITIVE_TOPOLOGY_LINELIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED	= D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_POINTLIST	= D3D_PRIMITIVE_TOPOLOGY_POINTLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINELIST	= D3D_PRIMITIVE_TOPOLOGY_LINELIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST</span><br><span class="line">    &#125; 	D3D_PRIMITIVE_TOPOLOGY;</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//通过线列表来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);</span><br><span class="line"><span class="comment">//通过三角形列表来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);</span><br><span class="line"><span class="comment">//通过三角形带来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>点列表 <code>D3D_PRIMITIVE_TOPOLOGY_POINTLIST</code></li>
+<li>线条带 <code>D3D_PRIMITIVE_TOPOLOGY_LINESTRIP</code></li>
+<li>线列表 <code>D3D_PRIMITIVE_TOPOLOGY_LINELIST</code></li>
+<li>三角形带 <code>D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP</code></li>
+</ul>
+<p><img src="https://img.supervj.top/img/tuyuantuopu_1.jpg"></p>
+<ul>
+<li>剔除(culling)问题：奇数与偶数三角形的绕序(环绕顺序)即装配图元的顶点顺序是不同的</li>
+</ul>
+<p>CPU会对偶数三角形的<code>前两个顶点</code>顺序进行调换已达到有奇数三角形绕序相同</p>
+<blockquote>
+<p>正确的应该是后<strong>两个顶点</strong>顺序调换，而OpenGL中才是前两个顶点调换</p>
+</blockquote>
+<ul>
+<li>三角形列表</li>
+</ul>
+<p><code>D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST</code></p>
+<p>三角形列表与三角形带的区别是，三角形列表的三角形可以彼此分离，所以每n*3个顶点组成n个三角形</p>
+<ul>
+<li>具有邻接数据的图元拓扑</li>
+</ul>
+<p>对于有邻接数据的三角形列表，每个三角形都有3个与之相邻的<code>邻接三角形</code></p>
+<p>借助<code>顶点缓冲区</code>和<code>索引缓冲区</code>将它们随主三角形一并提交至渲染流水线</p>
+<p>并且要把拓扑类型指定为<code>D3D12_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ</code>让渲染流水线知道如何以顶点缓冲区的顶点来构建主三角形和其邻接三角形；</p>
+<p>邻接图元的顶点只作为集合着色器的输入数据，并不会被绘制</p>
+<p><img src="https://img.supervj.top/img/DX/tuyuantuopu_2.jpg"></p>
+<h5 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Vertex quad[<span class="number">6</span>]=&#123;</span><br><span class="line">    v0,v1,v2,<span class="comment">//三角形0</span></span><br><span class="line">    v0,v2,v3 <span class="comment">//三角形1</span></span><br><span class="line">&#125;；</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>绕序</strong>：为三角形指定顶点顺序</li>
+</ul>
+<p>用<code>顶点列表</code>和<code>索引列表</code>组合起来构成三角形</p>
+<p>如</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">Vertex v[<span class="number">9</span>]=&#123;v0,v1,v2,v3,v4,v5,v6,v7,v8&#125;;</span><br><span class="line">UINT indexList[<span class="number">24</span>]=&#123;</span><br><span class="line">    <span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">2</span>,<span class="number">3</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">3</span>,<span class="number">4</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">4</span>,<span class="number">5</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">5</span>,<span class="number">6</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">6</span>,<span class="number">7</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">7</span>,<span class="number">8</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">8</span>,<span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="顶点着色阶段"><a href="#顶点着色阶段" class="headerlink" title="顶点着色阶段"></a>顶点着色阶段</h3><ul>
+<li>世界变换：将局部坐标系内的坐标转换到世界坐标系</li>
+<li>世界矩阵：上述变换的矩阵</li>
+</ul>
+<p>$$<br>W=SRT<br>$$</p>
+<ul>
+<li>观察空间:相机的局部坐标系，亦称视觉空间、摄像机空间等</li>
+<li>取景变换：世界空间至观察空间的变换；此变换的矩阵叫做<code>观察矩阵</code></li>
+</ul>
+<p>观察矩阵函数</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> XMMATRIX XM_CALLCONV XMMatrixLookAtLH</span><br><span class="line">(</span><br><span class="line">    FXMVECTOR EyePosition, </span><br><span class="line">    FXMVECTOR FocusPosition, </span><br><span class="line">    FXMVECTOR UpDirection</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">XMVECTOR eyePos=XMVectorSet(<span class="number">100</span>,<span class="number">100</span>,<span class="number">100</span>,<span class="number">1</span>);</span><br><span class="line">XMVECTOR target=XMVectorZero();</span><br><span class="line">XMVECTOR up=XMVectorSet(<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>);</span><br><span class="line">XMMATRIX V=XMMatrixLookAtLH(eyePos,target,up);<span class="comment">//返回观察矩阵</span></span><br><span class="line">XMVECTOR v2=XMVector3TransformCoord(target,V);</span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;v2;<span class="comment">//输出得到(0,0,173.2),即在观察空间的坐标</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>顶点的投影线：顶点到观察点的连线</li>
+<li>透视投影变换：3D顶点<strong>v</strong>变换至其投影线与3D投影平面的交点<strong>v<sup>、</sup></strong></li>
+</ul>
+<blockquote>
+<p>近平面(近裁剪面)<code>n</code>,远平面<code>f</code>，垂直视场角<code>α</code>，纵横比<code>r</code>，4个参数定义了以原点作为投影的中心，以<code>Z</code>轴进行观察的平截头体</p>
+</blockquote>
+<p>纵横比<br>$$<br>r=w/h<br>$$<br>w:投影窗口的宽度</p>
+<p>h:投影窗口的高度</p>
+<blockquote>
+<p>如果后台缓冲区与投影窗口纵横比不一致，在映射的过程中会产生非均匀缩放（不等比例缩放），导致图像拉伸</p>
+</blockquote>
+<ul>
+<li><p>NDC：规格化设备坐标(Normalized Device Coordinates)</p>
+</li>
+<li><p>透视除法（齐次除法）：顶点与投影矩阵相乘以后，对每个坐标除以<code>w=z</code></p>
+</li>
+<li><p>归一化深度值：通过函数 <code>g(z)</code>把<code>z</code>坐标从<code>[n,f]</code>映射到区间<code>[0,1]</code></p>
+</li>
+</ul>
+<p>$$<br>g(z)=A+ {B \over z}<br>$$</p>
+<ul>
+<li>透视投影矩阵</li>
+</ul>
+<p>$$<br>P=\begin{bmatrix}1\over rtan({\alpha \over 2}) &amp; 0 &amp; 0 &amp; 0\<br>0 &amp; 1\over{tan({\alpha\over 2})} &amp; 0 &amp; 0 \<br>0 &amp; 0 &amp; f\over {f-n} &amp; 1 \<br>0 &amp; &amp; 0 &amp; -nf\over{f-n} &amp; 0<br>\end{bmatrix}<br>$$</p>
+<blockquote>
+<p>在顶点乘以投影矩阵后，集合体会处于所谓的<code>齐次裁剪空间</code>或者<code>投影空间</code></p>
+<p>完成<strong>透视除法</strong>以后，便是**规格化设备坐标(NDC)**了</p>
+</blockquote>
+<ul>
+<li>XMMatrixPerspectiveFovLH</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovLH</span><br><span class="line">(</span><br><span class="line">    <span class="keyword">float</span> FovAngleY, <span class="comment">//用弧度值表示的垂直视场角</span></span><br><span class="line">    <span class="keyword">float</span> AspectRatio, <span class="comment">//纵横比：宽度/高度</span></span><br><span class="line">    <span class="keyword">float</span> NearZ, <span class="comment">//近平面距离</span></span><br><span class="line">    <span class="keyword">float</span> FarZ<span class="comment">//到远平面距离</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">XMMATRIX M2=XMMatrixPerspectiveFovLH(<span class="number">0.25f</span>*XM_PI,<span class="number">1092</span>/<span class="number">1080</span>,<span class="number">1.0</span>,<span class="number">1000</span>);</span><br><span class="line">	<span class="built_in">cout</span>&lt;&lt;M2;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>2.41421 0       0       0<br>0       2.41421 0       0<br>0       0       1.001   1<br>0       0       -1.001  0</p>
+</blockquote>
+<h3 id="曲面细分阶段"><a href="#曲面细分阶段" class="headerlink" title="曲面细分阶段"></a>曲面细分阶段</h3><p>利用镶嵌化处理技术对网格中的三角形进行细分，以此来增加物体表面上的三角形数量。</p>
+<p>再将这些新增的三角形偏移到适当的位置，使网格表现出更加细腻的细节</p>
+<ul>
+<li>曲面细分的优点</li>
+</ul>
+<ol>
+<li>实现LOD</li>
+<li>在内存中只维护<strong>低模</strong>，在有需求时动态增添三角形，从而节省资源</li>
+<li>处理动画和物理时使用低模，渲染时使用处理过的高模</li>
+</ol>
+<h3 id="几何着色器阶段"><a href="#几何着色器阶段" class="headerlink" title="几何着色器阶段"></a>几何着色器阶段</h3><p>几何着色器阶段接受输入是完整的图元</p>
+<p>与顶点着色器相比，几何着色器可以创建或者修改几何体</p>
+<p>比如，将一个点或者一条线扩展为一个四边形</p>
+<h3 id="裁剪"><a href="#裁剪" class="headerlink" title="裁剪"></a>裁剪</h3><p>对视锥体之外的物体进行裁剪</p>
+<blockquote>
+<p>苏泽兰-霍奇曼裁剪算法</p>
+</blockquote>
+<h3 id="光栅化阶段"><a href="#光栅化阶段" class="headerlink" title="光栅化阶段"></a>光栅化阶段</h3><p>光栅化阶段(RS,栅格化)：投影主屏幕上的3D三角形计算出对应的像素颜色</p>
+<ul>
+<li>视口变换：裁剪完成后，硬件通过透视除法将物体从齐次空间变换为规格化设备坐标（NDC）。此后顶点<code>x、y</code>坐标会以像素单位表示</li>
+<li>背面剔除：将背面朝向的三角形从渲染流水线中除去</li>
+<li>透视矫正插值：为得到2D空间的顶点的插值属性，对3D空间的三角形属性进行线性插值，即利用三角形属性计算出内部像素的属性</li>
+<li>像素着色器阶段(pixel shader)：针对每个像素片段进行处理，根据顶点的差值属性作为输入来计算像素颜色，亦可实现如逐像素光照(per-pixel lighting)、反射以及阴影等复杂效果</li>
+<li>输入合并阶段：上述阶段生成的像素片段送至渲染流水线的输出合并阶段(OM)。丢弃部分像素(如未通过深度测试等)，剩下的写入后台缓冲区，执行混合(blend)操作（透明效果也混合实现的）</li>
+</ul>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/06/23/Mardown%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
+      <meta itemprop="name" content="VJ东">
+      <meta itemprop="description" content=" 吃饭,睡觉,敲代码 ">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="翡翠梦境">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2020/06/23/Mardown%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F/" class="post-title-link" itemprop="url">Markdown(Typora)数学公式</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-06-23 00:00:00" itemprop="dateCreated datePublished" datetime="2020-06-23T00:00:00+08:00">2020-06-23</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-08-02 16:17:45" itemprop="dateModified" datetime="2021-08-02T16:17:45+08:00">2021-08-02</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/math/" itemprop="url" rel="index"><span itemprop="name">math</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Changyan：</span>
+    
+    
+      <a title="changyan" href="/2020/06/23/Mardown%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F/#SOHUCS" itemprop="discussionUrl">
+        <span id="url::http://supervj.top/2020/06/23/Mardown%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F/" class="cy_cmt_count" data-xid="2020/06/23/Mardown数学公式/" itemprop="commentCount"></span>
+      </a>
+    
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>4.4k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>4 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <blockquote>
+<p>Ctrl+Shift+M激活公式</p>
+</blockquote>
+<h3 id="上下标"><a href="#上下标" class="headerlink" title="上下标"></a>上下标</h3><p><code>a^2+\ b_&#123;y_3&#125;</code></p>
+<p>$$<br>a^2+\ b_{y_3}<br>$$</p>
+<h3 id="括号"><a href="#括号" class="headerlink" title="括号"></a>括号</h3><ul>
+<li>中小括号</li>
+</ul>
+<p><code>(a+b)*[c+2]</code><br>$$<br>(a+b)*[c+2]<br>$$</p>
+<ul>
+<li>大括号需要加<code>\</code></li>
+</ul>
+<p><code>\&#123;1,2,3 \&#125;</code><br>$$<br>{1,2,3 }<br>$$</p>
+<ul>
+<li>尖括号</li>
+</ul>
+<p><code>\langle x \rangle</code><br>$$<br>\langle x \rangle<br>$$</p>
+<ul>
+<li>上下取整</li>
+</ul>
+<p><code>\lceil x \rceil+\lfloor y\rfloor</code><br>$$<br>\lceil x \rceil+\lfloor y\rfloor<br>$$</p>
+<ul>
+<li>特殊括号</li>
+</ul>
+<p><code>\begin&#123;pmatrix&#125; 1\ 2\\ 3\ 4 \end&#123;pmatrix&#125;\\ \begin&#123;bmatrix&#125; 1\ 2\\ 3\ 4 \end&#123;bmatrix&#125;\\ \begin&#123;Bmatrix&#125; 1\ 2\\ 3\ 4 \end&#123;Bmatrix&#125;\\ \begin&#123;vmatrix&#125; 1&amp; 2\\ 3&amp; 4 \end&#123;vmatrix&#125;\\ \begin&#123;Vmatrix&#125; 1&amp; 2\\ 3&amp; 4 \end&#123;Vmatrix&#125;\\</code><br>$$<br>\begin{pmatrix} 1\ 2\ 3\ 4 \end{pmatrix}\<br>\begin{bmatrix} 1\ 2\ 3\ 4 \end{bmatrix}\<br>\begin{Bmatrix} 1\ 2\ 3\ 4 \end{Bmatrix}\<br>\begin{vmatrix} 1&amp; 2\ 3&amp; 4 \end{vmatrix}\<br>\begin{Vmatrix} 1 &amp; 2\ 3 &amp; 4 \end{Vmatrix}\<br>$$</p>
+<h3 id="希腊字母"><a href="#希腊字母" class="headerlink" title="希腊字母"></a>希腊字母</h3><p><code>1.\alpha\ A\\ 2.\beta\ B\\ 3.\gamma\ \Gamma\\ 4.\delta\ \Delta\\ 5.\epsilon\ E\\ 6.\zeta\ Z\\ 7.\eta\ H\\ 8.\theta\ \Theta\\ 9.\iota\ I\\ 10.\kappa\ K\\ 11.\lambda\ \Lambda\\ 12.\mu\ M\\ 13.\nu\ N\\ 14.\xi\ \Xi\\ 15.\omicron\ O\\ 16.\pi\ \Pi\\ 17.\rho\ P\\ 18.\sigma\ \Sigma\\ 19.\tau\ T\\ 20.\upsilon\ \Upsilon\\ 21.\phi\ \Phi\\ 22.\chi\ X\\ 23.\psi\ \Psi\\ 24.\omega\ \Omega\\</code><br>$$<br>1.\alpha\ A\<br>2.\beta\ B\<br>3.\gamma\ \Gamma\<br>4.\delta\ \Delta\<br>5.\epsilon\ E\<br>6.\zeta\ Z\<br>7.\eta\ H\<br>8.\theta\ \Theta\<br>9.\iota\ I\<br>10.\kappa\ K\<br>11.\lambda\ \Lambda\<br>12.\mu\ M\<br>13.\nu\ N\<br>14.\xi\ \Xi\<br>15.\omicron\ O\<br>16.\pi\ \Pi\<br>17.\rho\ P\<br>18.\sigma\ \Sigma\<br>19.\tau\ T\<br>20.\upsilon\ \Upsilon\<br>21.\phi\ \Phi\<br>22.\chi\ X\<br>23.\psi\ \Psi\<br>24.\omega\ \Omega\<br>$$</p>
+<h3 id="根式分式"><a href="#根式分式" class="headerlink" title="根式分式"></a>根式分式</h3><p><code>\sqrt[x+y]&#123;\frac ab&#125;+\sqrt&#123;c+2\over 50+x&#125;</code><br>$$<br>\sqrt[x+y]{\frac ab}+\sqrt{c+2\over 50+x}<br>$$</p>
+<h3 id="字体"><a href="#字体" class="headerlink" title="字体"></a>字体</h3><p><code>ABCabc+\ \mathbb&#123; ABCabc&#125;+\ \Bbb&#123; ABCabc黑板粗体&#125;\\ ABCabc+\mathbf&#123;ABCabc黑体&#125;\\ ABCabc+\mathtt&#123;ABCabc打印字体&#125; \\ ABCabc+\mathrm&#123;ABCabc罗马字体&#125; \\ ABCabc+\mathscr&#123;ABCabc手写字体&#125; \\ ABCabc+\mathfrak&#123;ABCabc德国字体Fraktur&#125; </code><br>$$<br>ABCabc+\ \mathbb{ ABCabc}+\ \Bbb{ ABCabc黑板粗体}\<br>ABCabc+\mathbf{ABCabc黑体}\<br>ABCabc+\mathtt{ABCabc打印字体} \<br>ABCabc+\mathrm{ABCabc罗马字体} \<br>ABCabc+\mathscr{ABCabc手写字体} \<br>ABCabc+\mathfrak{ABCabc德国字体Fraktur}<br>$$</p>
+<h3 id="表格"><a href="#表格" class="headerlink" title="表格"></a>表格</h3><p><code>\begin&#123;array&#125;&#123;c|lcr&#125; n &amp; \text&#123;Left&#125; &amp; \text&#123;Center&#125; &amp; \text&#123;Right&#125; \\ \hline 1 &amp; 0.24 &amp; 1 &amp; 125 \\ 2 &amp; -1 &amp; 189 &amp; -8 \\ 3 &amp; -20 &amp; 2000 &amp; 1+10i \\ \end&#123;array&#125;</code><br>$$<br>\begin{array}{c|lcr} n &amp; \text{Left} &amp; \text{Center} &amp; \text{Right} \ \hline 1 &amp; 0.24 &amp; 1 &amp; 125 \ 2 &amp; -1 &amp; 189 &amp; -8 \ 3 &amp; -20 &amp; 2000 &amp; 1+10i \ \end{array}<br>$$</p>
+<h3 id="矩阵"><a href="#矩阵" class="headerlink" title="矩阵"></a>矩阵</h3><p><code>\begin&#123;matrix&#125; 1 &amp; x &amp; x^2 \\ 1 &amp; y &amp; y^2 \\ 1 &amp; z &amp; z^2 \end&#123;matrix&#125;</code><br>$$<br>\begin{matrix} 1 &amp; x &amp; x^2 \ 1 &amp; y &amp; y^2 \ 1 &amp; z &amp; z^2 \end{matrix}<br>$$</p>
+<h3 id="向量等顶部符号"><a href="#向量等顶部符号" class="headerlink" title="向量等顶部符号"></a>向量等顶部符号</h3><p><code>\vec&#123;abc&#125; \ ,\overline b\ ,\overrightarrow&#123;cde&#125; \ ,\dot c\ , \dot &#123;adb&#125;\ ,\ddot&#123;acd&#125;\ ,\dddot&#123;adfe&#125;</code><br>$$<br>\vec{abc} \ ,\overline b\ ,\overrightarrow{cde} \ ,\dot c\ , \dot {adb}\ ,\ddot{acd}\ ,\dddot{adfe}<br>$$</p>
+<h3 id="对其"><a href="#对其" class="headerlink" title="对其"></a>对其</h3><p>需要使用&amp;来指示需要对齐的位置</p>
+<p><code>\begin&#123;align&#125; \sqrt&#123;37&#125; &amp; = \sqrt&#123;\frac&#123;73^2-1&#125;&#123;12^2&#125;&#125; \\ &amp; = \sqrt&#123;\frac&#123;73^2&#125;&#123;12^2&#125; \cdot \frac&#123;73^2-1&#125;&#123;73^2&#125;&#125; \\ &amp; = \frac&#123;73&#125;&#123;12&#125; \sqrt&#123;1 - \frac&#123;1&#125;&#123;73^2&#125;&#125; \\ &amp; \approx \frac&#123;73&#125;&#123;12&#125; \left( 1 - \frac&#123;1&#125;&#123;2 \cdot 73^2&#125; \right) \end&#123;align&#125;</code><br>$$<br>\begin{align} \sqrt{37} &amp; = \sqrt{\frac{73^2-1}{12^2}} \ &amp; = \sqrt{\frac{73^2}{12^2} \cdot \frac{73^2-1}{73^2}} \ &amp; = \frac{73}{12} \sqrt{1 - \frac{1}{73^2}} \ &amp; \approx \frac{73}{12} \left( 1 - \frac{1}{2 \cdot 73^2} \right) \end{align}<br>$$</p>
+<h3 id="分类表达式"><a href="#分类表达式" class="headerlink" title="分类表达式"></a>分类表达式</h3><p><code>f(n) = \begin&#123;cases&#125; n/2, &amp; \text&#123;if $n$ is even&#125; \\ 3n+1, &amp; \text&#123;if $n$ is odd&#125; \end&#123;cases&#125;</code><br>$$<br>f(n) = \begin{cases} n/2, &amp; \text{if $n$ is even} \ 3n+1, &amp; \text{if $n$ is odd} \end{cases}<br>$$<br><code>\left. \begin&#123;array&#125;&#123;l&#125; \text&#123;if $n$ is even:&#125; &amp; n/2 \\ \text&#123;if $n$ is odd:&#125; &amp; 3n+1 \end&#123;array&#125; \right\&#125; = f(n)</code><br>$$<br>\left. \begin{array}{l} \text{if $n$ is even:} &amp; n/2 \ \text{if $n$ is odd:} &amp; 3n+1 \end{array} \right} = f(n)<br>$$</p>
+<h3 id="公式标记与引用"><a href="#公式标记与引用" class="headerlink" title="公式标记与引用"></a>公式标记与引用</h3><p><code>a:= x^2-y^3 \tag&#123;公式1&#125;\label&#123;公式1&#125;</code><br>$$<br>a:= x^2-y^3 \tag{公式1}\label{公式1}<br>$$<br><code>a+y^3 \stackrel&#123;\eqref&#123;公式1&#125;&#125;=x^2</code></p>
+<p>$$<br>a+y^3 \stackrel{\eqref{公式1}}=x^2<br>$$</p>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><p><code>\to \rightarrow \leftarrow \Rightarrow \Leftarrow \mapsto</code><br>$$<br>\to \rightarrow \leftarrow \Rightarrow \Leftarrow \mapsto<br>$$<br><code>\lt \gt \le \ge \neq</code><br>$$<br>\lt \gt \le \ge \neq<br>$$</p>
+<p><code>\sin x\\ \arctan_y\\ \lim_&#123;1\to\infty&#125;\\</code><br>$$<br>\sin x\<br>\arctan_y\<br>\lim_{1\to\infty}\<br>$$<br><code>\sum_1^n\ ,\int_1^&#123;x+y&#125;\ </code><br>$$<br>\sum_1^n\ ,\int_1^{x+y}<br>$$</p>
+<h3 id="合集图片"><a href="#合集图片" class="headerlink" title="合集图片"></a>合集图片</h3><p><img src="https://img.supervj.top/img/DX/20190703164359871.png" alt="20190703164359871"></p>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
+
+    
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/06/23/LearnDX12_Math/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
+      <meta itemprop="name" content="VJ东">
+      <meta itemprop="description" content=" 吃饭,睡觉,敲代码 ">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="翡翠梦境">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          <a href="/2020/06/23/LearnDX12_Math/" class="post-title-link" itemprop="url">DX学习笔记（一）：数学基础</a>
+        </h2>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">发表于</span>
+
+      <time title="创建时间：2020-06-23 00:00:00" itemprop="dateCreated datePublished" datetime="2020-06-23T00:00:00+08:00">2020-06-23</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-08-02 16:40:19" itemprop="dateModified" datetime="2021-08-02T16:40:19+08:00">2021-08-02</time>
+      </span>
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-folder"></i>
+      </span>
+      <span class="post-meta-item-text">分类于</span>
+        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+          <a href="/categories/graphics/" itemprop="url" rel="index"><span itemprop="name">graphics</span></a>
+        </span>
+    </span>
+
+  
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="far fa-comment"></i>
+      </span>
+      <span class="post-meta-item-text">Changyan：</span>
+    
+    
+      <a title="changyan" href="/2020/06/23/LearnDX12_Math/#SOHUCS" itemprop="discussionUrl">
+        <span id="url::http://supervj.top/2020/06/23/LearnDX12_Math/" class="cy_cmt_count" data-xid="2020/06/23/LearnDX12_Math/" itemprop="commentCount"></span>
+      </a>
+    
+  </span>
+  
+  
+      </div>
+      <div class="post-meta">
+    <span class="post-meta-item" title="本文字数">
+      <span class="post-meta-item-icon">
+        <i class="far fa-file-word"></i>
+      </span>
+      <span class="post-meta-item-text">本文字数：</span>
+      <span>10k</span>
+    </span>
+    <span class="post-meta-item" title="阅读时长">
+      <span class="post-meta-item-icon">
+        <i class="far fa-clock"></i>
+      </span>
+      <span class="post-meta-item-text">阅读时长 &asymp;</span>
+      <span>9 分钟</span>
+    </span>
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+          <h2 id="向量代数"><a href="#向量代数" class="headerlink" title="向量代数"></a>向量代数</h2><h3 id="向量"><a href="#向量" class="headerlink" title="向量"></a>向量</h3><p>DirectX3D采用的左手坐标系</p>
+<ul>
+<li>左手坐标系：伸出左手，手指方向对准X轴正方向，弯曲手指对象Y轴正方向，大拇指指的就是Z轴正方向</li>
+</ul>
+<h5 id="向量的基本运算"><a href="#向量的基本运算" class="headerlink" title="向量的基本运算"></a>向量的基本运算</h5><ul>
+<li><p>两个向量相等。即u=v。当且仅当u和v的每个分量相等，即u<sub>x</sub>=v<sub>x</sub>,u<sub>y</sub>=v<sub>y</sub>, u<sub>z</sub>=v<sub>z</sub></p>
+</li>
+<li><p>向量的加法即两个向量对应分量都相加</p>
+</li>
+<li><p>向量与标量相乘即每一个分量与标量相乘</p>
+</li>
+<li><p>向量减法与加法类似</p>
+</li>
+</ul>
+<p>向量加法的几何意义u+v，即u的尾部与v的头部重合</p>
+<h5 id="向量的长度和单位向量"><a href="#向量的长度和单位向量" class="headerlink" title="向量的长度和单位向量"></a>向量的长度和单位向量</h5><ul>
+<li>3D向量的模可以用2次毕达哥拉斯定理（勾股定理）计算得到</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213350051.png" alt="image-20200118213350051"></p>
+</blockquote>
+<ul>
+<li>一个向量的长度变为单位长度称为向量的<strong>规范化（normalizing）</strong>,具体实现方法是</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213401165.png" alt="image-20200118213401165"></p>
+</blockquote>
+<h3 id="点积"><a href="#点积" class="headerlink" title="点积"></a>点积</h3><ul>
+<li>点积（dot product）是一种计算结果为标量值的向量乘法</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213420038.png" alt="image-20200118213420038"></p>
+</blockquote>
+<ul>
+<li>如果u·v=0，那么u和v正交（垂直）</li>
+<li>如果u·v&gt;0,那么夹角为锐角，即小于90°</li>
+<li>如果&gt;0,那么夹角为钝角</li>
+</ul>
+<h5 id="正交投影"><a href="#正交投影" class="headerlink" title="正交投影"></a>正交投影</h5><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213446595.png" alt="image-20200118213446595"></p>
+</blockquote>
+<p>即向量p是v在n向量上的投影</p>
+<p>一般的投影公式如下</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213508242.png" alt="image-20200118213508242"></p>
+</blockquote>
+<h3 id="正交化"><a href="#正交化" class="headerlink" title="正交化"></a>正交化</h3><p>如果向量集里面所有向量都相互正交，那么此向量集是<strong>规范正交</strong></p>
+<h5 id="格拉姆-施密特正交化"><a href="#格拉姆-施密特正交化" class="headerlink" title="格拉姆-施密特正交化"></a><strong>格拉姆-施密特正交化</strong></h5><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213545042.png" alt="image-20200118213545042"></p>
+</blockquote>
+<p>从文字上描述即，将向量v添加到规范正交集中时，需要用<strong>v减去这个规范正交集中的所有其他向量{w1,w2…}方向上的分量投影</strong>，这样确保新加入的v与该集合中的其他放量相互正交</p>
+<ul>
+<li>假设有向量集{v0,v1}，将其规范正交至集{w0,w1}</li>
+</ul>
+<p>则需要进行如下操作</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213557536.png" alt="image-20200118213557536"></p>
+</blockquote>
+<ul>
+<li>如果是三维向量集{v0,v1,v2}，至规范正交集{w0,w1,w2}</li>
+</ul>
+<p>则进行如下操作</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213605437.png" alt="image-20200118213605437"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213614501.png" alt="image-20200118213614501"></p>
+</blockquote>
+<h3 id="叉积"><a href="#叉积" class="headerlink" title="叉积"></a>叉积</h3><p>叉积公式</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213635523.png" alt="image-20200118213635523"></p>
+</blockquote>
+<p>两个向量叉积的意义即得到正交于两个向量的向量，采用的左手坐标系，即手指指向一个向量，通过向内弯曲小于等于180°的角度后到达另外一个向量，则大拇指方向是叉积所得向量的方向</p>
+<h5 id="用叉积类规范正交化"><a href="#用叉积类规范正交化" class="headerlink" title="用叉积类规范正交化"></a>用叉积类规范正交化</h5><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118213701332.png" alt="image-20200118213701332"></p>
+</blockquote>
+<h3 id="点"><a href="#点" class="headerlink" title="点"></a>点</h3><p>点（x,y,z）即从原点至该点的向量</p>
+<h3 id="用DirectXMath库"><a href="#用DirectXMath库" class="headerlink" title="用DirectXMath库"></a>用DirectXMath库</h3><h5 id="DirectXMath变量的使用规范"><a href="#DirectXMath变量的使用规范" class="headerlink" title="DirectXMath变量的使用规范"></a>DirectXMath变量的使用规范</h5><ul>
+<li>局部变量或全局变量用XMVECTOR类型</li>
+<li>对于类中的数据成员，用XMFLOAT2\XMFLOAT3和XMFLOAT4类型</li>
+<li>在运算之前，通过加载函数将XMFLOATn类型转换成XMVECTOR类型</li>
+<li>用XMVECTOR实例来进行运算</li>
+<li>通过存储函数将XMVECTOR类型转换为XMFLOATn类型</li>
+</ul>
+<h5 id="加载方法和存储方法"><a href="#加载方法和存储方法" class="headerlink" title="加载方法和存储方法"></a>加载方法和存储方法</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//将数据从XMFLOAT2类型加载到XMVECTOR类型</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMLoadFloat2</span><span class="params">(<span class="keyword">const</span> XMFLOAT2* pSource)</span></span>;</span><br><span class="line"><span class="comment">//将数据从XMFLOAT3类型加载到XMVECTOR类型，XMFLOAT4类似</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMLoadFloat3</span><span class="params">(<span class="keyword">const</span> XMFLOAT3* pSource)</span></span>;</span><br><span class="line"><span class="comment">//将数据从XMVECTOR类型存储到XMFLOAT2类型，XMFLOAT3以及XMFLOAT4方法类似</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> XM_CALLCONV <span class="title">XMStoreFloat2</span><span class="params">(XMFLOAT2* pDestination,FXMVECTOR V)</span></span>;</span><br><span class="line"><span class="comment">//********************//</span></span><br><span class="line"><span class="comment">//得到XMVECTOR实例中的一个分量或者将一个方脸转换为XMVECTOR类型</span></span><br><span class="line"><span class="function"><span class="keyword">float</span> XM_CALLCONV <span class="title">XMVectorGetX</span><span class="params">(FXMVECTOR V)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">float</span> XM_CALLCONV <span class="title">XMVectorGetY</span><span class="params">(FXMVECTOR V)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">float</span> XM_CALLCONV <span class="title">XMVectorGetZ</span><span class="params">(FXMVECTOR V)</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">float</span> XM_CALLCONV <span class="title">XMVectorGetX</span><span class="params">(FXMVECTOR V)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSetX</span><span class="params">(FXMVECTOR V,<span class="keyword">float</span> x)</span></span>;</span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSetY</span><span class="params">(FXMVECTOR V,<span class="keyword">float</span> y)</span></span>;</span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSetZ</span><span class="params">(FXMVECTOR V,<span class="keyword">float</span> z)</span></span>;.</span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSetW</span><span class="params">(FXMVECTOR V,<span class="keyword">float</span> w)</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="参数传递"><a href="#参数传递" class="headerlink" title="参数传递"></a>参数传递</h5><h6 id="传递规则"><a href="#传递规则" class="headerlink" title="传递规则"></a>传递规则</h6><ul>
+<li>前三个 XMVECTOR 参数用类型 <code>FXMVECTOR</code></li>
+<li>第四个 XMVECTOR 参数用 <code>GXMVECTOR</code></li>
+<li>第5、6个 XMVECTOR 参数用 <code>HXMVECTOR</code></li>
+<li>其余的 XMVECTOR 参数用 <code>CXMVECTOR</code></li>
+</ul>
+<blockquote>
+<p>在32位windows系统，编译器将根据<strong>_fastcall</strong>调用约定将前3个XMVECTOR参数传递到寄存器，其余放到栈</p>
+<p>在32位windows系统，编译器将根据<strong>_vectorcall</strong>调用约定将前6个XMVECTOR参数传递到寄存器，其余放到栈上</p>
+<p>其余平台上的定义，可以参见 <code>DirectXMath</code>库文档中的  <code>Library Internals</code>下的 <code>Calling Converntions</code> 部分的<code>[DirectXMath]</code></p>
+</blockquote>
+<h5 id="常向量"><a href="#常向量" class="headerlink" title="常向量"></a>常向量</h5><p>XMVECTOR类型的常量实例用 <strong><code>XMVECTORF32</code></strong> 表示</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> XMVECTORF32 v1 = &#123; <span class="number">0.5f</span>,<span class="number">1.0f</span>,<span class="number">1.0f</span>,<span class="number">1.0f</span> &#125;;</span><br></pre></td></tr></table></figure>
+
+<p>XMVECTORF32是一种16字节对齐的结构体，数学库中有将他转换至XMVECTOR类型的运算符</p>
+<p>另外也可以用<code>XMVECTORU32</code>类型来创建由证书数据构成的XMVECTOR常向量</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> XMVECTORU32 v2 = &#123; <span class="number">1</span>,<span class="number">2</span>,<span class="number">3</span>,<span class="number">4</span> &#125;;</span><br></pre></td></tr></table></figure>
+
+<h5 id="重载运算符"><a href="#重载运算符" class="headerlink" title="重载运算符"></a>重载运算符</h5><p>XMVECTOR类型针对向量的加法、减法和标量乘法都重载了运算符，如下</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118215001131.png" alt="image-20200118215001131"></p>
+</blockquote>
+<h5 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h5><p>DirectXMath库定义了一组于PI有关的常用数学常量近似值</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118215207615.png" alt="image-20200118215207615"></p>
+</blockquote>
+<p>另外还有角度和弧度之间的转化以及比较大小的函数</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118215348688.png" alt="image-20200118215348688"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200118215354016.png" alt="image-20200118215354016"></p>
+</blockquote>
+<h5 id="Setter函数"><a href="#Setter函数" class="headerlink" title="Setter函数"></a>Setter函数</h5><p>DirectXMath库提供了下列函数，用来设置XMVECTOR类型中的数据</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//返回零向量</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorZero</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//返回&#123;1，1，1，1&#125;</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSplatOne</span><span class="params">()</span></span>;</span><br><span class="line"><span class="comment">//返回&#123;x,y,z,w&#125;</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSet</span><span class="params">(<span class="keyword">float</span> x,<span class="keyword">float</span> y,<span class="keyword">float</span> z,<span class="keyword">float</span> w)</span></span>;</span><br><span class="line"><span class="comment">//返回&#123;value),value),value),value)&#125;</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorReplicate</span><span class="params">(<span class="keyword">float</span> value)</span></span>;</span><br><span class="line"><span class="comment">//返回&#123;Vx，Vx，Vx，Vx&#125;，同理；用SplateY，SplayteZ可以返回P&#123;Vy...&#125;,或者&#123;Vz..&#125;</span></span><br><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMVectorSplateX</span><span class="params">(FXMVECTOR V)</span></span>;    </span><br></pre></td></tr></table></figure>
+
+<h5 id="使用案例"><a href="#使用案例" class="headerlink" title="使用案例"></a>使用案例</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;DirectXMath.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;DirectXPackedVector.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> DirectX;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> DirectX::PackedVector;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">// 重写了&lt;&lt;运算符，使得cout函数可以输出XMVECTOR</span></span><br><span class="line">ostream&amp; XM_CALLCONV <span class="keyword">operator</span>&lt;&lt;(ostream&amp; os, FXMVECTOR v)</span><br><span class="line">&#123;</span><br><span class="line">	XMFLOAT4 dest;</span><br><span class="line">	XMStoreFloat4(&amp;dest, v);</span><br><span class="line">	os &lt;&lt; <span class="string">&quot;(&quot;</span> &lt;&lt; dest.x &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; dest.y &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; dest.z &lt;&lt;<span class="string">&quot;,&quot;</span>&lt;&lt;dest.w&lt;&lt; <span class="string">&quot;)&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> os;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!XMVerifyCPUSupport())</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;directx math not supported&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">static</span> <span class="keyword">const</span> XMVECTORF32 v1 = &#123; <span class="number">0.5f</span>,<span class="number">1.0f</span>,<span class="number">1.0f</span>,<span class="number">1.0f</span> &#125;;</span><br><span class="line">	XMVECTOR v2 = XMVectorReplicate(<span class="number">0.99f</span>);</span><br><span class="line">	XMVECTOR v3 = &#123; <span class="number">.5</span>f,<span class="number">.5</span>f,<span class="number">.5</span>f,<span class="number">.5</span>f &#125;;</span><br><span class="line">	XMVECTOR v4 = XMVectorSet(<span class="number">1</span>, <span class="number">2</span>, <span class="number">3</span>, <span class="number">4</span>);</span><br><span class="line">	XMVECTOR v5 = XMVectorSplatOne();</span><br><span class="line">	XMVECTOR v6 = XMVectorZero();</span><br><span class="line">	XMVECTOR v7 = XMVectorSplatZ(v4);</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; v1 &lt;&lt; v2 &lt;&lt; v3 &lt;&lt; v4 &lt;&lt; v5 &lt;&lt; v6 &lt;&lt; v7;</span><br><span class="line">	</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200118221313633.png" alt="image-20200118221313633"></p>
+</blockquote>
+<h5 id="向量函数"><a href="#向量函数" class="headerlink" title="向量函数"></a>向量函数</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">XMVECTOR v1 = XMVectorSet(<span class="number">1</span>, <span class="number">1</span>, <span class="number">1</span>, <span class="number">4</span>);</span><br><span class="line">	XMVECTOR v2 = XMVectorSet(<span class="number">-1</span>, <span class="number">-1</span>, <span class="number">-1</span>, <span class="number">5</span>);</span><br><span class="line">	XMVECTOR v3 = XMVectorSet(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span> ,<span class="number">0</span>);</span><br><span class="line">	XMVECTOR a = XMVector4Length(v1);<span class="comment">//||v1||2,2_范数，即平方和的更号</span></span><br><span class="line">	XMVECTOR b = XMVector4LengthSq(v1);<span class="comment">//||v1||1,1_范数，即平方和</span></span><br><span class="line">	XMVECTOR c = v1 - v2;<span class="comment">//减法</span></span><br><span class="line">	XMVECTOR d = <span class="number">10</span> * v1;<span class="comment">//乘法</span></span><br><span class="line">	XMVECTOR e = XMVector4Normalize(v1);<span class="comment">//标准化，即v1/|v1|</span></span><br><span class="line">	XMVECTOR f = XMVector3Dot(v1,v2);<span class="comment">//v1·v1</span></span><br><span class="line">	XMVECTOR g = XMVector3Cross(v1, v2);<span class="comment">//v1*v1</span></span><br><span class="line">	XMVECTOR projw, perpw;</span><br><span class="line">	XMVector3ComponentsFromNormal(&amp;projw, &amp;perpw, v1, v3);<span class="comment">//求v1在v3的proj和perp</span></span><br><span class="line">	XMVECTOR angle = XMVector4AngleBetweenVectors(v1, v2);<span class="comment">//2个向量的夹角</span></span><br><span class="line"></span><br><span class="line"><span class="built_in">cout</span> &lt;&lt; a&lt;&lt;b&lt;&lt;c&lt;&lt;d&lt;&lt;e&lt;&lt;f&lt;&lt;g&lt;&lt;projw&lt;&lt;perpw&lt;&lt;angle;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200119135645869.png" alt="image-20200119135645869"></p>
+</blockquote>
+<h5 id="浮点数的误差"><a href="#浮点数的误差" class="headerlink" title="浮点数的误差"></a>浮点数的误差</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">XMVector Epsilon=&#123;<span class="number">0.1</span>，<span class="number">0.1</span>，<span class="number">0.1</span>，<span class="number">0.1</span>&#125;；</span><br><span class="line"><span class="keyword">bool</span> IsEqual = XMVectorNearEqual(v1, v2，Epsilon);<span class="comment">//约等于来解决</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="矩阵代数"><a href="#矩阵代数" class="headerlink" title="矩阵代数"></a>矩阵代数</h2><h3 id="定义"><a href="#定义" class="headerlink" title="定义"></a>定义</h3><p>m*n的矩阵M，即由m行，n列构成的矩形阵列</p>
+<ul>
+<li>A<sub>1.*</sub></li>
+<li>A<sub>*.1</sub></li>
+</ul>
+<p><img src="https://img.supervj.top/img/DX/image-20200120070458975.png" alt="image-20200120070458975"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200120070505831.png" alt="image-20200120070505831"></p>
+<h3 id="乘法"><a href="#乘法" class="headerlink" title="乘法"></a>乘法</h3><ul>
+<li>矩阵<strong>AxB</strong>乘法的前提条件：A的列数必须于B的行数相同</li>
+</ul>
+<p>乘法公式</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120070807173.png" alt="image-20200120070807173"></p>
+</blockquote>
+<ul>
+<li>即矩阵A的第<strong>i</strong>个行向量于B的第<strong>j</strong>个列向量点积</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120070906956.png" alt="image-20200120070906956"></p>
+</blockquote>
+<ul>
+<li>行列数不相等的矩阵乘法不满足交换律即 <strong>AB≠BA</strong></li>
+</ul>
+<h5 id="向量于矩阵乘法"><a href="#向量于矩阵乘法" class="headerlink" title="向量于矩阵乘法"></a>向量于矩阵乘法</h5><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120071122512.png" alt="image-20200120071122512"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200120071219317.png" alt="image-20200120071219317"></p>
+</blockquote>
+<h3 id="转置矩阵"><a href="#转置矩阵" class="headerlink" title="转置矩阵"></a>转置矩阵</h3><p><strong>转置矩阵（transpose matrix）</strong>是将原矩阵阵列的 行与列进行互换 即mn的矩阵变成nm的矩阵</p>
+<p><strong>M **的转置矩阵记作 **M<sup>t</sup></strong></p>
+<ul>
+<li>转置矩阵具有下列性质</li>
+</ul>
+<blockquote>
+<p><strong><img src="https://img.supervj.top/img/DX/image-20200120071623379.png" alt="image-20200120071623379"></strong></p>
+</blockquote>
+<h3 id="单位矩阵"><a href="#单位矩阵" class="headerlink" title="单位矩阵"></a>单位矩阵</h3><p><strong>单位矩阵(identity matrix)**是一种主对角线上的元素都是</strong>1**，其他元素都是0的方阵，如</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120071758210.png" alt="image-20200120071758210"></p>
+</blockquote>
+<ul>
+<li>任何单位与单位矩阵相乘，得到的依然是原来的矩阵，而且满足交换律</li>
+</ul>
+<blockquote>
+<p>MI=IM=M</p>
+</blockquote>
+<h3 id="矩阵的行列式"><a href="#矩阵的行列式" class="headerlink" title="矩阵的行列式"></a>矩阵的行列式</h3><p>行列式记作： <strong>det A</strong></p>
+<ul>
+<li>当且仅当det A≠0时，方阵A是可逆的</li>
+</ul>
+<h5 id="余子阵"><a href="#余子阵" class="headerlink" title="余子阵"></a>余子阵</h5><p>n x n的矩阵A，<strong>余子阵（minor matrix）</strong> <img src="https://img.supervj.top/img/DX/image-20200120191929162.png" alt="image-20200120191929162">即从A中去除第 <strong>i</strong> 行和第 <strong>j</strong> 列的*<em>(n-1)</em>(n-1)**矩阵</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120200716480.png" alt="image-20200120200716480"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200120200727115.png" alt="image-20200120200727115"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200120200736692.png" alt="image-20200120200736692"></p>
+</blockquote>
+<h5 id="行列式"><a href="#行列式" class="headerlink" title="行列式"></a>行列式</h5><p><img src="https://img.supervj.top/img/DX/image-20200120200844209.png" alt="image-20200120200844209"></p>
+<ul>
+<li>对于2 x 2 的矩阵来说，行列式公式为：</li>
+</ul>
+<p><img src="https://img.supervj.top/img/DX/image-20200120200914468.png" alt="image-20200120200914468"></p>
+<ul>
+<li>3 x 3的矩阵，行列式公式为：</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120201007378.png" alt="image-20200120201007378"></p>
+</blockquote>
+<ul>
+<li>4 x 4的矩阵，行列式公式为：</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120201040699.png" alt="image-20200120201040699"></p>
+</blockquote>
+<ul>
+<li>案例：</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120201108843.png" alt="image-20200120201108843"></p>
+</blockquote>
+<blockquote>
+<p><strong>一个矩阵的行列式就是一个平行多面体的（定向的）体积，这个多面体的每条边对应着对应矩阵的列。如果学生得知了这个秘密（在纯粹的代数式的教育中，这个秘密被仔细的隐藏了起来），那么行列式的整个理论都将成为多重线性形式理论的一部分。倘若用别的方式来定义行列式，任何敏感的人都将会永远痛恨诸如行列式，Jacobian式，以及隐函数定理这些东西。</strong></p>
+<p>​                          <strong>——俄国数学家阿诺尔德（Vladimir Arnold）《论数学教育》</strong></p>
+</blockquote>
+<h3 id="伴随矩阵"><a href="#伴随矩阵" class="headerlink" title="伴随矩阵"></a>伴随矩阵</h3><p><img src="https://img.supervj.top/img/DX/image-20200120201159666.png" alt="image-20200120201159666"></p>
+<p>如果A中的每个元素分别计算出C<sub>ij</sub>,并将它至于矩阵C<sub>A</sub>中的第 <strong>i</strong> 行，第 <strong>j</strong> 列，那么将获得矩阵A的 <strong>代数余子式矩阵(cofactor matrix of A)</strong></p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120201605278.png" alt="image-20200120201605278"></p>
+</blockquote>
+<p>取矩阵C<sub>A</sub>的转置矩阵，得到<strong>矩阵A的伴随矩阵（adjoint matrix of A）</strong>，记作</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120204905556.png" alt="image-20200120204905556"></p>
+</blockquote>
+<h3 id="逆矩阵"><a href="#逆矩阵" class="headerlink" title="逆矩阵"></a>逆矩阵</h3><ul>
+<li>只有方阵才有逆矩阵</li>
+<li>n x n矩阵M的逆也是一个n x n的矩阵，记作 M<sup>-1</sup></li>
+<li>不是每个方阵都有逆矩阵，存在逆矩阵的方阵称为<strong>可逆矩阵（invertible matrix）</strong>，不存在逆矩阵的叫做<strong>奇异矩阵（singular matrix）</strong></li>
+<li>可逆矩阵的逆矩阵是唯一的</li>
+<li>可逆矩阵有逆矩阵相乘等到单位方阵： MM<sup>-1</sup>=M<sup>-1</sup>M=I，矩阵与其逆矩阵妈祖交换律</li>
+</ul>
+<p>逆矩阵的推导公式</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120205253567.png" alt="image-20200120205253567"></p>
+</blockquote>
+<ul>
+<li>案例，<img src="https://img.supervj.top/img/DX/image-20200120205340831.png" alt="image-20200120205340831"></li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120205418259.png" alt="image-20200120205418259"></p>
+</blockquote>
+<ul>
+<li><img src="https://img.supervj.top/img/DX/image-20200120205505699.png" alt="image-20200120205505699"></li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120205519977.png" alt="image-20200120205519977"></p>
+</blockquote>
+<ul>
+<li><img src="https://img.supervj.top/img/DX/image-20200120211359396.png" alt="image-20200120211359396"></li>
+</ul>
+<h3 id="DirectXMath库处理矩阵阵列"><a href="#DirectXMath库处理矩阵阵列" class="headerlink" title="DirectXMath库处理矩阵阵列"></a>DirectXMath库处理矩阵阵列</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br></pre></td><td class="code"><pre><span class="line">ostream&amp; XM_CALLCONV <span class="keyword">operator</span>&lt;&lt;(ostream&amp; os, FXMVECTOR v)</span><br><span class="line">&#123;</span><br><span class="line">	XMFLOAT4 dest;</span><br><span class="line">	XMStoreFloat4(&amp;dest, v);</span><br><span class="line">	os &lt;&lt; <span class="string">&quot;(&quot;</span> &lt;&lt; dest.x &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; dest.y &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; dest.z &lt;&lt;<span class="string">&quot;,&quot;</span>&lt;&lt;dest.w&lt;&lt; <span class="string">&quot;)&quot;</span> ;</span><br><span class="line">	<span class="keyword">return</span> os;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ostream&amp; XM_CALLCONV <span class="keyword">operator</span>&lt;&lt;(ostream&amp; os, FXMMATRIX v)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">4</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		os &lt;&lt; XMVectorGetX(v.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span>;</span><br><span class="line">		os &lt;&lt; XMVectorGetY(v.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span>;</span><br><span class="line">		os &lt;&lt; XMVectorGetZ(v.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span>;</span><br><span class="line">		os &lt;&lt; XMVectorGetW(v.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span>;</span><br><span class="line">		os &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> os;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!XMVerifyCPUSupport())</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;directx math not supported&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">		<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	XMMATRIX A</span><br><span class="line">	(</span><br><span class="line">		<span class="number">1.0f</span>, <span class="number">0.0f</span>, <span class="number">0.0f</span>, <span class="number">0.0f</span>,</span><br><span class="line">		<span class="number">0.0f</span>, <span class="number">2.0f</span>, <span class="number">0.0f</span>, <span class="number">0.0f</span>,</span><br><span class="line">		<span class="number">0.0f</span>, <span class="number">0.0f</span>, <span class="number">4.0f</span>, <span class="number">0.0f</span>,</span><br><span class="line">		<span class="number">1.0f</span>, <span class="number">2.0f</span>, <span class="number">3.0f</span>, <span class="number">1.0f</span></span><br><span class="line">	);</span><br><span class="line"></span><br><span class="line">		XMMATRIX B = XMMatrixIdentity();<span class="comment">//单位矩阵，斜线都是1</span></span><br><span class="line">	XMMATRIX C = A * B;<span class="comment">//矩阵乘法，AI=A；</span></span><br><span class="line">	XMMATRIX D = XMMatrixTranspose(A);<span class="comment">//转置矩阵，行列反转</span></span><br><span class="line">	XMVECTOR det = XMMatrixDeterminant(A);<span class="comment">//得到（det A,det A,det A,det A）</span></span><br><span class="line">	XMMATRIX E = XMMatrixInverse(&amp;det, A);<span class="comment">//返回M逆矩阵</span></span><br><span class="line">	XMMATRIX F = A * E;<span class="comment">//矩阵与逆矩阵乘积等于单位矩阵</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; A &lt;&lt; <span class="built_in">endl</span> &lt;&lt; B &lt;&lt; <span class="built_in">endl</span> &lt;&lt; C &lt;&lt; <span class="built_in">endl</span> &lt;&lt; D &lt;&lt; <span class="built_in">endl</span> &lt;&lt; E &lt;&lt; <span class="built_in">endl</span> &lt;&lt; det &lt;&lt; <span class="built_in">endl</span> &lt;&lt; F;</span><br><span class="line"></span><br><span class="line">	system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200120211048937.png" alt="image-20200120211048937"></p>
+</blockquote>
+<h2 id="变换"><a href="#变换" class="headerlink" title="变换"></a>变换</h2><h3 id="线性变换"><a href="#线性变换" class="headerlink" title="线性变换"></a>线性变换</h3><p>线性变换函数满足</p>
+<h6 id="线性变换函数公式"><a href="#线性变换函数公式" class="headerlink" title="线性变换函数公式"></a>线性变换函数公式</h6><blockquote>
+<p> <img src="https://img.supervj.top/img/DX/image-20200121070851768.png" alt="image-20200121070851768"></p>
+</blockquote>
+<h5 id="矩阵表示法"><a href="#矩阵表示法" class="headerlink" title="矩阵表示法"></a>矩阵表示法</h5><p>**u=(x,y,z)**也可以写作</p>
+<h6 id="矩阵表示法公式"><a href="#矩阵表示法公式" class="headerlink" title="矩阵表示法公式"></a>矩阵表示法公式</h6><h6 id=""><a href="#" class="headerlink" title=""></a><img src="https://img.supervj.top/img/DX/image-20200121071106597.png" alt="image-20200121071106597"></h6><h6 id="R3-标准基向量"><a href="#R3-标准基向量" class="headerlink" title="R3,标准基向量"></a>R<sup>3</sup>,标准基向量</h6><p><strong>i=(1,0,0), j=(0,1,0), k=(0,0,1)</strong></p>
+<h6 id="矩阵表示法公式2"><a href="#矩阵表示法公式2" class="headerlink" title="矩阵表示法公式2"></a>矩阵表示法公式2</h6><p><img src="https://img.supervj.top/img/DX/image-20200121071255330.png" alt="image-20200121071255330"></p>
+<p>根据线性组合，上述公式可以改写成</p>
+<h6 id="线性变换的矩阵表示法"><a href="#线性变换的矩阵表示法" class="headerlink" title="线性变换的矩阵表示法"></a>线性变换的矩阵表示法</h6><p><img src="https://img.supervj.top/img/DX/image-20200121071642398.png" alt="image-20200121071642398"></p>
+<p>我们称矩阵 <strong>A</strong>是线性变换的矩阵表示法</p>
+<h5 id="缩放"><a href="#缩放" class="headerlink" title="缩放"></a>缩放</h5><h6 id="定义-1"><a href="#定义-1" class="headerlink" title="定义"></a>定义</h6><p><img src="https://img.supervj.top/img/DX/image-20200121071743966.png" alt="image-20200121071743966"></p>
+<ul>
+<li>S就是一种线性变换</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121071817696.png" alt="image-20200121071817696"></p>
+</blockquote>
+<h6 id="缩放变换的矩阵表达式"><a href="#缩放变换的矩阵表达式" class="headerlink" title="缩放变换的矩阵表达式"></a>缩放变换的矩阵表达式</h6><blockquote>
+<p> <img src="https://img.supervj.top/img/DX/image-20200121071907341.png" alt="image-20200121071907341"></p>
+</blockquote>
+<ul>
+<li>缩放矩阵的逆矩阵</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200623102531554.png" alt="image-20200623102531554"></p>
+</blockquote>
+<ul>
+<li>案例</li>
+</ul>
+<p><img src="https://img.supervj.top/img/DX/image-20200623102549550.png" alt="image-20200623102549550"></p>
+<h5 id="旋转"><a href="#旋转" class="headerlink" title="旋转"></a>旋转</h5><h6 id="旋转矩阵基础公式"><a href="#旋转矩阵基础公式" class="headerlink" title="旋转矩阵基础公式"></a>旋转矩阵基础公式</h6><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121153741133.png" alt="image-20200121153741133"></p>
+<p><img src="https://img.supervj.top/img/DX/image-20200623102608770.png" alt="image-20200623102608770"></p>
+</blockquote>
+<ul>
+<li><p>上述公式里，*<strong>c=cosθ*** 而且 *</strong>s=sinθ***</p>
+</li>
+<li><p>旋转矩阵有个特性：每个行向量都为单位长度且两两正交，即这些行向量都是<strong>规范正交(orthonormal)</strong></p>
+</li>
+<li><p>若一个矩阵的行向量都是规范正交的，则此矩阵为<strong>正交矩阵（orthogonal matrix）</strong></p>
+</li>
+</ul>
+<h6 id="正交矩阵的逆矩阵"><a href="#正交矩阵的逆矩阵" class="headerlink" title="正交矩阵的逆矩阵"></a>正交矩阵的逆矩阵</h6><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121154123112.png" alt="image-20200121154123112"></p>
+</blockquote>
+<h6 id="通俗公式"><a href="#通俗公式" class="headerlink" title="通俗公式"></a>通俗公式</h6><p>如果选择绕*<strong>x、y、z***轴旋转，即分别取 *</strong>n =（1，0，0）、n =（0，1，0）、n =（0，0，1）***，那么对应的旋转矩阵是</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121154343881.png" alt="image-20200121154343881"></p>
+</blockquote>
+<h6 id="案例"><a href="#案例" class="headerlink" title="案例"></a>案例</h6><blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121154450682.png" alt="image-20200121154450682"></p>
+</blockquote>
+<h3 id="仿射变换"><a href="#仿射变换" class="headerlink" title="仿射变换"></a>仿射变换</h3><h4 id="齐次坐标"><a href="#齐次坐标" class="headerlink" title="齐次坐标"></a>齐次坐标</h4><ul>
+<li><strong><em>（x,y,z,0）</em></strong>表示向量</li>
+<li><strong><em>（x,y,z,1）</em></strong>表示点</li>
+</ul>
+<h5 id="仿射变换定义"><a href="#仿射变换定义" class="headerlink" title="仿射变换定义"></a>仿射变换定义</h5><ul>
+<li>仿射变换：一个线性变换加上一个平移变量 <strong><em>b</em></strong>,即</li>
+</ul>
+<blockquote>
+<p> <strong><em>α(u)=τ(u)+b</em></strong></p>
+</blockquote>
+<ul>
+<li>或者用矩阵表示法,A是一个线性变换的矩阵表示</li>
+</ul>
+<blockquote>
+<p> <img src="https://img.supervj.top/img/DX/image-20200121160932351.png" alt="image-20200121160932351"></p>
+</blockquote>
+<ul>
+<li>如果w=1把坐标扩充为齐次坐标，那么把上述公式简化成</li>
+</ul>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121161200597.png" alt="image-20200121161200597"></p>
+</blockquote>
+<h5 id="平移"><a href="#平移" class="headerlink" title="平移"></a>平移</h5><h6 id="恒等变换"><a href="#恒等变换" class="headerlink" title="恒等变换"></a>恒等变换</h6><p><strong>恒等变换</strong>是一种直接返回其输入参数的线性变换，如 <strong><em>I(u)=u</em></strong></p>
+<p>如果将平移变换定义为仿射变换，贼其中的线性变换就是一种恒等变换，即</p>
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121161843458.png" alt="image-20200121161843458"></p>
+</blockquote>
+<h6 id="平移矩阵"><a href="#平移矩阵" class="headerlink" title="平移矩阵"></a>平移矩阵</h6><p><img src="https://img.supervj.top/img/DX/image-20200121161704819.png" alt="image-20200121161704819"></p>
+<h6 id="平移矩阵的逆矩阵"><a href="#平移矩阵的逆矩阵" class="headerlink" title="平移矩阵的逆矩阵"></a>平移矩阵的逆矩阵</h6><p><img src="https://img.supervj.top/img/DX/image-20200121161727755.png" alt="image-20200121161727755"></p>
+<h6 id="案例-1"><a href="#案例-1" class="headerlink" title="案例"></a>案例</h6><p><img src="https://img.supervj.top/img/DX/image-20200121161922233.png" alt="image-20200121161922233"></p>
+<h5 id="缩放和旋转的放射矩阵"><a href="#缩放和旋转的放射矩阵" class="headerlink" title="缩放和旋转的放射矩阵"></a>缩放和旋转的放射矩阵</h5><ul>
+<li>如果放射变换的 b=0 ,则放射变换就是线性变换</li>
+<li>意味着，可以通过一个 4 x 4 的放射矩阵表达任意线性变换</li>
+</ul>
+<h6 id="4x4的缩放矩阵"><a href="#4x4的缩放矩阵" class="headerlink" title="4x4的缩放矩阵"></a>4x4的缩放矩阵</h6><p><img src="https://img.supervj.top/img/DX/image-20200121163133298.png" alt="image-20200121163133298"></p>
+<h6 id="4x4的旋转矩阵"><a href="#4x4的旋转矩阵" class="headerlink" title="4x4的旋转矩阵"></a>4x4的旋转矩阵</h6><p><img src="https://img.supervj.top/img/DX/image-20200121163151822.png" alt="image-20200121163151822"></p>
+<h5 id="仿射变换矩阵的几何意义"><a href="#仿射变换矩阵的几何意义" class="headerlink" title="仿射变换矩阵的几何意义"></a>仿射变换矩阵的几何意义</h5><p><img src="https://img.supervj.top/img/DX/image-20200121163854031.png" alt="image-20200121163854031"></p>
+<h4 id="变换的复合"><a href="#变换的复合" class="headerlink" title="变换的复合"></a>变换的复合</h4><p>假设*<strong>S**<em>为缩放矩阵，</em></strong>T*<strong>为平移矩阵，**<em>R</em></strong>为旋转矩阵</p>
+<p>因为矩阵乘法（不满足交换律），所以我么可以定义**<em>C=SRT**</em>，即把3个矩阵变成1个，方便计算</p>
+<h4 id="坐标变换"><a href="#坐标变换" class="headerlink" title="坐标变换"></a>坐标变换</h4><h5 id="坐标变换矩阵-标架变换矩阵公式"><a href="#坐标变换矩阵-标架变换矩阵公式" class="headerlink" title="坐标变换矩阵/标架变换矩阵公式"></a>坐标变换矩阵/标架变换矩阵公式</h5><h5 id="-1"><a href="#-1" class="headerlink" title=""></a><img src="https://img.supervj.top/img/DX/image-20200121170431813.png" alt="image-20200121170431813"></h5><h5 id="结合律"><a href="#结合律" class="headerlink" title="结合律"></a>结合律</h5><ul>
+<li>3个标架<strong>F,G,H</strong></li>
+<li><strong>A</strong>：<strong>F</strong>转换到<strong>G</strong>的变换矩阵</li>
+<li><strong>B</strong>：<strong>G</strong>转换到<strong>H</strong>的变换矩阵</li>
+<li><strong><em>p<sub>F</sub></em></strong>:<strong>F</strong>中的一个向量</li>
+<li>求：此向量在标架H中的坐标**<em>P<sub>H</sub>**</em></li>
+</ul>
+<p><strong><em>(p<sub>F</sub>**</em></strong>A)B*<em>=**</em>P<sub>H</sub>***</p>
+<p><strong><em>(p<sub>G</sub>**</em></strong>)B*<em>=**</em>P<sub>H</sub>***</p>
+<ul>
+<li>由于矩阵乘法满足结合律，所以</li>
+</ul>
+<p><strong><em>p<sub>F</sub></em></strong>(<strong>AB</strong>)=<strong><em>P<sub>H</sub></em></strong></p>
+<h5 id="逆矩阵-1"><a href="#逆矩阵-1" class="headerlink" title="逆矩阵"></a>逆矩阵</h5><p><strong><em>p<sub>F</sub>A</em></strong>=<strong><em>P<sub>H</sub></em></strong></p>
+<p><strong><em>P<sub>F</sub></em></strong>=<strong><em>p<sub>H</sub>A<sup>-1</sup></em></strong></p>
+<h4 id="变换矩阵与坐标变换矩阵"><a href="#变换矩阵与坐标变换矩阵" class="headerlink" title="变换矩阵与坐标变换矩阵"></a>变换矩阵与坐标变换矩阵</h4><p>在数学上，可以将<strong>改变几何体的变换</strong>解释为<strong>坐标变换</strong>，反之亦然</p>
+<h4 id="DirectXMath库的变换函数"><a href="#DirectXMath库的变换函数" class="headerlink" title="DirectXMath库的变换函数"></a>DirectXMath库的变换函数</h4><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> </span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;iostream&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;DirectXMath.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;DirectXPackedVector.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> <span class="built_in">std</span>;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> DirectX;</span><br><span class="line"><span class="keyword">using</span> <span class="keyword">namespace</span> DirectX::PackedVector;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">ostream&amp; <span class="keyword">operator</span>&lt;&lt;( ostream&amp; os, FXMVECTOR v)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">	XMFLOAT4 value;</span><br><span class="line">	XMStoreFloat4(&amp;value, v);</span><br><span class="line">	os &lt;&lt; <span class="string">&quot;(&quot;</span> &lt;&lt; value.x &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; value.y &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; value.z &lt;&lt; <span class="string">&quot;,&quot;</span> &lt;&lt; value.w &lt;&lt; <span class="string">&quot;)&quot;</span> &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="keyword">return</span> os;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">ostream&amp; <span class="keyword">operator</span>&lt;&lt;(ostream&amp; os, FXMMATRIX M)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;<span class="number">4</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		os  &lt;&lt; XMVectorGetX(M.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span> ;</span><br><span class="line">		os  &lt;&lt; XMVectorGetY(M.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span> ;</span><br><span class="line">		os  &lt;&lt; XMVectorGetZ(M.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span> ;</span><br><span class="line">		os  &lt;&lt; XMVectorGetW(M.r[i]) &lt;&lt; <span class="string">&quot;\t&quot;</span> ;</span><br><span class="line">		os &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> os;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	XMMATRIX m1 =</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>, <span class="number">1.0f</span>,</span><br><span class="line">		<span class="number">2.0f</span>, <span class="number">2.0f</span>, <span class="number">2.0f</span>, <span class="number">2.0f</span>,</span><br><span class="line">		<span class="number">3.0f</span>, <span class="number">3.0f</span>, <span class="number">3.0f</span>, <span class="number">3.0f</span>,</span><br><span class="line">		<span class="number">4.0f</span>, <span class="number">4.0f</span>, <span class="number">4.0f</span>, <span class="number">4.0f</span></span><br><span class="line">	&#125;;</span><br><span class="line">	<span class="comment">//缩放系数</span></span><br><span class="line">	XMMATRIX Scale1 = XMMatrixScaling(<span class="number">1.0f</span>, <span class="number">2.0f</span>, <span class="number">3.0f</span>);<span class="comment">//缩放矩阵1</span></span><br><span class="line">	XMVECTOR v1 = XMVectorSet(<span class="number">0.1</span>, <span class="number">0.1</span>, <span class="number">0.1</span>, <span class="number">0.1</span>);</span><br><span class="line">	XMMATRIX Scale2 = XMMatrixScalingFromVector(v1);<span class="comment">//缩放矩阵2，根据Vector</span></span><br><span class="line"></span><br><span class="line">	XMMATRIX RotX = XMMatrixRotationX(<span class="number">90.f</span>);<span class="comment">//X轴旋转矩阵</span></span><br><span class="line">	XMMATRIX RotY = XMMatrixRotationY(<span class="number">45.f</span>);</span><br><span class="line">	XMMATRIX RotZ = XMMatrixRotationZ(<span class="number">-180.f</span>);</span><br><span class="line">	XMVECTOR Axis= XMVectorSet(<span class="number">1</span>, <span class="number">0</span>, <span class="number">0</span>, <span class="number">0</span>);</span><br><span class="line">	XMMATRIX RotAxis = XMMatrixRotationAxis(Axis, <span class="number">45.f</span>);<span class="comment">//根据自定义轴旋转</span></span><br><span class="line">	XMMATRIX TransT = XMMatrixTranslation(<span class="number">100.f</span>, <span class="number">10.f</span>, <span class="number">-20.f</span>);<span class="comment">//位移矩阵</span></span><br><span class="line">	XMVECTOR vTransCoord = XMVector3TransformCoord(v1, TransT);<span class="comment">//移动向量</span></span><br><span class="line">	XMVECTOR vTransNormal = XMVector3TransformNormal(v1, TransT);</span><br><span class="line"></span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;m=&quot;</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; m1  &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;m*scale1=&quot;</span> &lt;&lt; <span class="built_in">endl</span>&lt;&lt; m1* Scale1 &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;m*scale2==&quot;</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; m1*Scale2 &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;RotX==&quot;</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; RotX &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;m*RotX==&quot;</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; m1 * RotX &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;v1:TransCoord==&quot;</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; vTransCoord &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; <span class="string">&quot;v1:TransNormal==&quot;</span> &lt;&lt; <span class="built_in">endl</span> &lt;&lt; vTransNormal &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">	system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><img src="https://img.supervj.top/img/DX/image-20200121182846768.png" alt="image-20200121182846768"></p>
+</blockquote>
+
+      
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+        <div class="post-eof"></div>
+      
+    </footer>
+  </article>
+</div>
+
+
+
 
     
 
@@ -1722,620 +2615,8 @@
 
 
 
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/05/21/%E7%94%A8Niagara%E7%BB%98%E5%88%B6%E6%A0%B7%E6%9D%A1%E7%BA%BF/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
-      <meta itemprop="name" content="VJ东">
-      <meta itemprop="description" content=" 吃饭,睡觉,敲代码 ">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="翡翠梦境">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2020/05/21/%E7%94%A8Niagara%E7%BB%98%E5%88%B6%E6%A0%B7%E6%9D%A1%E7%BA%BF/" class="post-title-link" itemprop="url">用Niagara的Ribbon绘制样条线</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-05-21 00:00:00" itemprop="dateCreated datePublished" datetime="2020-05-21T00:00:00+08:00">2020-05-21</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-08-02 16:39:19" itemprop="dateModified" datetime="2021-08-02T16:39:19+08:00">2021-08-02</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/graphics/" itemprop="url" rel="index"><span itemprop="name">graphics</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    
-      <a title="changyan" href="/2020/05/21/%E7%94%A8Niagara%E7%BB%98%E5%88%B6%E6%A0%B7%E6%9D%A1%E7%BA%BF/#SOHUCS" itemprop="discussionUrl">
-        <span id="url::http://supervj.top/2020/05/21/%E7%94%A8Niagara%E7%BB%98%E5%88%B6%E6%A0%B7%E6%9D%A1%E7%BA%BF/" class="cy_cmt_count" data-xid="2020/05/21/用Niagara绘制样条线/" itemprop="commentCount"></span>
-      </a>
-    
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>1.4k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>1 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <blockquote>
-<p>最近由于项目需要用到鼠标在场景利绘制曲线，方案有很多，比如SplineMesh，ProceduralMesh 等等，回头一想用特效也可以试试</p>
-<p>本案例使用虚幻4.22版本演示</p>
-<p>用Niagara的Ribbon绘制样条线的功能</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/niagara/niagara_0.gif"></p>
-<h5 id="模块函数-NiagaraModuleScript"><a href="#模块函数-NiagaraModuleScript" class="headerlink" title="模块函数 NiagaraModuleScript"></a>模块函数 NiagaraModuleScript</h5><ul>
-<li>模块函数是Niagara系统的函数库，是niagara系统最主要区别于老例子系统的其中一点</li>
-</ul>
-<p>创建函数库 <code>NM_Test1</code></p>
-<p><img src="https://img.supervj.top/img/niagara/niagara_1.jpg"></p>
-<p>完成如上节点连接</p>
-<p>注意：变量的前缀是对应模块，这个不能随意更改，创建的时候就选好模块会自动添加前缀；如果是系统已有变量，就不需要自己更改名称，如<code>Emitter.age</code>，表示发射器的生命周期</p>
-<ul>
-<li>User.SP：User分类下的Spline变量，本案例用下面参数代替</li>
-<li>Module.Count：函数输入参数，本函数中用于控制发射数量</li>
-<li>SampleSplinePositionByUnitDistanceWS:输入0-1输出曲线从开始到结束的世界空间位置</li>
-<li>ExecutionIndex:当前粒子的序号</li>
-</ul>
-<p>简单描述这个函数的功能就是根据发射粒子在所有发射粒子中的百分比对应到曲线spline的长度百分比</p>
-<h5 id="粒子发射器-Emitter"><a href="#粒子发射器-Emitter" class="headerlink" title="粒子发射器 Emitter"></a>粒子发射器 Emitter</h5><p><img src="https://img.supervj.top/img/niagara/niagara_2.jpg"></p>
-<p>随意创建一个发射器，删除多余节点，配置图所示</p>
-<p>刚开始比较容易混淆的概念是 Emitter的spawn，update与Particle的Spawn，Update的概念</p>
-<ul>
-<li>Emitter针对的就是整个发射器的操作，约等于老系统的Required和部分Spawn的内容，如整个发射器的生命周期，是否循环</li>
-<li>Particle控制每个粒子的属性和功能，如每个粒子的大小颜色等</li>
-<li>不恰当的比喻就是Emitter就是Actor，Particle就是Component</li>
-</ul>
-<p>图中关键节点解释</p>
-<ul>
-<li>创建3个User变量，User变量可以到外部设置</li>
-<li>创建Emitter模块的<code>Emitter.SpawnCount</code>变量，暴力一点可以直接跳过直接用User的</li>
-<li>发射器创建的时候用<code>User.SpawnCount</code>设置<code>Emitter.SpawnCount</code></li>
-<li><code>Emitter.SpawnCount</code>去设置<code>SpawnBurstInstaneous</code>的发射数量</li>
-<li>修改<code>Render</code>模块中的粒子类型为<code>Ribbon</code></li>
-<li>设置Ribbon的宽度</li>
-<li>在Spawn（在Update也可以） 中加上自定义的函数<code>NM_Test1</code>，并把<code>EmitterSpawnCount</code>设置为输入参数</li>
-</ul>
-<h5 id="粒子系统-NiagaraSystem"><a href="#粒子系统-NiagaraSystem" class="headerlink" title="粒子系统 NiagaraSystem"></a>粒子系统 NiagaraSystem</h5><blockquote>
-<p> 汇总所有Emitter的集合，同时可以实例化到场景或者类里的类;同时也可以再次修改Emitter中所有参数</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/niagara/niagara_3.jpg"></p>
-<p>如图所示，可以使用多个发射器，可以设置User模块的参数，可以拖拽不同发射器的作用时间（类似动画）</p>
-<p>本案例中只需要添加一个发射器</p>
-<h5 id="画线类-DrawItem"><a href="#画线类-DrawItem" class="headerlink" title="画线类 DrawItem"></a>画线类 DrawItem</h5><p><img src="https://img.supervj.top/img/niagara/niagara_4.jpg"></p>
-<ul>
-<li><p>目前版本貌似没有更直观的方法设置Spline变量，强行用设置Actor变量尽然是可以的(lll￢ω￢)</p>
-</li>
-<li><p>提供对外函数<code>AddPoint(FVector)</code>用于添加曲线点</p>
-</li>
-</ul>
-<h5 id="PlayerController"><a href="#PlayerController" class="headerlink" title="PlayerController"></a>PlayerController</h5><blockquote>
-<p>不要忘记开启项目设置里Input模块下的UseMouseForTouch</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/niagara/niagara_5.jpg"></p>
-<p>蓝图比较简单，简单描述就是在鼠标按下移动后用射线点通过DrawItem添加曲线点</p>
-<h5 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h5><ol>
-<li>用Niagara类绘制曲线模型算是比较简单方便的，Niagara在性能优化上也不错</li>
-<li>曲线在长度到一定程度后会有明显分段情况出现，不够圆滑，目前版本没有公开Ribbon的设置段数的变量</li>
-<li>据说Niagara在4.25才是正式版，目前无法保证bug问题</li>
-</ol>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
-      <meta itemprop="name" content="VJ东">
-      <meta itemprop="description" content=" 吃饭,睡觉,敲代码 ">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="翡翠梦境">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/" class="post-title-link" itemprop="url">《Multiplayer RPG Template》说明文档</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-05-19 00:00:00" itemprop="dateCreated datePublished" datetime="2020-05-19T00:00:00+08:00">2020-05-19</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-08-02 16:13:42" itemprop="dateModified" datetime="2021-08-02T16:13:42+08:00">2021-08-02</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    
-      <a title="changyan" href="/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/#SOHUCS" itemprop="discussionUrl">
-        <span id="url::http://supervj.top/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/" class="cy_cmt_count" data-xid="2020/05/19/超4说明文档CH/" itemprop="commentCount"></span>
-      </a>
-    
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>2.2k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <blockquote>
-<p> 这是一份<a target="_blank" rel="noopener" href="https://www.unrealengine.com/marketplace/zh-CN/product/multiplayer-rpg-template">Multiplayer RPG Template</a>的说明文档,内容包含其中主要系统的配置和制作方法</p>
-<p>此案例是基于UE4的<strong>ListerServer</strong>建立的局域网联机游戏demo，参考作品WOW</p>
-<p>基于UE4版本4.25</p>
-<p>demo尚且有未完善的地方，后续会跟进优化和修复</p>
-</blockquote>
-<h3 id="技能系统"><a href="#技能系统" class="headerlink" title="技能系统"></a>技能系统</h3><p><img src="https://img.supervj.top/imgchao4_skill1.jpg"></p>
-<p>如上图所示，此图为技能表的配置信息，下面简述其中重要的参数</p>
-<ul>
-<li>Action: 这个变量代表这个行为的唯一ID，原则上跟表格的RowName相同，很多逻辑中需要通过这个ID查找关于这个技能的所有信息，或者通过这个ID执行这个技能等</li>
-<li>Display(struct)：3个参数用来显示这个技能一般信息，比如名字或者说明还有图标的显示，在UMG上有相关的体现，当然你也可以用来自定义<ul>
-<li><img src="https://img.supervj.top/imgchao4_skill4.jpg"></li>
-<li><img src="https://img.supervj.top/imgchao4_skill5.jpg"></li>
-</ul>
-</li>
-<li>CastData(struct)：这个是一个施法的结构体，主要设置的是施法的方式和条件<ul>
-<li>Type:比如默认的读条施法，持续施法，攻击叠加类的施法等方式</li>
-<li>Time:施法所需要的时长，0意味着瞬发</li>
-<li>Duration:如果是持续施法，那么这个参数意味着引导时间</li>
-<li>KeepAttackStat:施法完以后会继续进行普通攻击</li>
-<li>MotionCast:移动施法，设置为否的话必须站立施法，一旦移动就打断施法</li>
-<li>NotTargetCast:不需要目标的施法，一般用于范围技能比如火雨之类</li>
-</ul>
-</li>
-<li>Mp:消耗魔法值，战士为怒气值</li>
-<li>CD:冷却时间</li>
-<li>MaxRange：最大释放范围，按照虚幻单位计算，0意味着无限制</li>
-<li>LearnGold/Level:学习该技能的前置条件，0意味着无要求</li>
-<li>RangeSelectRange:如果是范围选择的技能，此参数表示作用的半径</li>
-<li>TargetType:目标类型，作用地方还是友方等</li>
-<li>SkillClass:技能实例的类，无需手动创建</li>
-</ul>
-<h5 id="SkillRef"><a href="#SkillRef" class="headerlink" title="SkillRef"></a>SkillRef</h5><blockquote>
-<p>这个是通过表格配置的SkillClass创建的，无需手动创建，你只需要制作这个类的逻辑和效果</p>
-<p>这个类是继承自<code>BP_BaseSkill</code>,里面有一些乱七八糟的蓝图逻辑，不过并不是全部都是必须使用的，这个类很多情况下你可以自由发挥，反正技能释放了以后就通过这个类来控制这个技能实例的运行</p>
-<p>下面就通过<code>IceBullet</code>这个技能类来说明一下</p>
-</blockquote>
-<p><img src="https://img.supervj.top/imgchao4_skill2.jpg"></p>
-<p><code>IceBullet</code>继承于<code>ProjectileBase</code>，如上图所示，这是这个类的基本参数类型</p>
-<ul>
-<li>speed:飞行速度，依赖<code>ProjectileComponent</code></li>
-<li>StopDistance:停止的距离，因为这个类是追踪目标飞行的，所以会总有接近并且到达目标的时候，到达目标并停止以后会产生一段逻辑</li>
-<li>Duration:持续时间，如果没有命中到达时间以后也会摧毁自己</li>
-<li>Sound/FX:相关的特效配置，Start可以用于产生的时候播放，Hit可以用于打中目标以后播放，但都需要手动释放，<ul>
-<li>在<code>ProjectileBase</code>已经实现了<code>BeginPlay</code>以后调用Start的效果</li>
-<li>在打中目标后已经实现播放Hit的效果</li>
-</ul>
-</li>
-<li>BuffData：如果这个技能有buff/debuff可以设置这个类，需要手动调用方法来创建并运行buff类,如下图</li>
-</ul>
-<p><img src="https://img.supervj.top/imgchao4_skill3.jpg"></p>
-<h5 id="BuffRef"><a href="#BuffRef" class="headerlink" title="BuffRef"></a>BuffRef</h5><blockquote>
-<p>这是Buff的实例类，通过SkillRef内部调用<code>CreateBuff</code>方法创建</p>
-<p>通过重写<code>BuffInit</code>和<code>BuffEnd</code>方法来实现自定义的逻辑，如果是拥有持续效果，那么你可以重写<code>BuffDelta</code> 方法来制作持续调用的逻辑</p>
-</blockquote>
-<h3 id="装备系统"><a href="#装备系统" class="headerlink" title="装备系统"></a>装备系统</h3><p><img src="https://img.supervj.top/imgchao4_equp1.jpg"></p>
-<blockquote>
-<p>如上图所示，这个是装备信息的配置表，下面简单介绍其中主要参数的作用</p>
-</blockquote>
-<ul>
-<li>BodyPart：装备对应的位置</li>
-<li>Mesh/Mat:用于显示这个装备实体的模型，装备在人物上或者丢弃到世界中的显示</li>
-<li>Property:如字面意思就是2种属性，其中Adv属性会随着Base的更改而变化</li>
-</ul>
-<h3 id="道具系统"><a href="#道具系统" class="headerlink" title="道具系统"></a>道具系统</h3><p><img src="https://img.supervj.top/imgchao4_prop1.jpg"></p>
-<blockquote>
-<p>道具系统类似于装备系统</p>
-</blockquote>
-<ul>
-<li>EffectType:作用类型，本案例只制作了治疗效果和增加魔法的效果</li>
-<li>Value: 可以设置作用效果的范围值，当然这个不是必须的，具体是下面的道具类内部实现</li>
-<li>CanBeStacked:如果是否那么一个道具占据背包栏的一格，否则么可以堆放到一起</li>
-<li>ActionClass:道具类实现逻辑的类，参考Skill的实例实现，具体逻辑可以写到这个类里面</li>
-</ul>
-<h3 id="掉落系统"><a href="#掉落系统" class="headerlink" title="掉落系统"></a>掉落系统</h3><p><img src="https://img.supervj.top/imgchao4_drop1.jpg"></p>
-<blockquote>
-<p>如上图所示，掉落系统的配置放在<code>DataSystem</code> 这个类里面，为什么没有配置表格呢？O(∩_∩)O</p>
-<p>当然也可以，你可以自己创建一个类似的表格然后替换其中的逻辑，这个很简单</p>
-</blockquote>
-<p>这个配置信息是一个Map键值对，键对应的是角色的类，值即是掉落信息数组</p>
-<ul>
-<li>Action:选择装备/道具等的Action名称</li>
-<li>Type:选择是装备/道具，当然你要是想掉落技能的话理论上也可以，请自由发挥</li>
-<li>Amount:掉落数量</li>
-<li>Probability:概率，这个概率计算是在角色创建的时候就完成的，非击杀的时候</li>
-</ul>
-<h3 id="任务系统"><a href="#任务系统" class="headerlink" title="任务系统"></a>任务系统</h3><p><img src="https://img.supervj.top/imgchao4_task1.jpg"></p>
-<blockquote>
-<p> 如上图所示，这是任务表格的配置信息</p>
-</blockquote>
-<ul>
-<li>Titile：任务的标题，会显示在任务栏内的抬头标题部分</li>
-<li>Target：任务的目标</li>
-<li>DynamicTargetStat:这个会动态的刷新，具体实现的逻辑在下面的TaskClass内</li>
-<li>Descripion:任务描述</li>
-<li>Reward：奖励</li>
-</ul>
-<h5 id="TaskRef"><a href="#TaskRef" class="headerlink" title="TaskRef"></a>TaskRef</h5><p><img src="https://img.supervj.top/imgchao4_task2.jpg"></p>
-<p><img src="https://img.supervj.top/imgchao4_task3.jpg"></p>
-<blockquote>
-<p>如上图所示，每接受一个任务以后就会产生一个任务类来作为该任务的观察者(代理)</p>
-<p>具体这个任务是干什么的你可以通过实现这个类内的逻辑来管理，同时设置任务目标里的动态信息</p>
-</blockquote>
-<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><h5 id="怪物刷新"><a href="#怪物刷新" class="headerlink" title="怪物刷新"></a>怪物刷新</h5><p><img src="https://img.supervj.top/imgchao4_aigenerat1.jpg"></p>
-<blockquote>
-<p>怪物刷新是在场景里放置一个<code>BP_AIGenerator</code>管理类来完成的</p>
-</blockquote>
-<ul>
-<li>MaxNum:刷新的最大数量</li>
-<li>AIClass:设置刷新角色的类，超过1个的时候就随机从中刷新</li>
-<li>Range:以该管理类的位置为中心的半径内刷新怪物</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
-    
-
-
-<div class="post-block">
-  
-  
-
-  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3EN/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
-      <meta itemprop="name" content="VJ东">
-      <meta itemprop="description" content=" 吃饭,睡觉,敲代码 ">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="翡翠梦境">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          <a href="/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3EN/" class="post-title-link" itemprop="url">《Multiplayer RPG Template》Documentation</a>
-        </h2>
-
-        <div class="post-meta-container">
-          <div class="post-meta">
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-calendar"></i>
-      </span>
-      <span class="post-meta-item-text">发表于</span>
-
-      <time title="创建时间：2020-05-19 00:00:00" itemprop="dateCreated datePublished" datetime="2020-05-19T00:00:00+08:00">2020-05-19</time>
-    </span>
-      <span class="post-meta-item">
-        <span class="post-meta-item-icon">
-          <i class="far fa-calendar-check"></i>
-        </span>
-        <span class="post-meta-item-text">更新于</span>
-        <time title="修改时间：2021-08-02 16:13:27" itemprop="dateModified" datetime="2021-08-02T16:13:27+08:00">2021-08-02</time>
-      </span>
-    <span class="post-meta-item">
-      <span class="post-meta-item-icon">
-        <i class="far fa-folder"></i>
-      </span>
-      <span class="post-meta-item-text">分类于</span>
-        <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/other/" itemprop="url" rel="index"><span itemprop="name">other</span></a>
-        </span>
-    </span>
-
-  
-  
-  <span class="post-meta-item">
-    
-      <span class="post-meta-item-icon">
-        <i class="far fa-comment"></i>
-      </span>
-      <span class="post-meta-item-text">Changyan：</span>
-    
-    
-      <a title="changyan" href="/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3EN/#SOHUCS" itemprop="discussionUrl">
-        <span id="url::http://supervj.top/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3EN/" class="cy_cmt_count" data-xid="2020/05/19/超4说明文档EN/" itemprop="commentCount"></span>
-      </a>
-    
-  </span>
-  
-  
-      </div>
-      <div class="post-meta">
-    <span class="post-meta-item" title="本文字数">
-      <span class="post-meta-item-icon">
-        <i class="far fa-file-word"></i>
-      </span>
-      <span class="post-meta-item-text">本文字数：</span>
-      <span>5.3k</span>
-    </span>
-    <span class="post-meta-item" title="阅读时长">
-      <span class="post-meta-item-icon">
-        <i class="far fa-clock"></i>
-      </span>
-      <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>5 分钟</span>
-    </span>
-</div>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-          <blockquote>
-<p>This is <a target="_blank" rel="noopener" href="https://www.unrealengine.com/marketplace/zh-CN/product/multiplayer-rpg-template">Multiplayer RPG Template</a> Documentation,its about configuration and production method of the main system</p>
-<p>This case is based on UE4’s  ListerServer  built-in LAN online game demo, refer to the work WOW</p>
-<p>Based on UE4 version 4.25</p>
-<p>There are still some imperfections in the demo, which will be followed up for optimization and repair</p>
-</blockquote>
-<h3 id="Skill-system"><a href="#Skill-system" class="headerlink" title="Skill system"></a>Skill system</h3><p><img src="https://img.supervj.top/imgchao4_skill1.jpg"></p>
-<p>As shown in the above figure, this figure is the configuration information of the skill table. The important parameters are briefly described below</p>
-<ul>
-<li>Action: This variable represents the unique ID of this behavior. In principle, it is the same as the RowName of the table. In many logics, you need to use the ID to find all information about the skill, or use the ID to execute the skill</li>
-<li>Display(struct)：3 parameters are used to display the general information of this skill, such as the display of the name or description and icons, which are related to the UMG, of course, you can also customize<ul>
-<li><img src="https://img.supervj.top/imgchao4_skill4.jpg"></li>
-<li><img src="https://img.supervj.top/imgchao4_skill5.jpg"></li>
-</ul>
-</li>
-<li>CastData(struct)：This is a spell-casting structure, which mainly sets the method and conditions of the spell-casting<ul>
-<li>Type:For example, the default reading spell casting, continuous casting, attack superimposing casting and other methods</li>
-<li>Time:The time it takes to cast, 0 means instant</li>
-<li>Duration:If it is a continuous cast, then this parameter means the lead time</li>
-<li>KeepAttackStat:After the cast is finished, the normal attack will continue</li>
-<li>MotionCast:Move cast, if set to No, you must stand cast, once you move, interrupt cast</li>
-<li>NotTargetCast:Does not require target casting, and is generally used for range skills such as Fire and Rain</li>
-</ul>
-</li>
-<li>Mp:Mana cost, Warrior Rage</li>
-<li>CD:Cooling time</li>
-<li>MaxRange：Maximum release range, calculated in Unreal Units, 0 means unlimited</li>
-<li>LearnGold/Level:Prerequisites for learning this skill, 0 means no requirement</li>
-<li>RangeSelectRange:If it is a skill selected by range, this parameter indicates the radius of the effect</li>
-<li>TargetType:Target type, place of action or friend</li>
-<li>SkillClass:Skill class, no need to create manually</li>
-</ul>
-<h5 id="SkillRef"><a href="#SkillRef" class="headerlink" title="SkillRef"></a>SkillRef</h5><blockquote>
-<p>This is created by the SkillClass configured in the table, there is no need to manually create it, you only need to make the logic and effects of this class</p>
-<p>This class is inherited from <code>BP_BaseSkill</code>, which has some messy blueprint logic, but not all are necessary to use. In this case, you can freely play in many cases. Anyway, after the skill is released, you can control this skill through this class Running the instance</p>
-<p>Let’s explain it through the skill class of <code>IceBullet</code></p>
-</blockquote>
-<p><img src="https://img.supervj.top/imgchao4_skill2.jpg"></p>
-<p><code>IceBullet</code>Inherit from<code>ProjectileBase</code>，As shown in the figure above, this is the basic parameter type of this class</p>
-<ul>
-<li>speed: flight speed, depends on <code>ProjectileComponent</code></li>
-<li>StopDistance: the distance to stop, because this class is to track the target flight, so there will always be when approaching and reaching the target, a logic will be generated after reaching the target and stopping</li>
-<li>Duration: Duration, if there is no hit, the time will destroy yourself</li>
-<li>Sound / FX: related special effects configuration, Start can be used to play when it is generated, Hit can be used to play after hitting the target, but all need to be manually released<br>   - The effect of calling Start after <code>ProjectileBase</code> has realized<code> BeginPlay</code><br>   - The Hit effect has been achieved after hitting the target</li>
-<li>BuffData: If this skill has buff / debuff, you can set this class, you need to manually call the method to create and run the buff class, as shown below</li>
-</ul>
-<p><img src="https://img.supervj.top/imgchao4_skill3.jpg"></p>
-<h5 id="BuffRef"><a href="#BuffRef" class="headerlink" title="BuffRef"></a>BuffRef</h5><blockquote>
-<p>This is an instance class of Buff, created by internally calling <code>CreateBuff</code> method of SkillRef</p>
-<p>By rewriting the <code>BuffInit</code> and<code> BuffEnd</code> methods to achieve custom logic, if it has a continuous effect, then you can rewrite the <code>BuffDelta</code> method to make the logic of continuous calls</p>
-</blockquote>
-<h3 id="EquipSystem"><a href="#EquipSystem" class="headerlink" title="EquipSystem"></a>EquipSystem</h3><p><img src="https://img.supervj.top/imgchao4_equp1.jpg"></p>
-<blockquote>
-<p>As shown in the figure above, this is the configuration table of the equipment information. The following briefly introduces the role of the main parameters</p>
-</blockquote>
-<ul>
-<li>BodyPart： the corresponding position of the equipment</li>
-<li>Mesh/Mat: Used to display the model of this equipment entity, equipped on the character or discarded into the world</li>
-<li>Property: literally means 2 kinds of properties, of which Adv property will change with the change of Base</li>
-</ul>
-<h3 id="PropSystem"><a href="#PropSystem" class="headerlink" title="PropSystem"></a>PropSystem</h3><p><img src="https://img.supervj.top/imgchao4_prop1.jpg"></p>
-<blockquote>
-<p>The prop system is similar to the equipment system</p>
-</blockquote>
-<ul>
-<li>EffectType:Effect type, this case only made the healing effect and the effect of increasing magic</li>
-<li>Value: You can set the range value of the effect, of course, this is not necessary, specifically the internal implementation of the following prop class</li>
-<li>CanBeStacked:If one item occupies one space in the backpack bar, otherwise it can be stacked together</li>
-<li>ActionClass:Prop class implement logic class, refer to Skill instance implementation, specific logic can be written into this class</li>
-</ul>
-<h3 id="DropSystem"><a href="#DropSystem" class="headerlink" title="DropSystem"></a>DropSystem</h3><p><img src="https://img.supervj.top/imgchao4_drop1.jpg"></p>
-<blockquote>
-<p>As shown in the figure above, the configuration of the drop system is placed in the <code>DataSystem</code> class. Why is there no configuration table? O (∩_∩) O</p>
-<p>Of course, you can create a similar table yourself and replace the logic in it. This is very simple.</p>
-</blockquote>
-<p>This configuration information is a Map key-value pair, the key corresponds to the role class, and the value is the drop information array</p>
-<ul>
-<li>Action:Select the action name of equipment / props, etc.</li>
-<li>Type:Choose equipment / props. Of course, if you want to drop skills, you can theoretically do it. Please play freely.</li>
-<li>Amount:number of drops</li>
-<li>Probability:Probability, this probability calculation is done when the character is created, when not kill</li>
-</ul>
-<h3 id="TaskSystem"><a href="#TaskSystem" class="headerlink" title="TaskSystem"></a>TaskSystem</h3><p><img src="https://img.supervj.top/imgchao4_task1.jpg"></p>
-<blockquote>
-<p> As shown in the figure above, this is the configuration information of the task table</p>
-</blockquote>
-<ul>
-<li>Titile：the title of the task, which will be displayed in the header section of the task bar</li>
-<li>Target：the target of the task</li>
-<li>DynamicTargetStat:This will be refreshed dynamically, the specific implementation logic is in the following TaskClass</li>
-</ul>
-<h5 id="TaskRef"><a href="#TaskRef" class="headerlink" title="TaskRef"></a>TaskRef</h5><p><img src="https://img.supervj.top/imgchao4_task2.jpg"></p>
-<p><img src="https://img.supervj.top/imgchao4_task3.jpg"></p>
-<blockquote>
-<p>As shown in the figure above, each time a task is accepted, a task class will be generated as an observer (agent) of the task</p>
-<p>Specifically what the task is for, you can manage it by implementing the logic in this class, while setting the dynamic information in the task goal</p>
-</blockquote>
-<h3 id="Other"><a href="#Other" class="headerlink" title="Other"></a>Other</h3><h5 id="Monster-refresh"><a href="#Monster-refresh" class="headerlink" title="Monster refresh"></a>Monster refresh</h5><p><img src="https://img.supervj.top/imgchao4_aigenerat1.jpg"></p>
-<blockquote>
-<p>Monster refresh is done by placing a <code>BP_AIGenerator</code> management class in the scene</p>
-</blockquote>
-<ul>
-<li>MaxNum: the maximum number of refreshes</li>
-<li>AIClass: Set the class for refreshing the character, if more than one, it will be randomly refreshed from it</li>
-<li>Range: refresh monsters within a radius centered on the position of the management class</li>
-</ul>
-
-      
-    </div>
-
-    
-    
-    
-
-    <footer class="post-footer">
-        <div class="post-eof"></div>
-      
-    </footer>
-  </article>
-</div>
-
-
-
-
   <nav class="pagination">
-    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
+    <a class="extend prev" rel="prev" href="/page/6/"><i class="fa fa-angle-left" aria-label="上一页"></i></a><a class="page-number" href="/">1</a><span class="space">&hellip;</span><a class="page-number" href="/page/6/">6</a><span class="page-number current">7</span><a class="page-number" href="/page/8/">8</a><a class="page-number" href="/page/9/">9</a><a class="extend next" rel="next" href="/page/8/"><i class="fa fa-angle-right" aria-label="下一页"></i></a>
   </nav>
 
 

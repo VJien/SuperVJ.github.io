@@ -25,32 +25,26 @@
     var NexT = window.NexT || {};
     var CONFIG = {"hostname":"supervj.top","root":"/","images":"/images","scheme":"Pisces","version":"8.1.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
   </script>
-<meta name="description" content="前言编辑器扩展和Slate相关内容大杂烩, 不定期记录 自定义属性界面SObjectPropertyEntryBox用于选择资源的界面控件">
+<meta name="description" content="前言自定义很扩展消息窗口">
 <meta property="og:type" content="article">
-<meta property="og:title" content="编辑器扩展:大杂烩">
-<meta property="og:url" content="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%E5%8F%8ASlate%E6%9D%82%E8%B0%88/index.html">
+<meta property="og:title" content="编辑器扩展：消息窗口">
+<meta property="og:url" content="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/index.html">
 <meta property="og:site_name" content="翡翠梦境">
-<meta property="og:description" content="前言编辑器扩展和Slate相关内容大杂烩, 不定期记录 自定义属性界面SObjectPropertyEntryBox用于选择资源的界面控件">
+<meta property="og:description" content="前言自定义很扩展消息窗口">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210106105801136.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210106110849937.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210106162756815.png">
+<meta property="og:image" content="https://img.supervj.top//img/image-20210809102920800.png">
 <meta property="og:image" content="https://img.supervj.top//img/image-20210108110520787.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210809100140206.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210809100206177.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210809100220457.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210809100206177.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210809102049841.png">
+<meta property="og:image" content="https://img.supervj.top//img/image-20210108110520787.png">
 <meta property="article:published_time" content="2021-08-08T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-08-09T02:22:27.565Z">
+<meta property="article:modified_time" content="2021-08-09T02:29:45.857Z">
 <meta property="article:author" content="VJ东">
 <meta property="article:tag" content="Slate">
 <meta property="article:tag" content="编辑器扩展">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img.supervj.top//img/image-20210106105801136.png">
+<meta name="twitter:image" content="https://img.supervj.top//img/image-20210809102920800.png">
 
 
-<link rel="canonical" href="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%E5%8F%8ASlate%E6%9D%82%E8%B0%88/">
+<link rel="canonical" href="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/">
 
 
 <script class="page-configurations">
@@ -62,7 +56,7 @@
     lang   : 'zh-CN'
   };
 </script>
-<title>编辑器扩展:大杂烩 | 翡翠梦境</title>
+<title>编辑器扩展：消息窗口 | 翡翠梦境</title>
   
 
 
@@ -200,7 +194,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <section class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%9E%E6%80%A7%E7%95%8C%E9%9D%A2"><span class="nav-number">2.</span> <span class="nav-text">自定义属性界面</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SObjectPropertyEntryBox"><span class="nav-number">2.1.</span> <span class="nav-text">SObjectPropertyEntryBox</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#SClassPropertyEntryBox"><span class="nav-number">2.2.</span> <span class="nav-text">SClassPropertyEntryBox</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#cpp%E8%BF%90%E8%A1%8CEditorUtitlityWidget"><span class="nav-number">3.</span> <span class="nav-text">cpp运行EditorUtitlityWidget</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3"><span class="nav-number">4.</span> <span class="nav-text">消息窗口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89%E8%8F%9C%E5%8D%95%E5%92%8C%E5%B7%A5%E5%85%B7%E6%A0%8F"><span class="nav-number">5.</span> <span class="nav-text">自定义菜单和工具栏</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%9E%E7%8E%B0%E6%96%B9%E5%BC%8F"><span class="nav-number">5.1.</span> <span class="nav-text">实现方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8F%9C%E5%8D%95%E6%A0%8F-MenuBar"><span class="nav-number">5.2.</span> <span class="nav-text">菜单栏 MenuBar</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%8F%9C%E5%8D%95-Menu"><span class="nav-number">5.3.</span> <span class="nav-text">菜单 Menu</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B7%A5%E5%85%B7%E6%A0%8F-ToolBar"><span class="nav-number">5.4.</span> <span class="nav-text">工具栏 ToolBar</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3"><span class="nav-number">2.</span> <span class="nav-text">消息窗口</span></a></li></ol></div>
         </section>
         <!--/noindex-->
 
@@ -216,7 +210,7 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">78</span>
+          <span class="site-state-item-count">81</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
@@ -280,7 +274,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%E5%8F%8ASlate%E6%9D%82%E8%B0%88/">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
@@ -293,7 +287,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          编辑器扩展:大杂烩
+          编辑器扩展：消息窗口
         </h1>
 
         <div class="post-meta-container">
@@ -305,7 +299,7 @@
       <span class="post-meta-item-text">发表于</span>
       
 
-      <time title="创建时间：2021-08-09 00:00:00 / 修改时间：10:22:27" itemprop="dateCreated datePublished" datetime="2021-08-09T00:00:00+08:00">2021-08-09</time>
+      <time title="创建时间：2021-08-09 00:00:00 / 修改时间：10:29:45" itemprop="dateCreated datePublished" datetime="2021-08-09T00:00:00+08:00">2021-08-09</time>
     </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
@@ -334,8 +328,8 @@
       <span class="post-meta-item-text">Changyan：</span>
     
     
-      <a title="changyan" href="/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%E5%8F%8ASlate%E6%9D%82%E8%B0%88/#SOHUCS" itemprop="discussionUrl">
-        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2021/08/09/编辑器扩展及Slate杂谈/" itemprop="commentCount"></span>
+      <a title="changyan" href="/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/#SOHUCS" itemprop="discussionUrl">
+        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2021/08/09/编辑器扩展：消息窗口/" itemprop="commentCount"></span>
       </a>
     
   </span>
@@ -348,14 +342,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>8.5k</span>
+      <span>2.2k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>8 分钟</span>
+      <span>2 分钟</span>
     </span>
 </div>
 
@@ -366,62 +360,13 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>编辑器扩展和<code>Slate</code>相关内容大杂烩, 不定期记录</p>
-<h2 id="自定义属性界面"><a href="#自定义属性界面" class="headerlink" title="自定义属性界面"></a>自定义属性界面</h2><h3 id="SObjectPropertyEntryBox"><a href="#SObjectPropertyEntryBox" class="headerlink" title="SObjectPropertyEntryBox"></a>SObjectPropertyEntryBox</h3><p>用于选择资源的界面控件</p>
-<p><img src="https://img.supervj.top//img/image-20210106105801136.png" alt="image-20210106105801136"></p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自定义很扩展消息窗口</p>
+<p><img src="https://img.supervj.top//img/image-20210809102920800.png" alt="image-20210809102920800"></p>
+<p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
 <a id="more"></a>
 
-<p>直接上代码</p>
-<ul>
-<li>.h</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"></span><br><span class="line">TSharedPtr&lt;FAssetThumbnailPool&gt; AssetThumbnailPool;</span><br><span class="line">UObject* SelectObject;</span><br><span class="line">TSharedPtr&lt;SObjectPropertyEntryBox&gt; EditWidgetBox;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>cpp</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">SOVR_Hud::Construct</span><span class="params">(<span class="keyword">const</span> FArguments&amp; InArgs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	AssetThumbnailPool = MakeShareable(<span class="keyword">new</span> FAssetThumbnailPool(<span class="number">24</span>));</span><br><span class="line">    ................................</span><br></pre></td></tr></table></figure>
 
 
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">SAssignNew(EditWidgetBox,SObjectPropertyEntryBox)</span><br><span class="line">		.AllowedClass(UWidgetBlueprint::StaticClass())</span><br><span class="line">		.OnObjectChanged(<span class="keyword">this</span>, &amp;SOVR_Hud::OnSetObject)</span><br><span class="line">		.ObjectPath(<span class="keyword">this</span>,&amp;SOVR_Hud::GetPathName)</span><br><span class="line">		.OnShouldFilterAsset(<span class="keyword">this</span>,&amp;SOVR_Hud::ShouldFilterAsset)</span><br><span class="line">		.ThumbnailPool(AssetThumbnailPool)</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">SOVR_Hud::OnSetObject</span><span class="params">(<span class="keyword">const</span> FAssetData&amp; AssetData)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	SelectObject = AssetData.GetAsset();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">FString <span class="title">SOVR_Hud::GetPathName</span><span class="params">()</span><span class="keyword">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> SelectObject ? SelectObject-&gt;GetPathName() : TEXT(<span class="string">&quot;&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>AllowedClass : Class类型, 这个是资源的类型</li>
-<li>OnObjectChanged : 选择改变以后的代理</li>
-<li>ObjectPath : 提供资源的路径名称</li>
-<li>OnShouldFilterAsset : 过滤选项, 非必须</li>
-<li>ThumbnailPool: Icon的对象池, 如果不设置就没有Icon</li>
-</ul>
-<blockquote>
-<p>注意:</p>
-<p><code>GetPathName()</code>必须要返回真实的<code>PathName</code>,否则会导致界面显示还是<code>None</code>,如果没有正确的资源那么需要返回空或者<code>None</code>,否则会导致启动插件一次性卡顿并报警告</p>
-</blockquote>
-<h3 id="SClassPropertyEntryBox"><a href="#SClassPropertyEntryBox" class="headerlink" title="SClassPropertyEntryBox"></a>SClassPropertyEntryBox</h3><p>类似的, 用于选择<code>Class</code>的界面控件</p>
-<p><img src="https://img.supervj.top//img/image-20210106110849937.png" alt="image-20210106110849937"></p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">SAssignNew(ClassBox, SClassPropertyEntryBox)</span><br><span class="line">			.MetaClass(AActor::StaticClass())</span><br><span class="line">		<span class="comment">//.RequiredInterface(UStaticMesh::StaticClass())</span></span><br><span class="line">		.IsBlueprintBaseOnly(<span class="literal">false</span>)</span><br><span class="line">		.ShowTreeView(<span class="literal">true</span>)</span><br><span class="line">		.SelectedClass(<span class="keyword">this</span>, &amp;SOVR_Hud::OnGetClass)</span><br><span class="line">		.OnSetClass(<span class="keyword">this</span>, &amp;SOVR_Hud::OnSetClass)</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">const</span> UClass* <span class="title">SOVR_Hud::OnGetClass</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> SelectedClass;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">SOVR_Hud::OnSetClass</span><span class="params">(<span class="keyword">const</span> UClass* SetClass)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	SelectedClass = SetClass;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-
-
-<h2 id="cpp运行EditorUtitlityWidget"><a href="#cpp运行EditorUtitlityWidget" class="headerlink" title="cpp运行EditorUtitlityWidget"></a>cpp运行EditorUtitlityWidget</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//SelectObject = 任意编辑器UMG资源</span></span><br><span class="line"></span><br><span class="line">UWidgetBlueprint* Blueprint = Cast&lt;UWidgetBlueprint&gt;(SelectObject);</span><br><span class="line">		<span class="keyword">if</span> (Blueprint &amp;&amp; Blueprint-&gt;GeneratedClass-&gt;IsChildOf(UEditorUtilityWidget::StaticClass())) &#123;</span><br><span class="line">			<span class="keyword">const</span> UEditorUtilityWidget* CDO = Blueprint-&gt;GeneratedClass-&gt;GetDefaultObject&lt;UEditorUtilityWidget&gt;();</span><br><span class="line">			<span class="keyword">if</span> (CDO-&gt;ShouldAutoRunDefaultAction()) &#123;</span><br><span class="line">				UEditorUtilityWidget* Instance = NewObject&lt;UEditorUtilityWidget&gt;(GetTransientPackage(), Blueprint-&gt;GeneratedClass);</span><br><span class="line">				Instance-&gt;ExecuteDefaultAction();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				FName RegistrationName = FName(*(Blueprint-&gt;GetPathName() + TEXT(<span class="string">&quot;_ActiveTab&quot;</span>)));</span><br><span class="line">				FText DisplayName = FText::FromString(Blueprint-&gt;GetName());</span><br><span class="line">				FLevelEditorModule&amp; LevelEditorModule = FModuleManager::GetModuleChecked&lt;FLevelEditorModule&gt;(TEXT(<span class="string">&quot;LevelEditor&quot;</span>));</span><br><span class="line">				TSharedPtr&lt;FTabManager&gt; LevelEditorTabManager = LevelEditorModule.GetLevelEditorTabManager();</span><br><span class="line">				TSharedRef&lt;SDockTab&gt; NewDockTab = LevelEditorTabManager-&gt;InvokeTab(RegistrationName);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这个方案有缺陷, 就是第一次还是需要在编辑器下右键运行一次才能用cpp来运行, 因为右键运行会调用到<code> UEditorUtilitySubsystem::SpawnAndRegisterTab()</code>, 在这个函数中会对<code>UMG</code>进行初始化, 而用上述方法是没法初始化的</p>
-<blockquote>
-<p>恶心的问题是, 此模块基本上都没有导出符号(即没法在自己的cpp中使用任何有关<code>UEditorUtilityWidget</code>的类),  没法自己初始化, 解决方法二选一</p>
-<ol>
-<li>手动右键先运行一次(不推荐)</li>
-<li>使用<code>AutoRunDefaultAction</code>, 然后在蓝图中自己运行自己的资源(这个资源还没法cast, 否则还能写个通用方法)</li>
-</ol>
-<p><img src="https://img.supervj.top//img/image-20210106162756815.png" alt="image-20210106162756815"></p>
-</blockquote>
 <h2 id="消息窗口"><a href="#消息窗口" class="headerlink" title="消息窗口"></a>消息窗口</h2><p>先看两个枚举</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> EAppMsgType</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Enumerates supported message dialog button types.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		Ok,</span><br><span class="line">		YesNo,</span><br><span class="line">		OkCancel,</span><br><span class="line">		YesNoCancel,</span><br><span class="line">		CancelRetryContinue,</span><br><span class="line">		YesNoYesAllNoAll,</span><br><span class="line">		YesNoYesAllNoAllCancel,</span><br><span class="line">		YesNoYesAll,</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
@@ -439,55 +384,6 @@
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">EMsgRetType <span class="title">UFlib_IO::OpenMessageWindow</span><span class="params">(EMsgType Type, FText Msg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	EAppMsgType::Type  tp;</span><br><span class="line">	<span class="keyword">switch</span> (Type)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::Ok:</span><br><span class="line">	tp = EAppMsgType::Ok; </span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNo:</span><br><span class="line">		tp = EAppMsgType::YesNo;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::OkCancel:</span><br><span class="line">		tp = EAppMsgType::OkCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoCancel:</span><br><span class="line">		tp = EAppMsgType::YesNoCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::CancelRetryContinue:</span><br><span class="line">		tp = EAppMsgType::CancelRetryContinue;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAllNoAll:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAllNoAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAllNoAllCancel:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAllNoAllCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAll:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	EAppReturnType::Type retType = FMessageDialog::Open(tp, Msg);</span><br><span class="line">	EMsgRetType returnType = EMsgRetType::Ok;</span><br><span class="line">	<span class="keyword">switch</span> (retType)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::No:</span><br><span class="line">		returnType = EMsgRetType::No;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Yes:</span><br><span class="line">		returnType = EMsgRetType::Yes;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::YesAll:</span><br><span class="line">		returnType = EMsgRetType::YesAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::NoAll:</span><br><span class="line">		returnType = EMsgRetType::NoAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Cancel:</span><br><span class="line">		returnType = EMsgRetType::Cancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Ok:</span><br><span class="line">		returnType = EMsgRetType::Ok;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Retry:</span><br><span class="line">		returnType = EMsgRetType::Retry;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Continue:</span><br><span class="line">		returnType = EMsgRetType::Continue;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> returnType;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
 <p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
-<h2 id="自定义菜单和工具栏"><a href="#自定义菜单和工具栏" class="headerlink" title="自定义菜单和工具栏"></a>自定义菜单和工具栏</h2><p>常见的自定义编辑器菜单类的内容有  菜单(Menu), 菜单栏(MenuBar), 工具栏(ToolBar)</p>
-<p>效果如下</p>
-<p><img src="https://img.supervj.top//img/image-20210809100140206.png" alt="image-20210809100140206"></p>
-<p><img src="https://img.supervj.top//img/image-20210809100206177.png" alt="image-20210809100206177"></p>
-<p><img src="https://img.supervj.top//img/image-20210809100220457.png" alt="image-20210809100220457"></p>
-<h3 id="实现方式"><a href="#实现方式" class="headerlink" title="实现方式"></a>实现方式</h3><p>这里主要分为两种方式扩展</p>
-<ul>
-<li>FExtender</li>
-<li>UToolMenu</li>
-</ul>
-<p>后者为较为新的方式,在老版本和多数博客资料里都没有这个方式</p>
-<p>FExtender可以实现3种类型的扩展, 而UToolMenu对于部分扩展比如新的菜单栏添加这种并不支持(4.26)</p>
-<h3 id="菜单栏-MenuBar"><a href="#菜单栏-MenuBar" class="headerlink" title="菜单栏 MenuBar"></a>菜单栏 MenuBar</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FLevelEditorModule&amp; LevelEditorModule = FModuleManager::LoadModuleChecked&lt;FLevelEditorModule&gt;(<span class="string">&quot;LevelEditor&quot;</span>);</span><br></pre></td></tr></table></figure>
-
-
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//顶部菜单</span></span><br><span class="line">TSharedPtr&lt;FExtender&gt; MenuBarExtender = MakeShareable(<span class="keyword">new</span> FExtender());</span><br><span class="line">MenuBarExtender-&gt;AddMenuBarExtension(<span class="string">&quot;Help&quot;</span>, </span><br><span class="line">                                     EExtensionHook::After, PluginCommands, FMenuBarExtensionDelegate::CreateRaw(<span class="keyword">this</span>, &amp;FAdvancedFrameworkEditorModule::AddMenuBarExtension));</span><br><span class="line">LevelEditorModule.GetMenuExtensibilityManager()-&gt;AddExtender(MenuBarExtender);</span><br></pre></td></tr></table></figure>
-
-
-
-<p>上述代码的意思即为在<code>Help</code>栏后面添加一个新的菜单栏分类, 然后我们通过函数<code>AddMenuBarExtension</code>来实现</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FAdvancedFrameworkEditorModule::AddMenuBarExtension</span><span class="params">(FMenuBarBuilder&amp; Builder)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Builder.AddPullDownMenu(</span><br><span class="line">        LOCTEXT(<span class="string">&quot;PullMenu&quot;</span>, <span class="string">&quot;AdvancedFramework&quot;</span>),</span><br><span class="line">        LOCTEXT(<span class="string">&quot;PullMenu Tips&quot;</span>, <span class="string">&quot;AdvancedFramework Menu&quot;</span>),</span><br><span class="line">        FNewMenuDelegate::CreateRaw(<span class="keyword">this</span>, &amp;FAdvancedFrameworkEditorModule::MenuBarPullDown)</span><br><span class="line"></span><br><span class="line">    );</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FAdvancedFrameworkEditorModule::MenuBarPullDown</span><span class="params">( FMenuBuilder&amp; Builder)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	Builder.AddMenuEntry(FAFE_Commands::Get().LoginMap);</span><br><span class="line">	Builder.AddMenuEntry(FAFE_Commands::Get().TransitionMap);</span><br><span class="line">	Builder.AddMenuEntry(FAFE_Commands::Get().MapInfoSetup);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p><img src="https://img.supervj.top//img/image-20210809100206177.png" alt="image-20210809100206177"></p>
-<h3 id="菜单-Menu"><a href="#菜单-Menu" class="headerlink" title="菜单 Menu"></a>菜单 Menu</h3><p>菜单就是上述菜单栏内添加的一个MenuEntry, 我们注意到我们用的方式是<code>Builder.AddMenuEntry(FAFE_Commands::Get().LoginMap);</code></p>
-<p>这里就要稍微提一下<code>Commands</code>类</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">UI_COMMAND(LoginMap, <span class="string">&quot;Open Login Map&quot;</span>, <span class="string">&quot;Open Login Map&quot;</span>, EUserInterfaceActionType::Button, FInputGesture());</span><br></pre></td></tr></table></figure>
-
-<p>在该类里需要声明并用宏定义这个<code>FUICommandInfo</code>对象,  还要注意的是, 如果使用了自定义图标, 那么在<code>Style</code>类里的名称要与这个<code>FUICommandInfo</code>对象的名称要匹配, 比如</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Style-&gt;Set(<span class="string">&quot;AFE.LoginMap&quot;</span>, <span class="keyword">new</span> IMAGE_BRUSH(TEXT(<span class="string">&quot;Map_40x&quot;</span>), Icon40x40));</span><br><span class="line">Style-&gt;Set(<span class="string">&quot;AFE.LoginMap.Small&quot;</span>, <span class="keyword">new</span> IMAGE_BRUSH(TEXT(<span class="string">&quot;Map_16x&quot;</span>), Icon16x16));</span><br></pre></td></tr></table></figure>
-
-
-
-<p>我们在<code>Windows</code>菜单栏里添加我们的几个测试按钮</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">UToolMenu* Menu =  UToolMenus::Get()-&gt;ExtendMenu(<span class="string">&quot;LevelEditor.MainMenu.Window&quot;</span>);</span><br><span class="line">&#123;</span><br><span class="line">    FToolMenuSection&amp; Section = Menu-&gt;FindOrAddSection(<span class="string">&quot;AdvancedFramework&quot;</span>);</span><br><span class="line">    &#123;</span><br><span class="line">        Section.AddMenuEntryWithCommandList(FAFE_Commands::Get().LoginMap, PluginCommands);</span><br><span class="line">        Section.AddMenuEntryWithCommandList(FAFE_Commands::Get().TransitionMap, PluginCommands);</span><br><span class="line">        Section.AddMenuEntryWithCommandList(FAFE_Commands::Get().MapInfoSetup, PluginCommands);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里要<code>UToolMenu</code>比较方便, 当然也可以用<code>FExtender</code>来添加, 方法类似于菜单栏的使用</p>
-<h3 id="工具栏-ToolBar"><a href="#工具栏-ToolBar" class="headerlink" title="工具栏 ToolBar"></a>工具栏 ToolBar</h3><p>默认创建一个独立窗口插件就会自动生成一个工具栏的插件按钮, 当然我们也可以参考他的实现方式, 用<code>UToolMenu</code>来添加一个<code>Button</code>的方式.</p>
-<p>这里我们用传统的<code>FExtender</code>来添加一个下来菜单</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//工具栏</span></span><br><span class="line">TSharedPtr&lt;FExtender&gt; ToolBarExtender = MakeShareable(<span class="keyword">new</span> FExtender());</span><br><span class="line">ToolBarExtender-&gt;AddToolBarExtension(<span class="string">&quot;File&quot;</span>,</span><br><span class="line">                                     EExtensionHook::Before, PluginCommands, FToolBarExtensionDelegate::CreateRaw(<span class="keyword">this</span>, &amp;FAdvancedFrameworkEditorModule::AddToolBarExtension));</span><br><span class="line"></span><br><span class="line">LevelEditorModule.GetToolBarExtensibilityManager()-&gt;AddExtender(ToolBarExtender);</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FAdvancedFrameworkEditorModule::AddToolBarExtension</span><span class="params">(FToolBarBuilder&amp; Builder)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> ContextMenu = []()</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> SNew(SAFE_Hud);</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    Builder.AddSeparator(<span class="string">&quot;AdvancedFramework&quot;</span>);</span><br><span class="line">    Builder.AddComboButton(FUIAction(), FOnGetContent::CreateLambda(ContextMenu),</span><br><span class="line">                           TAttribute&lt;FText&gt;(FText::FromString(<span class="string">&quot;AdvancedFramework&quot;</span>)),</span><br><span class="line">                           TAttribute&lt;FText&gt;(FText::FromString(<span class="string">&quot;AdvancedFramework Menu&quot;</span>)),</span><br><span class="line">                           FSlateIcon(FAFE_Style::GetStyleSetName(), <span class="string">&quot;AFE.OpenPluginWindow&quot;</span>));</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这里稍微复杂一点,  通过添加一个<code>ComboButton</code>, 同时返回一个Slate对象来实现</p>
-<p><img src="https://img.supervj.top//img/image-20210809102049841.png" alt="image-20210809102049841"></p>
 
     </div>
 
@@ -523,7 +419,7 @@
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%E5%8F%8ASlate%E6%9D%82%E8%B0%88/" title="编辑器扩展:大杂烩">http://supervj.top/2021/08/09/编辑器扩展及Slate杂谈/</a>
+      <a href="http://supervj.top/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/" title="编辑器扩展：消息窗口">http://supervj.top/2021/08/09/编辑器扩展：消息窗口/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -557,11 +453,14 @@
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2021/08/03/%E8%87%AA%E5%AE%9A%E4%B9%89%E5%8A%A8%E7%94%BB%E8%8A%82%E7%82%B9AnimGraphNode/" rel="prev" title="自定义动画节点AnimGraphNode">
-                  <i class="fa fa-chevron-left"></i> 自定义动画节点AnimGraphNode
+                <a href="/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E8%87%AA%E5%AE%9A%E4%B9%89%E5%B1%9E%E6%80%A7%E7%95%8C%E9%9D%A2/" rel="prev" title="编辑器扩展：自定义属性界面">
+                  <i class="fa fa-chevron-left"></i> 编辑器扩展：自定义属性界面
                 </a>
             </div>
             <div class="post-nav-item">
+                <a href="/2021/08/09/%E5%85%B3%E4%BA%8EEditorUtilityWiget%E7%94%A8cpp%E6%9D%A5%E8%BF%90%E8%A1%8C/" rel="next" title="关于EditorUtilityWiget用cpp来运行">
+                  关于EditorUtilityWiget用cpp来运行 <i class="fa fa-chevron-right"></i>
+                </a>
             </div>
           </div>
     </footer>
