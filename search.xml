@@ -9771,7 +9771,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
   </entry>
   <entry>
     <title>关于EditorUtilityWiget用cpp来运行</title>
-    <url>/2021/08/09/%E5%85%B3%E4%BA%8EEditorUtilityWiget%E7%94%A8cpp%E6%9D%A5%E8%BF%90%E8%A1%8C/</url>
+    <url>/2021/01/09/%E5%85%B3%E4%BA%8EEditorUtilityWiget%E7%94%A8cpp%E6%9D%A5%E8%BF%90%E8%A1%8C/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>奇葩需求,  EditorUtilityWiget用cpp来运行</p>
 <a id="more"></a>
 
@@ -9800,7 +9800,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
   <entry>
     <title>编辑器扩展：消息窗口</title>
     <url>/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自定义很扩展消息窗口</p>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自定义和扩展消息窗口</p>
 <p><img src="https://img.supervj.top//img/image-20210809102920800.png" alt="image-20210809102920800"></p>
 <p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
 <a id="more"></a>
@@ -9957,5 +9957,80 @@ piecewise_linear_distribution分段线性分布</code></pre>
         <tag>Slate</tag>
         <tag>编辑器扩展</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>UE4模块启动顺序</title>
+    <url>/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文大致梳理一下UE4编辑器启动后各个模块的加载顺序， 重点看一下<code>ELoadingPhase</code>枚举对应的类型的加载时机</p>
+<a id="more"></a>
+
+
+
+
+
+<h2 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h2><p>任何可执行程序都会有一个执行入口，在 UE 中，每一个 Target 都会编译出一个可执行程序。引擎启动是从 <code>Launch</code> 模块开始的，<code>main</code> 函数也是定义在其中的</p>
+<p>简化代码表示</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">int32 <span class="title">GuardedMain</span><span class="params">( <span class="keyword">const</span> TCHAR* CmdLine )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    EnginePreInit( CmdLine );</span><br><span class="line">    <span class="comment">//...........</span></span><br><span class="line">    <span class="keyword">if</span> (GIsEditor)</span><br><span class="line">    &#123;</span><br><span class="line">        EditorInit(GEngineLoop);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        EngineInit();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...........</span></span><br><span class="line">    <span class="keyword">while</span>( !IsEngineExitRequested() )</span><br><span class="line">	&#123;</span><br><span class="line">		EngineTick();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>从代码的字面意思就可以理解为启动步骤大概就是 预初始化-&gt;初始化, 然后是Tick循环</p>
+<p>这里不得不说到一个引擎类 <code>FEngineLoop </code></p>
+<p><code>FEngineLoop </code>管理了程序的初始化与主循环</p>
+<p>因为整个UE是模块化的架构，引擎的实现就是靠各个模块组合驱动的, 那么就拿模块的启动来看一下引擎的启动顺序</p>
+<h2 id="模块启动"><a href="#模块启动" class="headerlink" title="模块启动"></a>模块启动</h2><p>先看一下模块加载的类型</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> ELoadingPhase</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">        EarliestPossible,</span><br><span class="line">        PostConfigInit,</span><br><span class="line">        PostSplashScreen,</span><br><span class="line">        PreEarlyLoadingScreen,</span><br><span class="line">        PreLoadingScreen,</span><br><span class="line">        PreDefault,</span><br><span class="line">        Default,</span><br><span class="line">        PostDefault,</span><br><span class="line">        PostEngineInit,</span><br><span class="line">        None,</span><br><span class="line">        Max,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先看一下<code>PreDefault</code>模式的插件到<code>StartupModule</code>的调用栈</p>
+<img src="https://img.supervj.top//img/image-20210809164503801.png" alt="image-20210809164503801"  />
+
+
+
+<p>先看下面代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">FEngineLoop::LoadStartupModules</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">FScopedSlowTask <span class="title">SlowTask</span><span class="params">(<span class="number">3</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    SlowTask.EnterProgressFrame(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// Load any modules that want to be loaded before default modules are loaded up.</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PreDefault) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SlowTask.EnterProgressFrame(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// Load modules that are configured to load in the default phase</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::Default) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::Default))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SlowTask.EnterProgressFrame(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// Load any modules that want to be loaded after default modules are loaded up.</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PostDefault) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PostDefault))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>上面是几种类型加载模式的模块启动都在编辑器引擎启动之前, 意味着<code>UEditorEngine::InitEditor()</code>还未执行.</p>
+<p>那么其他类型比如常见的<code>PostEngineInit</code>是啥时候启动的呢?</p>
+<p>在<code>FEngineLoop::Init()</code>中,  先执行了<code>GEditor</code>的初始化, 然后再执行<code>PostEngineInit</code>类型的模块的加载</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    SCOPED_BOOT_TIMING(<span class="string">&quot;GEngine-&gt;Init&quot;</span>);</span><br><span class="line">    GEngine-&gt;Init(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//............</span></span><br><span class="line">&#123;</span><br><span class="line">    SCOPED_BOOT_TIMING(<span class="string">&quot;IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PostEngineInit)&quot;</span>);</span><br><span class="line">    <span class="comment">// Load all the post-engine init modules</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PostEngineInit) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PostEngineInit))</span><br><span class="line">    &#123;</span><br><span class="line">        RequestEngineExit(TEXT(<span class="string">&quot;One or more modules failed PostEngineInit&quot;</span>));</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>简单梳理各类模块加载的顺序,以及部分常见的功能的初始化顺序</p>
+</blockquote>
+<ul>
+<li>多种平台调用 <code>GuardedMain() //Launch.cpp</code></li>
+<li><code>GuardedMain</code> 依次调用<code>EnginePreInit</code>, <code>EditorInit</code>或<code>EngineInit</code>, 然后循环<code>EngineTick</code></li>
+<li><code>Launch.cpp</code>内有全局变量 <code>FEngineLoop GEngineLoop;</code>, 上述方法通过<code>GEngineLoop</code>执行</li>
+<li>GEngineLoop<ul>
+<li><code>FEngineLoop::PreInit </code>会执行<code>PreInitPreStartupScreen</code>, <code>PreInitPostStartupScreen</code><ul>
+<li>前者会执行如命令行, 本地化等等大量初始化和逻辑, 先通过<code>FEngineLoop::AppInit</code>加载*<code>EarliestPossible</code><em>和</em><code>PostConfigInit</code>*类型的模块, 随后加载**<code>PostSplashScreen</code><strong>类型的模块 (**0%-18%</strong>), 退出函数时加载至<strong>39%</strong></li>
+<li>后者加载*<code>PreEarlyLoadingScreen</code><em>类型的模块(<strong>39%</strong>); 随后播放开场动画等, <em>然后加载<code>AssetRegistry</code>模块</em>,  然后通过<code>LoadStartupCoreModules</code>(<strong>45% - 55%</strong>)方法加载核心模块, 随后是</em><code>PreLoadingScreen</code><em>类型的模块(<strong>55% - 59%</strong>),  接着开始渲染线程<code>StartRenderingThread</code> (<strong>59% - 75%</strong>), 然后通过<code>LoadStartupModules</code>(<strong>75%</strong>)方法加载</em><code>PreDefault</code>, <code>Default</code>, <code>PostDefault</code>*类型的模块, </li>
+<li></li>
+<li>随后创建几个单例并调用<code>Init</code>(<strong>%79 - 86%</strong>)<ul>
+<li>创建<code>GEditor</code>并调用<code>GEditorEngine::InitEditor</code> , 该方法会加载编辑器资源</li>
+<li>创建<code>GEngine</code>并调用<code>GEngine::Init</code>, 该方法也有大量初始化比如创建<code>FWorldContext</code>, <code>Config</code>的加载, 音效设备的初始化, 加载一些系统模块(<code>MovieScene</code>,<code>LevelSequence</code>等等)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>然后通过执行 <code>FEngineLoop::Init</code>加载*<code>PostEngineInit</code>*类型的模块(<strong>86% - 90%</strong>)</li>
+</ul>
+</li>
+</ul>
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><blockquote>
+<p>加载核心模块在 45%进度, <code>EarliestPossible</code>, <code>PostConfigInit</code> , <code>PostSplashScreen</code>和<code>PreEarlyLoadingScreen</code>会在此之前</p>
+<p>核心模块有<code>Core</code>, <code>Networking</code>, <code>UnrealEd</code>, <code>Slate</code>等等</p>
+<p>编辑器资源初始化在75%之后, 也就是在<code>PreLoadingScreen</code>, <code>PreDefault</code>, <code>Default</code>, <code>PostDefault</code>之后, 所以如果需要对资源进行操作需要使用最后加载的<code>PostEngineInit</code></p>
+</blockquote>
+<p>另外, 引擎提供了几个全局代理,  可以来监听比如编辑器初始化完毕等事件 , 比如</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FCoreDelegates::OnPostEngineInit.AddRaw(<span class="keyword">this</span>, &amp;FAdvancedFrameworkEditorModule::RegisterPlaceActors);</span><br></pre></td></tr></table></figure>
+
+<p>详情可以参考文件<code>CoreDelegates.h</code></p>
+]]></content>
+      <categories>
+        <category>Engine</category>
+      </categories>
   </entry>
 </search>

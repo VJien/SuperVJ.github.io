@@ -25,29 +25,22 @@
     var NexT = window.NexT || {};
     var CONFIG = {"hostname":"supervj.top","root":"/","images":"/images","scheme":"Pisces","version":"8.1.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12},"copycode":true,"bookmark":{"enable":true,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"motion":{"enable":true,"async":true,"transition":{"post_block":"fadeIn","post_header":"fadeInDown","post_body":"fadeInDown","coll_header":"fadeInLeft","sidebar":"fadeInUp"}},"prism":false,"i18n":{"placeholder":"搜索...","empty":"没有找到任何搜索结果：${query}","hits_time":"找到 ${hits} 个搜索结果（用时 ${time} 毫秒）","hits":"找到 ${hits} 个搜索结果"},"path":"/search.xml","localsearch":{"enable":true,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false}};
   </script>
-<meta name="description" content="前言使用c++时经常要用到随机数, 本文对c++的随机数api做个简单的总结">
+<meta name="description" content="前言本文大致梳理一下UE4编辑器启动后各个模块的加载顺序， 重点看一下ELoadingPhase枚举对应的类型的加载时机">
 <meta property="og:type" content="article">
-<meta property="og:title" content="随机数">
-<meta property="og:url" content="http://supervj.top/2021/07/21/c++%E9%9A%8F%E6%9C%BA%E6%95%B0/index.html">
+<meta property="og:title" content="UE4模块启动顺序">
+<meta property="og:url" content="http://supervj.top/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/index.html">
 <meta property="og:site_name" content="翡翠梦境">
-<meta property="og:description" content="前言使用c++时经常要用到随机数, 本文对c++的随机数api做个简单的总结">
+<meta property="og:description" content="前言本文大致梳理一下UE4编辑器启动后各个模块的加载顺序， 重点看一下ELoadingPhase枚举对应的类型的加载时机">
 <meta property="og:locale" content="zh_CN">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721144150064.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721144237834.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721144316345.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721144503338.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721144827258.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721151336229.png">
-<meta property="og:image" content="https://img.supervj.top//img/image-20210721151404832.png">
-<meta property="article:published_time" content="2021-07-20T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-07-21T07:15:05.483Z">
+<meta property="og:image" content="https://img.supervj.top//img/image-20210809164503801.png">
+<meta property="article:published_time" content="2021-08-11T16:00:00.000Z">
+<meta property="article:modified_time" content="2021-08-13T02:20:19.023Z">
 <meta property="article:author" content="VJ东">
-<meta property="article:tag" content="随机数">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="https://img.supervj.top//img/image-20210721144150064.png">
+<meta name="twitter:image" content="https://img.supervj.top//img/image-20210809164503801.png">
 
 
-<link rel="canonical" href="http://supervj.top/2021/07/21/c++%E9%9A%8F%E6%9C%BA%E6%95%B0/">
+<link rel="canonical" href="http://supervj.top/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/">
 
 
 <script class="page-configurations">
@@ -59,7 +52,7 @@
     lang   : 'zh-CN'
   };
 </script>
-<title>随机数 | 翡翠梦境</title>
+<title>UE4模块启动顺序 | 翡翠梦境</title>
   
 
 
@@ -197,7 +190,7 @@
       <div class="sidebar-panel-container">
         <!--noindex-->
         <section class="post-toc-wrap sidebar-panel">
-            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BC%A0%E7%BB%9F%E6%96%B9%E6%B3%95"><span class="nav-number">2.</span> <span class="nav-text">传统方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#c-11%E9%9A%8F%E6%9C%BA%E6%95%B0%E7%AE%97%E6%B3%95"><span class="nav-number">3.</span> <span class="nav-text">c++11随机数算法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E7%AE%97%E6%B3%95"><span class="nav-number">4.</span> <span class="nav-text">其他算法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%B3%8A%E6%9D%BE%E5%88%86%E5%B8%83"><span class="nav-number">4.1.</span> <span class="nav-text">泊松分布</span></a></li></ol></li></ol></div>
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%85%A5%E5%8F%A3"><span class="nav-number">2.</span> <span class="nav-text">入口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E5%90%AF%E5%8A%A8"><span class="nav-number">3.</span> <span class="nav-text">模块启动</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%80%BB%E7%BB%93"><span class="nav-number">4.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%A1%A5%E5%85%85"><span class="nav-number">5.</span> <span class="nav-text">补充</span></a></li></ol></div>
         </section>
         <!--/noindex-->
 
@@ -277,7 +270,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2021/07/21/c++%E9%9A%8F%E6%9C%BA%E6%95%B0/">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
@@ -290,7 +283,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          随机数
+          UE4模块启动顺序
         </h1>
 
         <div class="post-meta-container">
@@ -300,17 +293,23 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-07-21 00:00:00 / 修改时间：15:15:05" itemprop="dateCreated datePublished" datetime="2021-07-21T00:00:00+08:00">2021-07-21</time>
+      <time title="创建时间：2021-08-12 00:00:00" itemprop="dateCreated datePublished" datetime="2021-08-12T00:00:00+08:00">2021-08-12</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-08-13 10:20:19" itemprop="dateModified" datetime="2021-08-13T10:20:19+08:00">2021-08-13</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
       </span>
       <span class="post-meta-item-text">分类于</span>
         <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-          <a href="/categories/c/" itemprop="url" rel="index"><span itemprop="name">c++</span></a>
+          <a href="/categories/Engine/" itemprop="url" rel="index"><span itemprop="name">Engine</span></a>
         </span>
     </span>
 
@@ -331,8 +330,8 @@
       <span class="post-meta-item-text">Changyan：</span>
     
     
-      <a title="changyan" href="/2021/07/21/c++%E9%9A%8F%E6%9C%BA%E6%95%B0/#SOHUCS" itemprop="discussionUrl">
-        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2021/07/21/c++随机数/" itemprop="commentCount"></span>
+      <a title="changyan" href="/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/#SOHUCS" itemprop="discussionUrl">
+        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2021/08/12/引擎启动/" itemprop="commentCount"></span>
       </a>
     
   </span>
@@ -345,14 +344,14 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>2.5k</span>
+      <span>3.8k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
         <i class="far fa-clock"></i>
       </span>
       <span class="post-meta-item-text">阅读时长 &asymp;</span>
-      <span>2 分钟</span>
+      <span>3 分钟</span>
     </span>
 </div>
 
@@ -363,80 +362,73 @@
     
     
     <div class="post-body" itemprop="articleBody">
-        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>使用c++时经常要用到随机数, 本文对c++的随机数api做个简单的总结</p>
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文大致梳理一下UE4编辑器启动后各个模块的加载顺序， 重点看一下<code>ELoadingPhase</code>枚举对应的类型的加载时机</p>
 <a id="more"></a>
 
 
 
-<h2 id="传统方法"><a href="#传统方法" class="headerlink" title="传统方法"></a>传统方法</h2><p>c++11之前一般会用<code>srand()</code>配合<code>rand()</code>来实现随机数的使用</p>
-<p>比如</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">&#123;</span><br><span class="line">	<span class="built_in">cout</span> &lt;&lt; rand() % <span class="number">10</span> &lt;&lt; <span class="string">&quot; &quot;</span>;<span class="comment">//返回0-9的随机数</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://img.supervj.top//img/image-20210721144150064.png" alt="image-20210721144150064"></p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">&#123;</span><br><span class="line">    srand(<span class="number">1</span>);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; rand() % <span class="number">10</span> &lt;&lt; <span class="string">&quot; &quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://img.supervj.top//img/image-20210721144237834.png" alt="image-20210721144237834"></p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">&#123;</span><br><span class="line">    srand(i%<span class="number">2</span>);</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; rand() % <span class="number">10</span> &lt;&lt; <span class="string">&quot; &quot;</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h2 id="入口"><a href="#入口" class="headerlink" title="入口"></a>入口</h2><p>任何可执行程序都会有一个执行入口，在 UE 中，每一个 Target 都会编译出一个可执行程序。引擎启动是从 <code>Launch</code> 模块开始的，<code>main</code> 函数也是定义在其中的</p>
+<p>简化代码表示</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">int32 <span class="title">GuardedMain</span><span class="params">( <span class="keyword">const</span> TCHAR* CmdLine )</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    EnginePreInit( CmdLine );</span><br><span class="line">    <span class="comment">//...........</span></span><br><span class="line">    <span class="keyword">if</span> (GIsEditor)</span><br><span class="line">    &#123;</span><br><span class="line">        EditorInit(GEngineLoop);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        EngineInit();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//...........</span></span><br><span class="line">    <span class="keyword">while</span>( !IsEngineExitRequested() )</span><br><span class="line">	&#123;</span><br><span class="line">		EngineTick();</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://img.supervj.top//img/image-20210721144316345.png" alt="image-20210721144316345"></p>
-<h2 id="c-11随机数算法"><a href="#c-11随机数算法" class="headerlink" title="c++11随机数算法"></a>c++11随机数算法</h2><p>c++11提供了3个新的随机算法</p>
-<ul>
-<li>linear_congruential_engine线性同余法</li>
-<li>mersenne_twister_engine梅森旋转法</li>
-<li>substract_with_carry_engine滞后Fibonacci</li>
-</ul>
-<p>借用网络图用一下</p>
-<p><img src="https://img.supervj.top//img/image-20210721144503338.png" alt="image-20210721144503338"></p>
-<p>如果我们要使用这三个模板类的话，就必须自己实例化之。但这些实例化参数都是这些算法里面使用到的参数，如果不懂算法的原理的话，真的不知道需要用什么参数才能得到比较好的随机序列。所以我们这些卑微的码农是用不了这些模板类的。C++11标准也想到了这点，所以就帮我们预定义了一些随机数类，这些随机数类都是用比较好的参数实例化上面那三个模板类。注意：在C++11里面，把这些随机数生成器叫做引擎(engines)。</p>
-<p>直接开撸</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::default_random_engine  random;	</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; random() &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>从代码的字面意思就可以理解为启动步骤大概就是 预初始化-&gt;初始化, 然后是Tick循环</p>
+<p>这里不得不说到一个引擎类 <code>FEngineLoop </code></p>
+<p><code>FEngineLoop </code>管理了程序的初始化与主循环</p>
+<p>因为整个UE是模块化的架构，引擎的实现就是靠各个模块组合驱动的, 那么就拿模块的启动来看一下引擎的启动顺序</p>
+<h2 id="模块启动"><a href="#模块启动" class="headerlink" title="模块启动"></a>模块启动</h2><p>先看一下模块加载的类型</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">namespace</span> ELoadingPhase</span><br><span class="line">&#123;</span><br><span class="line">    <span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">        EarliestPossible,</span><br><span class="line">        PostConfigInit,</span><br><span class="line">        PostSplashScreen,</span><br><span class="line">        PreEarlyLoadingScreen,</span><br><span class="line">        PreLoadingScreen,</span><br><span class="line">        PreDefault,</span><br><span class="line">        Default,</span><br><span class="line">        PostDefault,</span><br><span class="line">        PostEngineInit,</span><br><span class="line">        None,</span><br><span class="line">        Max,</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p>结果就不显示了, 一堆随机数</p>
-<p>同样的, 也可以设置随机种子(seed),方法是往构造函数传入参数或者使用 <code>random.seed()</code>来设置</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="built_in">std</span>::default_random_engine  <span class="title">random</span><span class="params">(<span class="number">1</span>)</span></span>;</span><br><span class="line"><span class="comment">//等价于 random.seed(1);</span></span><br></pre></td></tr></table></figure>
+<p>先看一下<code>PreDefault</code>模式的插件到<code>StartupModule</code>的调用栈</p>
+<img src="https://img.supervj.top//img/image-20210809164503801.png" alt="image-20210809164503801"  />
 
-<hr>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::default_random_engine  random;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::uniform_int_distribution&lt;<span class="keyword">int</span>&gt; <span class="title">dis1</span><span class="params">(<span class="number">0</span>, <span class="number">100</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::uniform_real_distribution&lt;<span class="keyword">double</span>&gt; <span class="title">dis2</span><span class="params">(<span class="number">0.0</span>, <span class="number">1.0</span>)</span></span>;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10</span>;i++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; dis1(random) &lt;&lt;<span class="built_in">endl</span>;</span><br><span class="line">    <span class="built_in">cout</span> &lt;&lt; dis2(random) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://img.supervj.top//img/image-20210721144827258.png" alt="image-20210721144827258"></p>
-<p>用上述两个模板类来生成的均是<strong>均匀分布的随机数</strong>, 基本已经能满足一般的项目需求了</p>
-<blockquote>
-<p>需要注意的是</p>
-<p>uniform_int_distribution的随机数的范围是 <code>[ ]</code></p>
-<p>uniform_real_distribution却是半开范围 <code> [ )</code></p>
-<p>如果需要浮点数随机范围是<code>[]</code>,那么按照如下使用</p>
-<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="built_in">std</span>::uniform_real_distribution&lt;<span class="keyword">double</span>&gt; <span class="title">dis2</span><span class="params">(<span class="number">0</span>, <span class="built_in">std</span>::nextafter(<span class="number">1</span>,DBL_MAX))</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>先看下面代码</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">FEngineLoop::LoadStartupModules</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="function">FScopedSlowTask <span class="title">SlowTask</span><span class="params">(<span class="number">3</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    SlowTask.EnterProgressFrame(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// Load any modules that want to be loaded before default modules are loaded up.</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PreDefault) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PreDefault))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SlowTask.EnterProgressFrame(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// Load modules that are configured to load in the default phase</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::Default) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::Default))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    SlowTask.EnterProgressFrame(<span class="number">1</span>);</span><br><span class="line">    <span class="comment">// Load any modules that want to be loaded after default modules are loaded up.</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PostDefault) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PostDefault))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>上面是几种类型加载模式的模块启动都在编辑器引擎启动之前, 意味着<code>UEditorEngine::InitEditor()</code>还未执行.</p>
+<p>那么其他类型比如常见的<code>PostEngineInit</code>是啥时候启动的呢?</p>
+<p>在<code>FEngineLoop::Init()</code>中,  先执行了<code>GEditor</code>的初始化, 然后再执行<code>PostEngineInit</code>类型的模块的加载</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    SCOPED_BOOT_TIMING(<span class="string">&quot;GEngine-&gt;Init&quot;</span>);</span><br><span class="line">    GEngine-&gt;Init(<span class="keyword">this</span>);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//............</span></span><br><span class="line">&#123;</span><br><span class="line">    SCOPED_BOOT_TIMING(<span class="string">&quot;IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PostEngineInit)&quot;</span>);</span><br><span class="line">    <span class="comment">// Load all the post-engine init modules</span></span><br><span class="line">    <span class="keyword">if</span> (!IProjectManager::Get().LoadModulesForProject(ELoadingPhase::PostEngineInit) || !IPluginManager::Get().LoadModulesForEnabledPlugins(ELoadingPhase::PostEngineInit))</span><br><span class="line">    &#123;</span><br><span class="line">        RequestEngineExit(TEXT(<span class="string">&quot;One or more modules failed PostEngineInit&quot;</span>));</span><br><span class="line">        <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><blockquote>
+<p>简单梳理各类模块加载的顺序,以及部分常见的功能的初始化顺序</p>
 </blockquote>
-<h2 id="其他算法"><a href="#其他算法" class="headerlink" title="其他算法"></a>其他算法</h2><p>C++11提供的概率分布类型有下面这些：</p>
-<p>均匀分布：</p>
-<pre><code>uniform_int_distribution          整数均匀分布
-uniform_real_distribution        浮点数均匀分布</code></pre>
-<p>伯努利类型分布：（仅有yes/no两种结果，概率一个p，一个1-p）</p>
-<pre><code>bernoulli_distribution    伯努利分布
-binomial_distribution     二项分布
-geometry_distribution    几何分布
-negative_biomial_distribution  负二项分布</code></pre>
-<p>Rate-based distributions: </p>
-<pre><code>poisson_distribution 泊松分布
-exponential_distribution指数分布
-gamma_distribution 伽马分布
-weibull_distribution 威布尔分布
-extreme_value_distribution 极值分布</code></pre>
-<p>正态分布相关：</p>
-<pre><code>normal_distribution        正态分布
-chi_squared_distribution卡方分布
-cauchy_distribution       柯西分布
-fisher_f_distribution      费歇尔F分布
-student_t_distribution t分布</code></pre>
-<p>分段分布相关：</p>
-<pre><code>discrete_distribution离散分布
-piecewise_constant_distribution分段常数分布
-piecewise_linear_distribution分段线性分布</code></pre>
-<h3 id="泊松分布"><a href="#泊松分布" class="headerlink" title="泊松分布"></a>泊松分布</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::default_random_engine  random;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::uniform_int_distribution&lt;<span class="keyword">int</span>&gt; <span class="title">dis1</span><span class="params">(<span class="number">0</span>, <span class="number">100</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::uniform_real_distribution&lt;<span class="keyword">double</span>&gt; <span class="title">dis2</span><span class="params">(<span class="number">0.0</span>, <span class="number">1.0</span>)</span></span>;</span><br><span class="line"><span class="function"><span class="built_in">std</span>::poisson_distribution&lt;<span class="keyword">int</span>&gt; <span class="title">dis3</span><span class="params">(<span class="number">2.5</span>)</span></span>;</span><br><span class="line"><span class="keyword">int</span> p[<span class="number">10</span>] = &#123;&#125;;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i=<span class="number">0</span>; i&lt;<span class="number">10000</span>;i++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">int</span> n = dis3(random);	</span><br><span class="line">    <span class="keyword">if</span> (n &lt; <span class="number">10</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        p[n]++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i =<span class="number">0</span>; i&lt; <span class="number">10</span>; i++)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">cout</span>&lt;&lt; i &lt;&lt; <span class="string">&quot; : &quot;</span>&lt;&lt; <span class="built_in">string</span>(p[i]*<span class="number">0.01</span>, <span class="string">&#x27;*&#x27;</span>) &lt;&lt; <span class="built_in">endl</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<ul>
+<li>多种平台调用 <code>GuardedMain() //Launch.cpp</code></li>
+<li><code>GuardedMain</code> 依次调用<code>EnginePreInit</code>, <code>EditorInit</code>或<code>EngineInit</code>, 然后循环<code>EngineTick</code></li>
+<li><code>Launch.cpp</code>内有全局变量 <code>FEngineLoop GEngineLoop;</code>, 上述方法通过<code>GEngineLoop</code>执行</li>
+<li>GEngineLoop<ul>
+<li><code>FEngineLoop::PreInit </code>会执行<code>PreInitPreStartupScreen</code>, <code>PreInitPostStartupScreen</code><ul>
+<li>前者会执行如命令行, 本地化等等大量初始化和逻辑, 先通过<code>FEngineLoop::AppInit</code>加载*<code>EarliestPossible</code><em>和</em><code>PostConfigInit</code>*类型的模块, 随后加载**<code>PostSplashScreen</code><strong>类型的模块 (**0%-18%</strong>), 退出函数时加载至<strong>39%</strong></li>
+<li>后者加载*<code>PreEarlyLoadingScreen</code><em>类型的模块(<strong>39%</strong>); 随后播放开场动画等, <em>然后加载<code>AssetRegistry</code>模块</em>,  然后通过<code>LoadStartupCoreModules</code>(<strong>45% - 55%</strong>)方法加载核心模块, 随后是</em><code>PreLoadingScreen</code><em>类型的模块(<strong>55% - 59%</strong>),  接着开始渲染线程<code>StartRenderingThread</code> (<strong>59% - 75%</strong>), 然后通过<code>LoadStartupModules</code>(<strong>75%</strong>)方法加载</em><code>PreDefault</code>, <code>Default</code>, <code>PostDefault</code>*类型的模块, </li>
+<li></li>
+<li>随后创建几个单例并调用<code>Init</code>(<strong>%79 - 86%</strong>)<ul>
+<li>创建<code>GEditor</code>并调用<code>GEditorEngine::InitEditor</code> , 该方法会加载编辑器资源</li>
+<li>创建<code>GEngine</code>并调用<code>GEngine::Init</code>, 该方法也有大量初始化比如创建<code>FWorldContext</code>, <code>Config</code>的加载, 音效设备的初始化, 加载一些系统模块(<code>MovieScene</code>,<code>LevelSequence</code>等等)</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>然后通过执行 <code>FEngineLoop::Init</code>加载*<code>PostEngineInit</code>*类型的模块(<strong>86% - 90%</strong>)</li>
+</ul>
+</li>
+</ul>
+<h2 id="补充"><a href="#补充" class="headerlink" title="补充"></a>补充</h2><blockquote>
+<p>加载核心模块在 45%进度, <code>EarliestPossible</code>, <code>PostConfigInit</code> , <code>PostSplashScreen</code>和<code>PreEarlyLoadingScreen</code>会在此之前</p>
+<p>核心模块有<code>Core</code>, <code>Networking</code>, <code>UnrealEd</code>, <code>Slate</code>等等</p>
+<p>编辑器资源初始化在75%之后, 也就是在<code>PreLoadingScreen</code>, <code>PreDefault</code>, <code>Default</code>, <code>PostDefault</code>之后, 所以如果需要对资源进行操作需要使用最后加载的<code>PostEngineInit</code></p>
+</blockquote>
+<p>另外, 引擎提供了几个全局代理,  可以来监听比如编辑器初始化完毕等事件 , 比如</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">FCoreDelegates::OnPostEngineInit.AddRaw(<span class="keyword">this</span>, &amp;FAdvancedFrameworkEditorModule::RegisterPlaceActors);</span><br></pre></td></tr></table></figure>
 
-<p><img src="https://img.supervj.top//img/image-20210721151336229.png" alt="image-20210721151336229"></p>
-<p>上图显示的就是如下图的情况</p>
-<p><img src="https://img.supervj.top//img/image-20210721151404832.png" alt="image-20210721151404832"></p>
+<p>详情可以参考文件<code>CoreDelegates.h</code></p>
 
     </div>
 
@@ -472,7 +464,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="http://supervj.top/2021/07/21/c++%E9%9A%8F%E6%9C%BA%E6%95%B0/" title="随机数">http://supervj.top/2021/07/21/c++随机数/</a>
+      <a href="http://supervj.top/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/" title="UE4模块启动顺序">http://supervj.top/2021/08/12/引擎启动/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -497,22 +489,16 @@ piecewise_linear_distribution分段线性分布</code></pre>
   </div>
 </div>
 
-          <div class="post-tags">
-              <a href="/tags/%E9%9A%8F%E6%9C%BA%E6%95%B0/" rel="tag"># 随机数</a>
-          </div>
 
         
 
           <div class="post-nav">
             <div class="post-nav-item">
-                <a href="/2021/06/18/obj%E6%96%87%E4%BB%B6%E6%95%B0%E6%8D%AE/" rel="prev" title="obj及mtl文件数据">
-                  <i class="fa fa-chevron-left"></i> obj及mtl文件数据
+                <a href="/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/" rel="prev" title="编辑器扩展：消息窗口">
+                  <i class="fa fa-chevron-left"></i> 编辑器扩展：消息窗口
                 </a>
             </div>
             <div class="post-nav-item">
-                <a href="/2021/08/02/RootMotion%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/" rel="next" title="RootMotion源码简单解析">
-                  RootMotion源码简单解析 <i class="fa fa-chevron-right"></i>
-                </a>
             </div>
           </div>
     </footer>
