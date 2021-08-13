@@ -194,7 +194,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: NoTo Sans SC, Noto Serif SC, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: ZCOOL XiaoWei, Noto Serif SC, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-weight: bold;
   line-height: 1.5;
   margin: 20px 0 15px;
@@ -3024,6 +3024,7 @@ code {
   border-radius: 6px;
   font-size: 15px;
   font-weight: lighter;
+  font-family: Consolas;
 }
 ::selection {
   background-color: #59ff83;
@@ -3051,9 +3052,10 @@ code {
 }
 strong {
   font-weight: bold;
-  background-color: #fff;
+  background-color: rgba(200,200,200,0.2);
   border-radius: 39px;
   color: #f30;
   padding-left: 1px;
   padding-right: 1px;
+  font-family: Consolas;
 }
