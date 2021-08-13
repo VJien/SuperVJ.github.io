@@ -194,7 +194,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: Ma Shan Zheng, ZCOOL XiaoWei, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-family: Noto Serif SC, ZCOOL XiaoWei, 'PingFang SC', 'Microsoft YaHei', sans-serif;
   font-weight: bold;
   line-height: 1.5;
   margin: 20px 0 15px;
@@ -1209,8 +1209,8 @@ pre code {
   color: var(--brand-hover-color);
 }
 .site-title {
-  font-family: ZCOOL XiaoWei, ZCOOL XiaoWei, 'PingFang SC', 'Microsoft YaHei', sans-serif;
-  font-size: 2em;
+  font-family: Noto Serif SC, ZCOOL XiaoWei, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+  font-size: 1.1em;
   font-weight: normal;
   margin: 0;
 }
@@ -2984,16 +2984,25 @@ body {
   background-attachment: fixed;
   background-position: center;
 }
-.main-inner {
-  background-color: rgba(255,255,255,0.88);
-}
 .header-inner {
   border-radius: 30px 30px 30px 30px;
   box-shadow: 8px 7px 2px 0 rgba(0,0,0,0.12), 7px 4px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.9);
+  background: rgba(255,255,255,0.75);
 }
 .sidebar-inner {
-  border-radius: 30px 30px 30px 30px;
+  border-radius: 3px 3px 3px 3px;
   box-shadow: 8px 7px 2px 0 rgba(0,0,0,0.12), 7px 4px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
+  opacity: 0.8;
+}
+.pagination {
+  border-radius: 30px 80px 30px 80px;
+  box-shadow: 8px 7px 2px 0 rgba(0,0,0,0.12), 7px 4px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
+}
+.post-block {
+  border-radius: 30px 30px 30px 30px;
+  box-shadow: 1px 1px 1px 1px rgba(0,0,0,0.1), 7px 4px 1px 1px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
+  padding: 3px 5px;
+  border-padding: 5px 50px;
 }
 .pagination {
   border-radius: 30px 80px 30px 80px;
@@ -3030,9 +3039,6 @@ code {
   overflow: hidden;
   box-shadow: 8px 7px 2px 0 rgba(0,0,0,0.12), 7px 4px 1px -2px rgba(0,0,0,0.06), 0 1px 5px 0 rgba(0,0,0,0.12);
 }
-.site-meta {
-  background-image: linear-gradient(200deg, #00f, #00ff7f);
-}
 strong {
   font-weight: bold;
   background-color: rgba(200,200,200,0.2);
@@ -3042,6 +3048,10 @@ strong {
   padding-right: 1px;
   font-family: Consolas;
 }
+.site-title {
+  font-family: 'Lato', "PingFang SC", "华文新魏", sans-serif;
+  font-size: 20px;
+}
 .post {
   margin-top: 60px;
   margin-bottom: 60px;
@@ -3049,3 +3059,12 @@ strong {
   -webkit-box-shadow: 0 0 5px rgba(202,203,203,0.5);
   -moz-box-shadow: 0 0 5px rgba(202,203,204,0.5);
 }
+/*.post-body h2{
+    font-size: 23px;
+    font-weight: bold;
+    background-color: #99CCFF;
+    border-radius: 20px;
+    color: #f9f9f9;
+    padding-left: 8px;
+    text-shadow: 1px 1px 1px #000;
+}*/

@@ -613,14 +613,14 @@
 
   
   <url>
-    <loc>http://supervj.top/tags/%E5%8A%A8%E7%94%BB/</loc>
+    <loc>http://supervj.top/tags/animation/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
   </url>
   
   <url>
-    <loc>http://supervj.top/tags/animation/</loc>
+    <loc>http://supervj.top/tags/%E5%8A%A8%E7%94%BB/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -837,6 +837,13 @@
   </url>
   
   <url>
+    <loc>http://supervj.top/tags/%E4%BB%A3%E7%90%86/</loc>
+    <lastmod>2021-08-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>http://supervj.top/tags/%E9%A1%B6%E7%82%B9%E5%8A%A8%E7%94%BB/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
@@ -851,13 +858,6 @@
   </url>
   
   <url>
-    <loc>http://supervj.top/tags/%E4%BB%A3%E7%90%86/</loc>
-    <lastmod>2021-08-13</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
     <loc>http://supervj.top/tags/VS/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
@@ -866,20 +866,6 @@
   
   <url>
     <loc>http://supervj.top/tags/%E9%9A%8F%E6%9C%BA%E6%95%B0/</loc>
-    <lastmod>2021-08-13</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://supervj.top/tags/obj/</loc>
-    <lastmod>2021-08-13</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.6</priority>
-  </url>
-  
-  <url>
-    <loc>http://supervj.top/tags/%E6%A8%A1%E5%9E%8B/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
@@ -901,6 +887,20 @@
   
   <url>
     <loc>http://supervj.top/tags/3dMax/</loc>
+    <lastmod>2021-08-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://supervj.top/tags/obj/</loc>
+    <lastmod>2021-08-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://supervj.top/tags/%E6%A8%A1%E5%9E%8B/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
