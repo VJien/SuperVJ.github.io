@@ -1,77 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>AdvancedLocomotionSystemV4分析(三):动作叠加</title>
-    <url>/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/</url>
-    <content><![CDATA[<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
-<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
-<p><a href="https://supervj.top/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/">AdvancedLocomotionSystemV4分析(四):布娃娃和起身</a></p>
-<p><a href="https://supervj.top/2020/10/31/AdvancedLocomotionSystem%E5%88%86%E6%9E%905_%E9%95%9C%E5%A4%B4/">AdvancedLocomotionSystemV4分析(五):镜头</a></p>
-<hr>
-<blockquote>
-<p>本片主要分析一下ALS项目的动作叠加部分，主要用到各类姿势的切换，如受伤状态、持枪、持弓状态等，另外一种一般项目会用到的<code>AnimOffset</code>在这里没有用到，头部转向用了另外一种方式制作</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/temp/%E5%BD%95%E5%88%B6_2020_10_29_16_42_10_43.gif" alt="录制_2020_10_29_16_42_10_43"></p>
-<a id="more"></a>
-
-<p>姿势的切换通过接口<code>BPI_Set_OverlayState</code>调用，无论是用<code>ALS</code>项目的UI切换或者其他方式都可以</p>
-<p>在<code>ABP</code>中直接改变<code>OverlayState</code>变量也可以直接预览效果，比之前的模块都简单一些</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029161903882.png" alt="image-20201029161903882"></p>
-<p>如上图，<code>Overlay</code>单独做了一个动画层</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029162011256.png" alt="image-20201029162011256"></p>
-<p>我这边实现了部分动作，如上图，其实思路大同小异，性别/受伤等切换比较简单，弓箭/枪类等动作会有一个内部状态机切换动作，稍微会讲</p>
-<p>判断类型基本是通过<code>OverlayState</code>来判定</p>
-<h3 id="Default"><a href="#Default" class="headerlink" title="Default"></a>Default</h3><p>如果按照我们之前两篇文章的制作，到这里之前角色是静态的，因为之前的默认动作只是播放<code>ALS_N_Pose</code>的第一帧动作，但是加上目前这个逻辑以后就开始有了<code>IDLE</code>动作了，我们看<code>Default</code>状态机做了什么</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029162347423.png" alt="image-20201029162347423"></p>
-<p>文字描述一下就是</p>
-<p>根据<strong>步态/站姿/是否在空中</strong>，来决定基础动作使用姿势动画的第几帧,这里名字带<code>Variation</code>的字样的都是单帧动画的集合，使用的都是某一帧的数据</p>
-<p>然后叠加<code>次要运动</code>动画，这个动画是带起伏的<code>IDLE</code>动作，如下图</p>
-<img src="https://img.supervj.top/img/temp/%E5%BD%95%E5%88%B6_2020_10_29_16_28_06_978.gif" alt="录制_2020_10_29_16_28_06_978" style="zoom:50%;" />
-
-<p>所以所有姿势的起伏动作都是来源于这个动画，值得借鉴</p>
-<h3 id="Bow"><a href="#Bow" class="headerlink" title="Bow"></a>Bow</h3><p>至于男女姿势其实跟默认的没啥逻辑上的区别就略过了，下面看看弓箭的动作，这个还是蛮实用的，我们实际开发中基本肯定会用到射击类的武器</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029163239993.png" alt="image-20201029163239993"></p>
-<p>上图就是整个弓箭的状态机，除了几个特殊动作，默认都用子状态机<code>Bow</code>，特殊动作比如<code>GetUp</code>用的就是基础弓箭动作的某一帧比如下图，而这个整形变量<code>OverlayStateCount</code>是通过动画通知修改的，容易理解</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029163214826.png" alt="image-20201029163214826"></p>
-<p><img src="https://i.loli.net/2020/10/29/pAfJreFWv5b6Klu.png" alt="image-20201029163523606"></p>
-<p>我们看一下子状态机里面的内容，如上图</p>
-<p>默认是一个松弛状态，然后有准备动作和瞄准动作</p>
-<p>其实就是把之前的比如<code>Default</code>类型的姿势模仿一遍扔过来就可以了，无非就是换一个单帧混合动画而已</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029163714887.png" alt="image-20201029163714887"></p>
-<p>这里看到上面从<code>Ready</code>切换回<code>Released</code>会有3个<code>Contition</code>，理论上来讲不用这么多，当然他总有他的道理</p>
-<p>3个分别解释一下是</p>
-<ol>
-<li><code>Bow</code>状态机持续超过3秒同时旋转值(RotationAmount)等于0</li>
-<li><code>Bow</code>状态机持续超过3秒同时正在移动</li>
-<li>冲刺状态或者空中状态</li>
-</ol>
-<p>其中上面第三个判定优先级是2</p>
-<p>那么就凑成了一个完整的弓箭姿势叠加</p>
-<h3 id="LayerBlending层"><a href="#LayerBlending层" class="headerlink" title="LayerBlending层"></a>LayerBlending层</h3><p>只看<code>Overlay</code>层还不够，因为最开始的一张图显示，还有一个<code>LayerBlending</code>层来混合3个另外的层</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029164641087.png" alt="image-20201029164641087"></p>
-<p>一眼望去很绝望的赶脚，确实做的非常细致</p>
-<p>我们看几个代表性的</p>
-<p><img src="https://img.supervj.top/img/temp/image-20201029164742536.png" alt="image-20201029164742536"></p>
-<p><img src="https://i.loli.net/2020/10/29/vOE72zdfQtIAHey.png" alt="image-20201029171059067"></p>
-<p><img src="https://i.loli.net/2020/10/29/y2O1PtaDFJ8pqiR.png" alt="image-20201029171216089"></p>
-<p><code>BasePose</code>通过两种方式叠加<code>BaseLayer</code>缓存为Pose</p>
-<p>后面根据各种<code>Layering</code>曲线的值来决定混合的动作和插槽</p>
-<p>然后从脚步pose开始逐步骨骼分层</p>
-<p><img src="https://i.loli.net/2020/10/29/gOLE469lzDSNcmY.png" alt="image-20201029172626602"></p>
-<p>上图比较特殊，在最后部分用了2个特殊的骨骼分层，倒数第二个用了一个<code>root</code>创建的基于<code>root</code>的虚拟骨骼，暂时没发现什么具体作用；最后一个骨骼分层节点没有设置成员</p>
-<p>按照注释解释是<strong>将两个图层中的动画曲线混合在一起，并覆盖上一层的干扰。</strong></p>
-<p>好吧，此坑先留着，后面来挖</p>
-<h3 id="坑"><a href="#坑" class="headerlink" title="坑"></a>坑</h3><p>制作叠加的时候发现了一个坑，动作切换的时候，<code>Base_N_Pose</code>曲线的值会回到0，然后导致每次切换姿势回瞬间跳转到默认姿势再调准到期望姿势，产生了异常抖动效果。</p>
-<p>按照正常情况站姿的情况下该值应该一直处于1才对，然后手动在基础动画层的最后节点之前手动<code>ModifyCurves</code>把此曲线值先设为1。</p>
-]]></content>
-      <categories>
-        <category>animation</category>
-      </categories>
-      <tags>
-        <tag>animation</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>AdvancedLocomotionSystemV4分析(二):攀爬系统</title>
     <url>/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/</url>
     <content><![CDATA[<blockquote>
@@ -150,6 +79,77 @@
       </tags>
   </entry>
   <entry>
+    <title>AdvancedLocomotionSystemV4分析(三):动作叠加</title>
+    <url>/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/</url>
+    <content><![CDATA[<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
+<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
+<p><a href="https://supervj.top/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/">AdvancedLocomotionSystemV4分析(四):布娃娃和起身</a></p>
+<p><a href="https://supervj.top/2020/10/31/AdvancedLocomotionSystem%E5%88%86%E6%9E%905_%E9%95%9C%E5%A4%B4/">AdvancedLocomotionSystemV4分析(五):镜头</a></p>
+<hr>
+<blockquote>
+<p>本片主要分析一下ALS项目的动作叠加部分，主要用到各类姿势的切换，如受伤状态、持枪、持弓状态等，另外一种一般项目会用到的<code>AnimOffset</code>在这里没有用到，头部转向用了另外一种方式制作</p>
+</blockquote>
+<p><img src="https://img.supervj.top/img/temp/%E5%BD%95%E5%88%B6_2020_10_29_16_42_10_43.gif" alt="录制_2020_10_29_16_42_10_43"></p>
+<a id="more"></a>
+
+<p>姿势的切换通过接口<code>BPI_Set_OverlayState</code>调用，无论是用<code>ALS</code>项目的UI切换或者其他方式都可以</p>
+<p>在<code>ABP</code>中直接改变<code>OverlayState</code>变量也可以直接预览效果，比之前的模块都简单一些</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029161903882.png" alt="image-20201029161903882"></p>
+<p>如上图，<code>Overlay</code>单独做了一个动画层</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029162011256.png" alt="image-20201029162011256"></p>
+<p>我这边实现了部分动作，如上图，其实思路大同小异，性别/受伤等切换比较简单，弓箭/枪类等动作会有一个内部状态机切换动作，稍微会讲</p>
+<p>判断类型基本是通过<code>OverlayState</code>来判定</p>
+<h3 id="Default"><a href="#Default" class="headerlink" title="Default"></a>Default</h3><p>如果按照我们之前两篇文章的制作，到这里之前角色是静态的，因为之前的默认动作只是播放<code>ALS_N_Pose</code>的第一帧动作，但是加上目前这个逻辑以后就开始有了<code>IDLE</code>动作了，我们看<code>Default</code>状态机做了什么</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029162347423.png" alt="image-20201029162347423"></p>
+<p>文字描述一下就是</p>
+<p>根据<strong>步态/站姿/是否在空中</strong>，来决定基础动作使用姿势动画的第几帧,这里名字带<code>Variation</code>的字样的都是单帧动画的集合，使用的都是某一帧的数据</p>
+<p>然后叠加<code>次要运动</code>动画，这个动画是带起伏的<code>IDLE</code>动作，如下图</p>
+<img src="https://img.supervj.top/img/temp/%E5%BD%95%E5%88%B6_2020_10_29_16_28_06_978.gif" alt="录制_2020_10_29_16_28_06_978" style="zoom:50%;" />
+
+<p>所以所有姿势的起伏动作都是来源于这个动画，值得借鉴</p>
+<h3 id="Bow"><a href="#Bow" class="headerlink" title="Bow"></a>Bow</h3><p>至于男女姿势其实跟默认的没啥逻辑上的区别就略过了，下面看看弓箭的动作，这个还是蛮实用的，我们实际开发中基本肯定会用到射击类的武器</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029163239993.png" alt="image-20201029163239993"></p>
+<p>上图就是整个弓箭的状态机，除了几个特殊动作，默认都用子状态机<code>Bow</code>，特殊动作比如<code>GetUp</code>用的就是基础弓箭动作的某一帧比如下图，而这个整形变量<code>OverlayStateCount</code>是通过动画通知修改的，容易理解</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029163214826.png" alt="image-20201029163214826"></p>
+<p><img src="https://i.loli.net/2020/10/29/pAfJreFWv5b6Klu.png" alt="image-20201029163523606"></p>
+<p>我们看一下子状态机里面的内容，如上图</p>
+<p>默认是一个松弛状态，然后有准备动作和瞄准动作</p>
+<p>其实就是把之前的比如<code>Default</code>类型的姿势模仿一遍扔过来就可以了，无非就是换一个单帧混合动画而已</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029163714887.png" alt="image-20201029163714887"></p>
+<p>这里看到上面从<code>Ready</code>切换回<code>Released</code>会有3个<code>Contition</code>，理论上来讲不用这么多，当然他总有他的道理</p>
+<p>3个分别解释一下是</p>
+<ol>
+<li><code>Bow</code>状态机持续超过3秒同时旋转值(RotationAmount)等于0</li>
+<li><code>Bow</code>状态机持续超过3秒同时正在移动</li>
+<li>冲刺状态或者空中状态</li>
+</ol>
+<p>其中上面第三个判定优先级是2</p>
+<p>那么就凑成了一个完整的弓箭姿势叠加</p>
+<h3 id="LayerBlending层"><a href="#LayerBlending层" class="headerlink" title="LayerBlending层"></a>LayerBlending层</h3><p>只看<code>Overlay</code>层还不够，因为最开始的一张图显示，还有一个<code>LayerBlending</code>层来混合3个另外的层</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029164641087.png" alt="image-20201029164641087"></p>
+<p>一眼望去很绝望的赶脚，确实做的非常细致</p>
+<p>我们看几个代表性的</p>
+<p><img src="https://img.supervj.top/img/temp/image-20201029164742536.png" alt="image-20201029164742536"></p>
+<p><img src="https://i.loli.net/2020/10/29/vOE72zdfQtIAHey.png" alt="image-20201029171059067"></p>
+<p><img src="https://i.loli.net/2020/10/29/y2O1PtaDFJ8pqiR.png" alt="image-20201029171216089"></p>
+<p><code>BasePose</code>通过两种方式叠加<code>BaseLayer</code>缓存为Pose</p>
+<p>后面根据各种<code>Layering</code>曲线的值来决定混合的动作和插槽</p>
+<p>然后从脚步pose开始逐步骨骼分层</p>
+<p><img src="https://i.loli.net/2020/10/29/gOLE469lzDSNcmY.png" alt="image-20201029172626602"></p>
+<p>上图比较特殊，在最后部分用了2个特殊的骨骼分层，倒数第二个用了一个<code>root</code>创建的基于<code>root</code>的虚拟骨骼，暂时没发现什么具体作用；最后一个骨骼分层节点没有设置成员</p>
+<p>按照注释解释是<strong>将两个图层中的动画曲线混合在一起，并覆盖上一层的干扰。</strong></p>
+<p>好吧，此坑先留着，后面来挖</p>
+<h3 id="坑"><a href="#坑" class="headerlink" title="坑"></a>坑</h3><p>制作叠加的时候发现了一个坑，动作切换的时候，<code>Base_N_Pose</code>曲线的值会回到0，然后导致每次切换姿势回瞬间跳转到默认姿势再调准到期望姿势，产生了异常抖动效果。</p>
+<p>按照正常情况站姿的情况下该值应该一直处于1才对，然后手动在基础动画层的最后节点之前手动<code>ModifyCurves</code>把此曲线值先设为1。</p>
+]]></content>
+      <categories>
+        <category>animation</category>
+      </categories>
+      <tags>
+        <tag>animation</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>AdvancedLocomotionSystemV4分析(四):布娃娃和起身</title>
     <url>/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/</url>
     <content><![CDATA[<blockquote>
@@ -213,73 +213,6 @@
       <categories>
         <category>animation</category>
       </categories>
-  </entry>
-  <entry>
-    <title>AdvancedLocomotionSystemV4分析(五):镜头</title>
-    <url>/2020/10/31/AdvancedLocomotionSystem%E5%88%86%E6%9E%905_%E9%95%9C%E5%A4%B4/</url>
-    <content><![CDATA[<p><img src="https://i.loli.net/2020/10/31/oGuy1Ex9ajNzfQg.gif" alt="录制_2020_10_31_14_52_47_579~2"></p>
-<blockquote>
-<p>上一篇留下了一个镜头抖动问题，实际上ALS项目是通过自定义<code>CameraManager</code>实现的，本篇就此来展开一下</p>
-</blockquote>
-<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
-<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
-<p><a href="https://supervj.top/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/">AdvancedLocomotionSystemV4分析(三):动作叠加</a></p>
-<p><a href="https://supervj.top/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/">AdvancedLocomotionSystemV4分析(四):布娃娃和起身</a></p>
-<a id="more"></a>
-
-
-
-<p>先大概简述一下<code>ALS</code>镜头控制的方法</p>
-<ul>
-<li>自定义<code>CameraManager</code>代替默认第三人称模板的<code>SpringArm</code>+<code>Camera</code>的方式</li>
-<li>重写<code>BlueprintUpdateCamera</code></li>
-<li><code>CameraManager</code>挂载骨骼模型相机，创建动画蓝图，用曲线来控制相机位置信息</li>
-</ul>
-<h3 id="动画蓝图"><a href="#动画蓝图" class="headerlink" title="动画蓝图"></a>动画蓝图</h3><p><code>ALS</code>巧妙的用动画蓝图来辅助相机位置的控制和切换，如何做到的？我们先来看一下这是个什么动画蓝图</p>
-<p><img src="https://i.loli.net/2020/10/31/vQ1OTbzS7JmA435.png" alt="image-20201031141203030"></p>
-<p>随便打开一个角落</p>
-<p><img src="https://i.loli.net/2020/10/31/qZLflKyOBEITbDg.png" alt="image-20201031141249269"></p>
-<p>所以说，动画蓝图没动画(lll￢ω￢)</p>
-<p>完全是用动画蓝图的状态机来自然过渡各类曲线数据，所以显而易见的可以知道在其他地方会 用到这些曲线</p>
-<blockquote>
-<p>ps.相机的骨骼模型你完全可以用一个球代替，曲线都是手动加的，不用到三维软件加</p>
-</blockquote>
-<h3 id="CameraManager"><a href="#CameraManager" class="headerlink" title="CameraManager"></a>CameraManager</h3><p><img src="https://i.loli.net/2020/10/31/GOxWNeguVfl2Ehb.png" alt="image-20201031141505810"></p>
-<p>先一个初始化方法把必要的参数给拿到，可以到<code>PlayerController</code>内初始化，毕竟<code>CamaraManager</code>本身就是配置在<code>PlayerController</code>内</p>
-<p><img src="https://i.loli.net/2020/10/31/2KXOuLNdSFeUjpD.png" alt="image-20201031141559486"></p>
-<p>然后重写<code>BlueprintUpdateCamera</code>方法，随意给一个判断，不满足就走默认的方式</p>
-<p><img src="https://i.loli.net/2020/10/31/HZkM9N5LtmFYa3P.png" alt="image-20201031141650530"></p>
-<p>在<code>CustomCameraBehavior</code>内有很多计算，我们逐一分析</p>
-<p><img src="https://i.loli.net/2020/10/31/ykfTUYdMzprCI3D.png" alt="image-20201031141736699"></p>
-<p>从角色内去获取必要的参数，<code>PivotTarget</code>是观察的目标点，<code>1PTarget</code>为第一人称的位置，第一人称会讲相机放到固定插槽位置，这里是眼睛的位置</p>
-<p><img src="https://i.loli.net/2020/10/31/Gh4ui29epCf6oPO.png" alt="image-20201031142246941"></p>
-<p>当前旋转向控制器旋转插值过去，速度由曲线<code>RotationLagSpeed</code>变量控制</p>
-<p><img src="https://i.loli.net/2020/10/31/LjN2QKumEPFlTVI.png" alt="image-20201031142342258"></p>
-<p><code>SmoothPivotTarget</code>其实是当前的相机变换信息，插值向第一条的目标点</p>
-<p>关于<code>CalclateAxisIndependentLag</code>内部是经过插值计算把<code>CurrentLocation</code>向<code>TargetLocation</code>插值过渡</p>
-<p>内部有一点不容易理解，如下图</p>
-<p><img src="https://i.loli.net/2020/10/31/QMlYCAxi5cj32So.png" alt="image-20201031143027445"></p>
-<p>位置先反向旋转最后又给转回来，如果觉得很难理解，其实可以不加这部操作，区别不大</p>
-<p><img src="https://i.loli.net/2020/10/31/TIdpo7camu8DkyC.png" alt="image-20201031143300660"></p>
-<p>然后再加上曲线<code>PivotOffset_*</code>的偏移后存为变量<code>PivotLocation</code>，简单粗暴</p>
-<p><img src="https://i.loli.net/2020/10/31/yQrHnYlhoMUAB3G.png" alt="image-20201031143348227"></p>
-<p>然后加上相机偏移曲线<code>CameraOffset_*</code>存为变量<code>TargetCameraLocation</code></p>
-<blockquote>
-<p>关于<code>CameraOffset</code>与<code>PivotOffset</code>的区别</p>
-<p>前者是相机的位置，后者是目标点的位置，其实换到大家熟悉的<code>SpringArm</code>来说，前者就是<code>SocketOffset</code>，后者就是<code>TargetOffset</code>，不熟悉的可以自己去试一试</p>
-</blockquote>
-<p><img src="https://i.loli.net/2020/10/31/BwZD4tEi36c7Ydp.png" alt="image-20201031143540131"></p>
-<p>第三人称下的射线检测，其实就是做了一个类似<code>SpringArm</code>的<code>DoTestCollision</code>的作用</p>
-<p><img src="https://i.loli.net/2020/10/31/E9gxYbDcpBuATKl.png" alt="image-20201031143628977"></p>
-<p>最后就是根据曲线返回第一人称还是第三人称的数据</p>
-]]></content>
-      <categories>
-        <category>animation</category>
-      </categories>
-      <tags>
-        <tag>animation</tag>
-        <tag>镜头</tag>
-      </tags>
   </entry>
   <entry>
     <title>AssetManager的使用</title>
@@ -589,6 +522,73 @@
       </categories>
       <tags>
         <tag>C++11</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>AdvancedLocomotionSystemV4分析(五):镜头</title>
+    <url>/2020/10/31/AdvancedLocomotionSystem%E5%88%86%E6%9E%905_%E9%95%9C%E5%A4%B4/</url>
+    <content><![CDATA[<p><img src="https://i.loli.net/2020/10/31/oGuy1Ex9ajNzfQg.gif" alt="录制_2020_10_31_14_52_47_579~2"></p>
+<blockquote>
+<p>上一篇留下了一个镜头抖动问题，实际上ALS项目是通过自定义<code>CameraManager</code>实现的，本篇就此来展开一下</p>
+</blockquote>
+<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
+<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
+<p><a href="https://supervj.top/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/">AdvancedLocomotionSystemV4分析(三):动作叠加</a></p>
+<p><a href="https://supervj.top/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/">AdvancedLocomotionSystemV4分析(四):布娃娃和起身</a></p>
+<a id="more"></a>
+
+
+
+<p>先大概简述一下<code>ALS</code>镜头控制的方法</p>
+<ul>
+<li>自定义<code>CameraManager</code>代替默认第三人称模板的<code>SpringArm</code>+<code>Camera</code>的方式</li>
+<li>重写<code>BlueprintUpdateCamera</code></li>
+<li><code>CameraManager</code>挂载骨骼模型相机，创建动画蓝图，用曲线来控制相机位置信息</li>
+</ul>
+<h3 id="动画蓝图"><a href="#动画蓝图" class="headerlink" title="动画蓝图"></a>动画蓝图</h3><p><code>ALS</code>巧妙的用动画蓝图来辅助相机位置的控制和切换，如何做到的？我们先来看一下这是个什么动画蓝图</p>
+<p><img src="https://i.loli.net/2020/10/31/vQ1OTbzS7JmA435.png" alt="image-20201031141203030"></p>
+<p>随便打开一个角落</p>
+<p><img src="https://i.loli.net/2020/10/31/qZLflKyOBEITbDg.png" alt="image-20201031141249269"></p>
+<p>所以说，动画蓝图没动画(lll￢ω￢)</p>
+<p>完全是用动画蓝图的状态机来自然过渡各类曲线数据，所以显而易见的可以知道在其他地方会 用到这些曲线</p>
+<blockquote>
+<p>ps.相机的骨骼模型你完全可以用一个球代替，曲线都是手动加的，不用到三维软件加</p>
+</blockquote>
+<h3 id="CameraManager"><a href="#CameraManager" class="headerlink" title="CameraManager"></a>CameraManager</h3><p><img src="https://i.loli.net/2020/10/31/GOxWNeguVfl2Ehb.png" alt="image-20201031141505810"></p>
+<p>先一个初始化方法把必要的参数给拿到，可以到<code>PlayerController</code>内初始化，毕竟<code>CamaraManager</code>本身就是配置在<code>PlayerController</code>内</p>
+<p><img src="https://i.loli.net/2020/10/31/2KXOuLNdSFeUjpD.png" alt="image-20201031141559486"></p>
+<p>然后重写<code>BlueprintUpdateCamera</code>方法，随意给一个判断，不满足就走默认的方式</p>
+<p><img src="https://i.loli.net/2020/10/31/HZkM9N5LtmFYa3P.png" alt="image-20201031141650530"></p>
+<p>在<code>CustomCameraBehavior</code>内有很多计算，我们逐一分析</p>
+<p><img src="https://i.loli.net/2020/10/31/ykfTUYdMzprCI3D.png" alt="image-20201031141736699"></p>
+<p>从角色内去获取必要的参数，<code>PivotTarget</code>是观察的目标点，<code>1PTarget</code>为第一人称的位置，第一人称会讲相机放到固定插槽位置，这里是眼睛的位置</p>
+<p><img src="https://i.loli.net/2020/10/31/Gh4ui29epCf6oPO.png" alt="image-20201031142246941"></p>
+<p>当前旋转向控制器旋转插值过去，速度由曲线<code>RotationLagSpeed</code>变量控制</p>
+<p><img src="https://i.loli.net/2020/10/31/LjN2QKumEPFlTVI.png" alt="image-20201031142342258"></p>
+<p><code>SmoothPivotTarget</code>其实是当前的相机变换信息，插值向第一条的目标点</p>
+<p>关于<code>CalclateAxisIndependentLag</code>内部是经过插值计算把<code>CurrentLocation</code>向<code>TargetLocation</code>插值过渡</p>
+<p>内部有一点不容易理解，如下图</p>
+<p><img src="https://i.loli.net/2020/10/31/QMlYCAxi5cj32So.png" alt="image-20201031143027445"></p>
+<p>位置先反向旋转最后又给转回来，如果觉得很难理解，其实可以不加这部操作，区别不大</p>
+<p><img src="https://i.loli.net/2020/10/31/TIdpo7camu8DkyC.png" alt="image-20201031143300660"></p>
+<p>然后再加上曲线<code>PivotOffset_*</code>的偏移后存为变量<code>PivotLocation</code>，简单粗暴</p>
+<p><img src="https://i.loli.net/2020/10/31/yQrHnYlhoMUAB3G.png" alt="image-20201031143348227"></p>
+<p>然后加上相机偏移曲线<code>CameraOffset_*</code>存为变量<code>TargetCameraLocation</code></p>
+<blockquote>
+<p>关于<code>CameraOffset</code>与<code>PivotOffset</code>的区别</p>
+<p>前者是相机的位置，后者是目标点的位置，其实换到大家熟悉的<code>SpringArm</code>来说，前者就是<code>SocketOffset</code>，后者就是<code>TargetOffset</code>，不熟悉的可以自己去试一试</p>
+</blockquote>
+<p><img src="https://i.loli.net/2020/10/31/BwZD4tEi36c7Ydp.png" alt="image-20201031143540131"></p>
+<p>第三人称下的射线检测，其实就是做了一个类似<code>SpringArm</code>的<code>DoTestCollision</code>的作用</p>
+<p><img src="https://i.loli.net/2020/10/31/E9gxYbDcpBuATKl.png" alt="image-20201031143628977"></p>
+<p>最后就是根据曲线返回第一人称还是第三人称的数据</p>
+]]></content>
+      <categories>
+        <category>animation</category>
+      </categories>
+      <tags>
+        <tag>animation</tag>
+        <tag>镜头</tag>
       </tags>
   </entry>
   <entry>
@@ -1603,6 +1603,76 @@
       </tags>
   </entry>
   <entry>
+    <title>Json文件读写</title>
+    <url>/2020/08/07/Json/</url>
+    <content><![CDATA[<blockquote>
+<p>本文主要介绍UE4下的JSON文件的读写</p>
+</blockquote>
+<h3 id="文件读写"><a href="#文件读写" class="headerlink" title="文件读写"></a>文件读写</h3><p>首先我们需要扩展普通的文件读写方法</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_LoadStringFromFile</span><span class="params">(<span class="keyword">const</span> FString&amp; FileName, <span class="keyword">const</span> FString&amp; RelativePath, FString&amp; result)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!FileName.IsEmpty())</span><br><span class="line">	&#123;</span><br><span class="line">		FString file=FPaths::ProjectContentDir()+RelativePath+FileName;</span><br><span class="line">		<span class="keyword">return</span>  FFileHelper::LoadFileToString(result,*file);				</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_SaveStringToFile</span><span class="params">(<span class="keyword">const</span> FString&amp; FileName, <span class="keyword">const</span> FString&amp; RelativePath, <span class="keyword">const</span> FString&amp; <span class="built_in">string</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!FileName.IsEmpty())</span><br><span class="line">	&#123;</span><br><span class="line">		FString file = FPaths::ProjectContentDir() + RelativePath + FileName;</span><br><span class="line">		<span class="keyword">return</span>  FFileHelper::SaveStringToFile(<span class="built_in">string</span>,*file);</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>此方法是以工程目录下的Content路径为基础的，如果需要指定其他路径就需要替换<code> FPaths::ProjectContentDir()</code>方法或者干脆直接把整个路径给公开</p>
+<a id="more"></a>
+
+<h3 id="JSON文件读写"><a href="#JSON文件读写" class="headerlink" title="JSON文件读写"></a>JSON文件读写</h3><p>先来一个示例<code>JSON</code>文件</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;school&quot;</span>: <span class="string">&quot;Super&quot;</span>,</span><br><span class="line">	<span class="attr">&quot;name&quot;</span>:</span><br><span class="line">	[</span><br><span class="line">		<span class="string">&quot;Tom&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Jien&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Harry&quot;</span></span><br><span class="line">	],</span><br><span class="line">	<span class="attr">&quot;Tom&quot;</span>:</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="attr">&quot;sex&quot;</span>:<span class="string">&quot;boy&quot;</span>,</span><br><span class="line">		<span class="attr">&quot;score&quot;</span>:</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">&quot;Math&quot;</span>:<span class="number">99</span>,</span><br><span class="line">			<span class="attr">&quot;English&quot;</span>:<span class="number">80</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	<span class="attr">&quot;Jien&quot;</span>:</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="attr">&quot;sex&quot;</span>:<span class="string">&quot;boy&quot;</span>,</span><br><span class="line">		<span class="attr">&quot;score&quot;</span>:</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">&quot;Math&quot;</span>:<span class="number">88</span>,</span><br><span class="line">			<span class="attr">&quot;English&quot;</span>:<span class="number">95</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>解释几个关键参数</p>
+<ul>
+<li>TJsonReader</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">TSharedPtr&lt;FJsonObject&gt; JSONContentObject;</span><br><span class="line">TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; Reader = TJsonReaderFactory&lt;TCHAR&gt;::Create(JSONInput);</span><br></pre></td></tr></table></figure>
+
+<p>用来反序列化的一个类，把文件中的字符串先存放到<code>TJsonReader</code>的智能指针里;同样的还有写入操作和序列化操作，对应的类就是<code>TJsonWriter</code></p>
+<ul>
+<li><code>FJsonObject</code></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FJsonSerializer::Deserialize(Reader, JSONContentObject)</span><br></pre></td></tr></table></figure>
+
+<p>通过<code>FJsonSerializer</code>把<code>TJsonReader</code> 反序列化到<code>FJsonObject</code>中，然后就可以通过方法来解读</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">StringValue=JSONContentObject-&gt;GetStringField(key);</span><br></pre></td></tr></table></figure>
+
+<p>当然，有个前提是这个key对应的一个值，如示例中的<code>&quot;school&quot;: &quot;Super</code></p>
+<ul>
+<li>FJsonValue</li>
+</ul>
+<p>因为JSON文件是可以使用数组和嵌套的，对于数组，就必须用到<code>FJsonValue</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">&quot;name&quot;:</span></span><br><span class="line"><span class="comment">	[</span></span><br><span class="line"><span class="comment">		&quot;Tom&quot;,</span></span><br><span class="line"><span class="comment">		&quot;Jien&quot;,</span></span><br><span class="line"><span class="comment">		&quot;Harry&quot;</span></span><br><span class="line"><span class="comment">	],</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line">TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line"><span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">&#123;</span><br><span class="line">	JsonParedValue = JsonObj-&gt;GetArrayField(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为<code>name</code>对应的是一个数组，所以得到的<code>FJsonValue</code>就是这个数组的成员</p>
+<p>然后通过下面方法得到所有成员</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> i: JsonParedValue)</span><br><span class="line">&#123;</span><br><span class="line">    value.Add(i-&gt;AsString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完整的解析一个键值对，值是数组的方法如下</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_LoadValueArrayFromJsonKey</span><span class="params">(<span class="keyword">const</span> FString&amp; JsonString, <span class="keyword">const</span> FString&amp; key, TArray&lt;FString&gt;&amp; value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">	TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line">	TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; JsonReader = TJsonReaderFactory&lt;TCHAR&gt;::Create(JsonString);</span><br><span class="line">	<span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">	&#123;</span><br><span class="line">		JsonParedValue = JsonObj-&gt;GetArrayField(key);</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">auto</span> i: JsonParedValue)</span><br><span class="line">		&#123;</span><br><span class="line">			value.Add(i-&gt;AsString());</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>简单的键值对的方法如下</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_LoadValueFromJsonKey</span><span class="params">(<span class="keyword">const</span> FString&amp; JsonString, <span class="keyword">const</span> FString&amp; key, FString&amp; value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">	TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line">	TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; JsonReader=TJsonReaderFactory&lt;TCHAR&gt;::Create(JsonString);</span><br><span class="line">	<span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">	&#123;</span><br><span class="line">		value=JsonObj-&gt;GetStringField(key);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>写入会麻烦一点，首先需要些一个函数来把<code>FJsonObject</code>转换为<code>FString</code></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::GetStringFromJsonObj</span><span class="params">(<span class="keyword">const</span> TSharedPtr&lt;FJsonObject&gt;&amp; InJsonObj, FString&amp; OutStr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InJsonObj.IsValid() &amp;&amp; InJsonObj-&gt;Values.Num() &gt; <span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		TSharedRef&lt;TJsonWriter&lt;TCHAR&gt;&gt; t_writer = TJsonWriterFactory&lt;&gt;::Create(&amp;OutStr);</span><br><span class="line">		FJsonSerializer::Serialize(InJsonObj.ToSharedRef(), t_writer);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后我们直接写一个改写固定键值对的函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_SaveJsonData</span><span class="params">(<span class="keyword">const</span> FString&amp; FileName, <span class="keyword">const</span> FString&amp; RelativePath, <span class="keyword">const</span> FString&amp; key, <span class="keyword">const</span> FString&amp; value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	FString JsonString;</span><br><span class="line">	FString result;</span><br><span class="line">	<span class="keyword">if</span> (V_LoadStringFromFile(FileName, RelativePath, JsonString))</span><br><span class="line">	&#123;</span><br><span class="line">		TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">		TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line">		TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; JsonReader = 	TJsonReaderFactory&lt;TCHAR&gt;::Create(JsonString);</span><br><span class="line">		<span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">		&#123;</span><br><span class="line">			JsonObj-&gt;SetStringField(key,value);</span><br><span class="line">		<span class="keyword">if</span> (GetStringFromJsonObj(JsonObj, result))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> V_SaveStringToFile(FileName, RelativePath, result);</span><br><span class="line">            &#125;		</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>最后得到结果</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">\</span><br><span class="line">    &#123;</span><br><span class="line">	<span class="attr">&quot;school&quot;</span>: <span class="string">&quot;hello&quot;</span>,</span><br><span class="line">	<span class="attr">&quot;name&quot;</span>: [</span><br><span class="line">		<span class="string">&quot;Tom&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Jien&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Harry&quot;</span></span><br><span class="line">	],</span><br><span class="line">	<span class="attr">&quot;Tom&quot;</span>:..........</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>engine</category>
+      </categories>
+      <tags>
+        <tag>Json</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>使用Hexo+GithubPages部署个人静态博客</title>
     <url>/2020/12/04/Hexo+GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/</url>
     <content><![CDATA[<blockquote>
@@ -1865,76 +1935,6 @@
       </tags>
   </entry>
   <entry>
-    <title>Json文件读写</title>
-    <url>/2020/08/07/Json/</url>
-    <content><![CDATA[<blockquote>
-<p>本文主要介绍UE4下的JSON文件的读写</p>
-</blockquote>
-<h3 id="文件读写"><a href="#文件读写" class="headerlink" title="文件读写"></a>文件读写</h3><p>首先我们需要扩展普通的文件读写方法</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_LoadStringFromFile</span><span class="params">(<span class="keyword">const</span> FString&amp; FileName, <span class="keyword">const</span> FString&amp; RelativePath, FString&amp; result)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!FileName.IsEmpty())</span><br><span class="line">	&#123;</span><br><span class="line">		FString file=FPaths::ProjectContentDir()+RelativePath+FileName;</span><br><span class="line">		<span class="keyword">return</span>  FFileHelper::LoadFileToString(result,*file);				</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_SaveStringToFile</span><span class="params">(<span class="keyword">const</span> FString&amp; FileName, <span class="keyword">const</span> FString&amp; RelativePath, <span class="keyword">const</span> FString&amp; <span class="built_in">string</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!FileName.IsEmpty())</span><br><span class="line">	&#123;</span><br><span class="line">		FString file = FPaths::ProjectContentDir() + RelativePath + FileName;</span><br><span class="line">		<span class="keyword">return</span>  FFileHelper::SaveStringToFile(<span class="built_in">string</span>,*file);</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>此方法是以工程目录下的Content路径为基础的，如果需要指定其他路径就需要替换<code> FPaths::ProjectContentDir()</code>方法或者干脆直接把整个路径给公开</p>
-<a id="more"></a>
-
-<h3 id="JSON文件读写"><a href="#JSON文件读写" class="headerlink" title="JSON文件读写"></a>JSON文件读写</h3><p>先来一个示例<code>JSON</code>文件</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;school&quot;</span>: <span class="string">&quot;Super&quot;</span>,</span><br><span class="line">	<span class="attr">&quot;name&quot;</span>:</span><br><span class="line">	[</span><br><span class="line">		<span class="string">&quot;Tom&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Jien&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Harry&quot;</span></span><br><span class="line">	],</span><br><span class="line">	<span class="attr">&quot;Tom&quot;</span>:</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="attr">&quot;sex&quot;</span>:<span class="string">&quot;boy&quot;</span>,</span><br><span class="line">		<span class="attr">&quot;score&quot;</span>:</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">&quot;Math&quot;</span>:<span class="number">99</span>,</span><br><span class="line">			<span class="attr">&quot;English&quot;</span>:<span class="number">80</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;,</span><br><span class="line">	<span class="attr">&quot;Jien&quot;</span>:</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="attr">&quot;sex&quot;</span>:<span class="string">&quot;boy&quot;</span>,</span><br><span class="line">		<span class="attr">&quot;score&quot;</span>:</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="attr">&quot;Math&quot;</span>:<span class="number">88</span>,</span><br><span class="line">			<span class="attr">&quot;English&quot;</span>:<span class="number">95</span></span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>解释几个关键参数</p>
-<ul>
-<li>TJsonReader</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">TSharedPtr&lt;FJsonObject&gt; JSONContentObject;</span><br><span class="line">TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; Reader = TJsonReaderFactory&lt;TCHAR&gt;::Create(JSONInput);</span><br></pre></td></tr></table></figure>
-
-<p>用来反序列化的一个类，把文件中的字符串先存放到<code>TJsonReader</code>的智能指针里;同样的还有写入操作和序列化操作，对应的类就是<code>TJsonWriter</code></p>
-<ul>
-<li><code>FJsonObject</code></li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FJsonSerializer::Deserialize(Reader, JSONContentObject)</span><br></pre></td></tr></table></figure>
-
-<p>通过<code>FJsonSerializer</code>把<code>TJsonReader</code> 反序列化到<code>FJsonObject</code>中，然后就可以通过方法来解读</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">StringValue=JSONContentObject-&gt;GetStringField(key);</span><br></pre></td></tr></table></figure>
-
-<p>当然，有个前提是这个key对应的一个值，如示例中的<code>&quot;school&quot;: &quot;Super</code></p>
-<ul>
-<li>FJsonValue</li>
-</ul>
-<p>因为JSON文件是可以使用数组和嵌套的，对于数组，就必须用到<code>FJsonValue</code></p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">&quot;name&quot;:</span></span><br><span class="line"><span class="comment">	[</span></span><br><span class="line"><span class="comment">		&quot;Tom&quot;,</span></span><br><span class="line"><span class="comment">		&quot;Jien&quot;,</span></span><br><span class="line"><span class="comment">		&quot;Harry&quot;</span></span><br><span class="line"><span class="comment">	],</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"></span><br><span class="line">TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line"><span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">&#123;</span><br><span class="line">	JsonParedValue = JsonObj-&gt;GetArrayField(key);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>因为<code>name</code>对应的是一个数组，所以得到的<code>FJsonValue</code>就是这个数组的成员</p>
-<p>然后通过下面方法得到所有成员</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> i: JsonParedValue)</span><br><span class="line">&#123;</span><br><span class="line">    value.Add(i-&gt;AsString());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>完整的解析一个键值对，值是数组的方法如下</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_LoadValueArrayFromJsonKey</span><span class="params">(<span class="keyword">const</span> FString&amp; JsonString, <span class="keyword">const</span> FString&amp; key, TArray&lt;FString&gt;&amp; value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">	TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line">	TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; JsonReader = TJsonReaderFactory&lt;TCHAR&gt;::Create(JsonString);</span><br><span class="line">	<span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">	&#123;</span><br><span class="line">		JsonParedValue = JsonObj-&gt;GetArrayField(key);</span><br><span class="line">		</span><br><span class="line">		<span class="keyword">for</span> (<span class="keyword">auto</span> i: JsonParedValue)</span><br><span class="line">		&#123;</span><br><span class="line">			value.Add(i-&gt;AsString());</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>简单的键值对的方法如下</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_LoadValueFromJsonKey</span><span class="params">(<span class="keyword">const</span> FString&amp; JsonString, <span class="keyword">const</span> FString&amp; key, FString&amp; value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">	TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line">	TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; JsonReader=TJsonReaderFactory&lt;TCHAR&gt;::Create(JsonString);</span><br><span class="line">	<span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">	&#123;</span><br><span class="line">		value=JsonObj-&gt;GetStringField(key);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>写入会麻烦一点，首先需要些一个函数来把<code>FJsonObject</code>转换为<code>FString</code></p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::GetStringFromJsonObj</span><span class="params">(<span class="keyword">const</span> TSharedPtr&lt;FJsonObject&gt;&amp; InJsonObj, FString&amp; OutStr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InJsonObj.IsValid() &amp;&amp; InJsonObj-&gt;Values.Num() &gt; <span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		TSharedRef&lt;TJsonWriter&lt;TCHAR&gt;&gt; t_writer = TJsonWriterFactory&lt;&gt;::Create(&amp;OutStr);</span><br><span class="line">		FJsonSerializer::Serialize(InJsonObj.ToSharedRef(), t_writer);</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>然后我们直接写一个改写固定键值对的函数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UTestLib::V_SaveJsonData</span><span class="params">(<span class="keyword">const</span> FString&amp; FileName, <span class="keyword">const</span> FString&amp; RelativePath, <span class="keyword">const</span> FString&amp; key, <span class="keyword">const</span> FString&amp; value)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	FString JsonString;</span><br><span class="line">	FString result;</span><br><span class="line">	<span class="keyword">if</span> (V_LoadStringFromFile(FileName, RelativePath, JsonString))</span><br><span class="line">	&#123;</span><br><span class="line">		TArray&lt;TSharedPtr&lt;FJsonValue&gt;&gt; JsonParedValue;</span><br><span class="line">		TSharedPtr&lt;FJsonObject&gt; JsonObj;</span><br><span class="line">		TSharedRef&lt;TJsonReader&lt;TCHAR&gt;&gt; JsonReader = 	TJsonReaderFactory&lt;TCHAR&gt;::Create(JsonString);</span><br><span class="line">		<span class="keyword">if</span> (FJsonSerializer::Deserialize(JsonReader, JsonObj))</span><br><span class="line">		&#123;</span><br><span class="line">			JsonObj-&gt;SetStringField(key,value);</span><br><span class="line">		<span class="keyword">if</span> (GetStringFromJsonObj(JsonObj, result))</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> V_SaveStringToFile(FileName, RelativePath, result);</span><br><span class="line">            &#125;		</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>最后得到结果</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line">\</span><br><span class="line">    &#123;</span><br><span class="line">	<span class="attr">&quot;school&quot;</span>: <span class="string">&quot;hello&quot;</span>,</span><br><span class="line">	<span class="attr">&quot;name&quot;</span>: [</span><br><span class="line">		<span class="string">&quot;Tom&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Jien&quot;</span>,</span><br><span class="line">		<span class="string">&quot;Harry&quot;</span></span><br><span class="line">	],</span><br><span class="line">	<span class="attr">&quot;Tom&quot;</span>:..........</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>engine</category>
-      </categories>
-      <tags>
-        <tag>Json</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Markdown(Typora)数学公式</title>
     <url>/2020/06/23/Mardown%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F/</url>
     <content><![CDATA[<blockquote>
@@ -2035,6 +2035,52 @@
       </tags>
   </entry>
   <entry>
+    <title>Picgo+GitHub搭建免费图床</title>
+    <url>/2020/05/13/Picgo+GitHub%E6%90%AD%E5%BB%BA%E5%85%8D%E8%B4%B9%E5%9B%BE%E5%BA%8A/</url>
+    <content><![CDATA[<blockquote>
+<p>本文介绍如何用Picgo+GitHub搭建免费的图床</p>
+<p>可用于个人Markdown文档的图片外链</p>
+<p>Github图床优点：免费，安全；缺点：网络不稳定，偶尔上传失败</p>
+</blockquote>
+<h3 id="关于Picgo"><a href="#关于Picgo" class="headerlink" title="关于Picgo"></a>关于Picgo</h3><p>这是一款图片上传的工具，目前支持<code>七牛图床</code>，<code>腾讯云</code>，<code>阿里oss</code>，<code>GitHub</code>等图床，未来将支持更多图床。</p>
+<p>所以解决问题的思路就是，将本地的文件，或者剪切板上面的截图发送图床，然后生成在线图片的链接，这样就可以随时随地使用图片外链了</p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ul>
+<li><p>git和github使用请参考本人另一篇文章<a href="%5Bhttps://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/%5D(https://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/)">《Git使用指北》</a></p>
+</li>
+<li><p><a href="https://github.com/Molunerfinn/PicGo/releases">下载picgo软件</a></p>
+</li>
+</ul>
+<h3 id="GitHub流程"><a href="#GitHub流程" class="headerlink" title="GitHub流程"></a>GitHub流程</h3><ol>
+<li><p>新建一个<code>Repository</code>，建议命名成<code>img</code>之类的方便记忆</p>
+</li>
+<li><p>生成一个Token用于操作GitHub repository，流程如下</p>
+<blockquote>
+<p>Settings-&gt;Developer settings-&gt;Personnal access tokens-&gt;Generate new token</p>
+</blockquote>
+<p> 注：创建成功后，会生成一串token，这串token之后不会再显示，所以第一次看到的时候，就要好好保存</p>
+</li>
+</ol>
+<h3 id="配置Picgo"><a href="#配置Picgo" class="headerlink" title="配置Picgo"></a>配置Picgo</h3><p><img src="https://img.supervj.top/imgpicgo_github_3.jpg"></p>
+<ul>
+<li>仓库名：即你<code>github</code>仓库的名称</li>
+<li>设定分支：对应仓库的分支，默认是<code>master</code></li>
+<li>设定Token：之前保存的<code>Token</code></li>
+<li>指定存储路径：保存到仓库的路径</li>
+<li>设定自定义域名：见如下</li>
+</ul>
+<h5 id="自定义域名"><a href="#自定义域名" class="headerlink" title="自定义域名"></a>自定义域名</h5><p>默认不指定域名，这样生成的是<code>github</code>地址，部分情况会被墙掉，对于图片访问不是特别友善</p>
+<p>有自己域名的同学强烈建议使用自定义域名</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>GitHub</tag>
+        <tag>博客</tag>
+        <tag>图床</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Paper2D第三方工具TexturerPacker</title>
     <url>/2021/01/08/Paper2D%E7%AC%AC%E4%B8%89%E6%96%B9%E5%B7%A5%E5%85%B7TexturerPacker/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>关于Paper2D使用第三方工具<code>TexturerPacker</code>的简单使用方法记录</p>
@@ -2079,52 +2125,6 @@
       <tags>
         <tag>Paper2D</tag>
         <tag>TexturerPacker</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Picgo+GitHub搭建免费图床</title>
-    <url>/2020/05/13/Picgo+GitHub%E6%90%AD%E5%BB%BA%E5%85%8D%E8%B4%B9%E5%9B%BE%E5%BA%8A/</url>
-    <content><![CDATA[<blockquote>
-<p>本文介绍如何用Picgo+GitHub搭建免费的图床</p>
-<p>可用于个人Markdown文档的图片外链</p>
-<p>Github图床优点：免费，安全；缺点：网络不稳定，偶尔上传失败</p>
-</blockquote>
-<h3 id="关于Picgo"><a href="#关于Picgo" class="headerlink" title="关于Picgo"></a>关于Picgo</h3><p>这是一款图片上传的工具，目前支持<code>七牛图床</code>，<code>腾讯云</code>，<code>阿里oss</code>，<code>GitHub</code>等图床，未来将支持更多图床。</p>
-<p>所以解决问题的思路就是，将本地的文件，或者剪切板上面的截图发送图床，然后生成在线图片的链接，这样就可以随时随地使用图片外链了</p>
-<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ul>
-<li><p>git和github使用请参考本人另一篇文章<a href="%5Bhttps://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/%5D(https://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/)">《Git使用指北》</a></p>
-</li>
-<li><p><a href="https://github.com/Molunerfinn/PicGo/releases">下载picgo软件</a></p>
-</li>
-</ul>
-<h3 id="GitHub流程"><a href="#GitHub流程" class="headerlink" title="GitHub流程"></a>GitHub流程</h3><ol>
-<li><p>新建一个<code>Repository</code>，建议命名成<code>img</code>之类的方便记忆</p>
-</li>
-<li><p>生成一个Token用于操作GitHub repository，流程如下</p>
-<blockquote>
-<p>Settings-&gt;Developer settings-&gt;Personnal access tokens-&gt;Generate new token</p>
-</blockquote>
-<p> 注：创建成功后，会生成一串token，这串token之后不会再显示，所以第一次看到的时候，就要好好保存</p>
-</li>
-</ol>
-<h3 id="配置Picgo"><a href="#配置Picgo" class="headerlink" title="配置Picgo"></a>配置Picgo</h3><p><img src="https://img.supervj.top/imgpicgo_github_3.jpg"></p>
-<ul>
-<li>仓库名：即你<code>github</code>仓库的名称</li>
-<li>设定分支：对应仓库的分支，默认是<code>master</code></li>
-<li>设定Token：之前保存的<code>Token</code></li>
-<li>指定存储路径：保存到仓库的路径</li>
-<li>设定自定义域名：见如下</li>
-</ul>
-<h5 id="自定义域名"><a href="#自定义域名" class="headerlink" title="自定义域名"></a>自定义域名</h5><p>默认不指定域名，这样生成的是<code>github</code>地址，部分情况会被墙掉，对于图片访问不是特别友善</p>
-<p>有自己域名的同学强烈建议使用自定义域名</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>GitHub</tag>
-        <tag>博客</tag>
-        <tag>图床</tag>
       </tags>
   </entry>
   <entry>
@@ -2183,6 +2183,97 @@
         <tag>GitHub</tag>
         <tag>博客</tag>
         <tag>图床</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>RootMotion源码简单解析</title>
+    <url>/2021/08/02/RootMotion%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>由于平时经常使用<code>RootMotion</code>动画, 经常遇到一些问题, 所以还是凑空看了一下源码, 大概整理了一下<code>RootMotion</code>动画的运行机制和关键问题</p>
+<a id="more"></a>
+
+
+
+<h2 id="伪代码"><a href="#伪代码" class="headerlink" title="伪代码"></a>伪代码</h2><p>先用伪代码简单的描述一下<code>RootMotion</code>的大概运行逻辑, 以单机蒙太奇动画示例</p>
+<div id="flowchart-0" class="flow-chart"></div>
+
+
+
+
+
+<p>这当中涉及到的内容非常多, 下面慢慢整理</p>
+<h2 id="动画实例部分"><a href="#动画实例部分" class="headerlink" title="动画实例部分"></a>动画实例部分</h2><p>上面伪代码中需要的参数<code>RootMotionParams</code>来自于动画资源, 也就是来自动画实例部分</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">USTRUCT()</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FRootMotionMovementParams</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="comment">//..............</span></span><br><span class="line">    UPROPERTY()</span><br><span class="line">	<span class="keyword">bool</span> bHasRootMotion;</span><br><span class="line">	UPROPERTY()</span><br><span class="line">	<span class="keyword">float</span> BlendWeight;</span><br><span class="line">	UPROPERTY()</span><br><span class="line">	FTransform RootMotionTransform;</span><br><span class="line">    <span class="comment">//..........</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>参数主要就上面3个属性</p>
+<hr>
+<p>这里先讨论多数情况下的<code>RootMotion</code>, 一般都是由蒙太奇触发, 那么起点就是动画实例(<code>AnimInstance</code>)内的<code>UAnimInstance::Montage_Play()</code></p>
+<p>播放蒙太奇的时候, 会创建一个<code>FAnimMontageInstance*</code>对象来真正的播放蒙太奇动画</p>
+<p><img src="https://img.supervj.top//img/image-20210802110915641.png" alt="image-20210802110915641"></p>
+<p>也就是是说, 播放蒙太奇会创建一个对象来管理这个蒙太奇动画, 同时也会存放在动画实例里面的数组和Map中</p>
+<hr>
+<p>下面要去看动画实例中的函数<code>UAnimInstance::UpdateAnimation</code></p>
+<p><img src="https://img.supervj.top//img/image-20210802111137556.png" alt="image-20210802111137556"></p>
+<p>看调用栈, 就是来自<code>PerformMovement()</code>(稍后再看)的调用</p>
+<p>然后就调用到<code>UpdateMontage(DeltaSeconds);</code></p>
+<p><img src="https://img.supervj.top//img/image-20210802111258219.png" alt="image-20210802111258219"></p>
+<p><code>Montage_UpdateWeight();</code>这个刷新混合值</p>
+<p>在<code> UAnimInstance::Montage_Advance()</code> 中重点做了这个事</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">MontageInstance-&gt;Advance(DeltaSeconds, RootMotionParams, bUsingBlendedRootMotion);</span><br></pre></td></tr></table></figure>
+
+<p>然后在<code>FAnimMontageInstance::Advance()</code>中重点做了下面的事情</p>
+<p><img src="https://img.supervj.top//img/image-20210802111520573.png" alt="image-20210802111520573"></p>
+<p><code>ExtractRootMotionFromTrackRange()</code>函数获取了蒙太奇的位置插值信息, 这个计算内容也比较复杂, 会有片段以及slot等检测, 这里不展开. 得到的信息是本地空间的, 即是一个位移而不是位置, 最后计算的时候会经过转换到世界空间等计算; </p>
+<blockquote>
+<p>那么动画实例这一部分的任务就是计算出<code>RootMotionParams</code>, 等待着移动组件的使用</p>
+</blockquote>
+<h2 id="移动组件部分"><a href="#移动组件部分" class="headerlink" title="移动组件部分"></a>移动组件部分</h2><p>从<code>UCharacterMovementComponent::PerformMovement()</code>开始</p>
+<p>先判断是否开启了<code>RootMotion</code>,  如果开启那么就<code>TickCharacterPose(DeltaSeconds);</code>,同时清理掉当前的<code>RootMotionParams</code>参数</p>
+<blockquote>
+<p><code>RootMotionParams</code>参数都是用完就清理, 包括在<code>SkeletalMesh</code>中也有类似操作</p>
+</blockquote>
+<p>然后是<code>TickCharacterPose()</code></p>
+<p><img src="https://img.supervj.top//img/image-20210802113219463.png" alt="image-20210802113219463"></p>
+<p>这里对<code>Mesh</code>的Tick会调用到之前动画实例部分的代码</p>
+<p>下面通过<code>ConsumeRootMotion()</code>获取参数并清理了<code>Mesh</code>中的参数</p>
+<p><code>Mesh</code>中保存里<code>AnimScriptInstance(就是当前的AnimInstance)</code>, <code>AnimScriptInstance::ConsumeExtractedRootMotion()</code>可以获取并清理<code>ExtractedRootMotion</code></p>
+<p>然后设置缩放以后设置到当前的<code>RootMotionParams</code></p>
+<blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UPROPERTY(Replicated)</span><br><span class="line">	<span class="keyword">float</span> AnimRootMotionTranslationScale;</span><br></pre></td></tr></table></figure>
+
+<p>这个缩放参数 目前没有扩展出方便蓝图调用的API,  如果有需要可以手动设置此变量来动态的控制蒙太奇的运动,  参考UE5的<code>WarpMotion</code>组件的思路</p>
+</blockquote>
+<hr>
+<p>接下来跳过一大堆代码,转到下面这里</p>
+<p><img src="https://img.supervj.top//img/image-20210802113830692.png" alt="image-20210802113830692"></p>
+<p><code>Velocity</code>变量直接决定下一次渲染我们角色的偏移位置, 那么实际上这里就可以简单理解为之前计算出来的<code>RootMotionParams</code>参数在这里经过了空间转换, 然后通过若干计算转换成了<code>Velocity</code></p>
+<blockquote>
+<p>偷懒具体计算就不去看了</p>
+</blockquote>
+<h2 id="动画序列RootMotion"><a href="#动画序列RootMotion" class="headerlink" title="动画序列RootMotion"></a>动画序列RootMotion</h2><p>用动画序列来执行根骨个运动, 即开启<code>RootMotion From Everything</code></p>
+<p>开启此模式以后,  <code>PerformMovement()</code>会一直调用<code>TickCharacterPose()</code></p>
+<p>随后会执行如下代码</p>
+<p><img src="https://img.supervj.top//img/image-20210802152027895.png" alt="image-20210802152027895"></p>
+<p>这里就要提到动画实例里面的一个多线程辅助类<code>FAnimInstanceProxy</code>,如果当前的<code>RootMotionMode</code>为<code>RootMotion From Everything</code>，那么我们在主线程Tick的时候就会立刻去更新<code>FAnimInstanceProxy::TickAssetPlayerInstances()</code>，这样是为了能及时获取到每一帧的<code>Rootmotion</code>信息</p>
+<p><img src="https://img.supervj.top//img/image-20210802152320194.png" alt="image-20210802152320194"></p>
+<p>随后通过<code>FAnimInstanceProxy</code>类来一直获取<code>RootMotionMovementParams</code>参数</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
+<li>其实RootMotion本质上走的还是移动组件的处理流程，只不过其移动数据是从动画里面提取的。</li>
+<li>Rootmotion只支持Montage的同步; UE4的状态机太复杂不容易同步</li>
+<li>除非是常规的线性运动的Rootmotion，其他的不规则的运动几乎无法预测, 导致同步效果不理想</li>
+<li>从性能上说，减少数据的同步和校验可以减少服务器的CPU和内存的压力，所以Rootmotion在网络游戏中的使用要慎重考虑。</li>
+</ul>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 移动组件::PerformMovement
+cd1=>condition: 是否有RootMotion?
+c1=>operation: TickCharacterPose获取RootMotionParam
+c2=>operation: 通过RootMotionParam计算速度
+e=>end: 刷新位置
+
+st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script>]]></content>
+      <categories>
+        <category>engine</category>
+      </categories>
+      <tags>
+        <tag>animation</tag>
       </tags>
   </entry>
   <entry>
@@ -2285,97 +2376,6 @@
       </categories>
       <tags>
         <tag>UBT</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>RootMotion源码简单解析</title>
-    <url>/2021/08/02/RootMotion%E6%BA%90%E7%A0%81%E8%A7%A3%E6%9E%90/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>由于平时经常使用<code>RootMotion</code>动画, 经常遇到一些问题, 所以还是凑空看了一下源码, 大概整理了一下<code>RootMotion</code>动画的运行机制和关键问题</p>
-<a id="more"></a>
-
-
-
-<h2 id="伪代码"><a href="#伪代码" class="headerlink" title="伪代码"></a>伪代码</h2><p>先用伪代码简单的描述一下<code>RootMotion</code>的大概运行逻辑, 以单机蒙太奇动画示例</p>
-<div id="flowchart-0" class="flow-chart"></div>
-
-
-
-
-
-<p>这当中涉及到的内容非常多, 下面慢慢整理</p>
-<h2 id="动画实例部分"><a href="#动画实例部分" class="headerlink" title="动画实例部分"></a>动画实例部分</h2><p>上面伪代码中需要的参数<code>RootMotionParams</code>来自于动画资源, 也就是来自动画实例部分</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">USTRUCT()</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FRootMotionMovementParams</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    <span class="comment">//..............</span></span><br><span class="line">    UPROPERTY()</span><br><span class="line">	<span class="keyword">bool</span> bHasRootMotion;</span><br><span class="line">	UPROPERTY()</span><br><span class="line">	<span class="keyword">float</span> BlendWeight;</span><br><span class="line">	UPROPERTY()</span><br><span class="line">	FTransform RootMotionTransform;</span><br><span class="line">    <span class="comment">//..........</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>参数主要就上面3个属性</p>
-<hr>
-<p>这里先讨论多数情况下的<code>RootMotion</code>, 一般都是由蒙太奇触发, 那么起点就是动画实例(<code>AnimInstance</code>)内的<code>UAnimInstance::Montage_Play()</code></p>
-<p>播放蒙太奇的时候, 会创建一个<code>FAnimMontageInstance*</code>对象来真正的播放蒙太奇动画</p>
-<p><img src="https://img.supervj.top//img/image-20210802110915641.png" alt="image-20210802110915641"></p>
-<p>也就是是说, 播放蒙太奇会创建一个对象来管理这个蒙太奇动画, 同时也会存放在动画实例里面的数组和Map中</p>
-<hr>
-<p>下面要去看动画实例中的函数<code>UAnimInstance::UpdateAnimation</code></p>
-<p><img src="https://img.supervj.top//img/image-20210802111137556.png" alt="image-20210802111137556"></p>
-<p>看调用栈, 就是来自<code>PerformMovement()</code>(稍后再看)的调用</p>
-<p>然后就调用到<code>UpdateMontage(DeltaSeconds);</code></p>
-<p><img src="https://img.supervj.top//img/image-20210802111258219.png" alt="image-20210802111258219"></p>
-<p><code>Montage_UpdateWeight();</code>这个刷新混合值</p>
-<p>在<code> UAnimInstance::Montage_Advance()</code> 中重点做了这个事</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">MontageInstance-&gt;Advance(DeltaSeconds, RootMotionParams, bUsingBlendedRootMotion);</span><br></pre></td></tr></table></figure>
-
-<p>然后在<code>FAnimMontageInstance::Advance()</code>中重点做了下面的事情</p>
-<p><img src="https://img.supervj.top//img/image-20210802111520573.png" alt="image-20210802111520573"></p>
-<p><code>ExtractRootMotionFromTrackRange()</code>函数获取了蒙太奇的位置插值信息, 这个计算内容也比较复杂, 会有片段以及slot等检测, 这里不展开. 得到的信息是本地空间的, 即是一个位移而不是位置, 最后计算的时候会经过转换到世界空间等计算; </p>
-<blockquote>
-<p>那么动画实例这一部分的任务就是计算出<code>RootMotionParams</code>, 等待着移动组件的使用</p>
-</blockquote>
-<h2 id="移动组件部分"><a href="#移动组件部分" class="headerlink" title="移动组件部分"></a>移动组件部分</h2><p>从<code>UCharacterMovementComponent::PerformMovement()</code>开始</p>
-<p>先判断是否开启了<code>RootMotion</code>,  如果开启那么就<code>TickCharacterPose(DeltaSeconds);</code>,同时清理掉当前的<code>RootMotionParams</code>参数</p>
-<blockquote>
-<p><code>RootMotionParams</code>参数都是用完就清理, 包括在<code>SkeletalMesh</code>中也有类似操作</p>
-</blockquote>
-<p>然后是<code>TickCharacterPose()</code></p>
-<p><img src="https://img.supervj.top//img/image-20210802113219463.png" alt="image-20210802113219463"></p>
-<p>这里对<code>Mesh</code>的Tick会调用到之前动画实例部分的代码</p>
-<p>下面通过<code>ConsumeRootMotion()</code>获取参数并清理了<code>Mesh</code>中的参数</p>
-<p><code>Mesh</code>中保存里<code>AnimScriptInstance(就是当前的AnimInstance)</code>, <code>AnimScriptInstance::ConsumeExtractedRootMotion()</code>可以获取并清理<code>ExtractedRootMotion</code></p>
-<p>然后设置缩放以后设置到当前的<code>RootMotionParams</code></p>
-<blockquote>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UPROPERTY(Replicated)</span><br><span class="line">	<span class="keyword">float</span> AnimRootMotionTranslationScale;</span><br></pre></td></tr></table></figure>
-
-<p>这个缩放参数 目前没有扩展出方便蓝图调用的API,  如果有需要可以手动设置此变量来动态的控制蒙太奇的运动,  参考UE5的<code>WarpMotion</code>组件的思路</p>
-</blockquote>
-<hr>
-<p>接下来跳过一大堆代码,转到下面这里</p>
-<p><img src="https://img.supervj.top//img/image-20210802113830692.png" alt="image-20210802113830692"></p>
-<p><code>Velocity</code>变量直接决定下一次渲染我们角色的偏移位置, 那么实际上这里就可以简单理解为之前计算出来的<code>RootMotionParams</code>参数在这里经过了空间转换, 然后通过若干计算转换成了<code>Velocity</code></p>
-<blockquote>
-<p>偷懒具体计算就不去看了</p>
-</blockquote>
-<h2 id="动画序列RootMotion"><a href="#动画序列RootMotion" class="headerlink" title="动画序列RootMotion"></a>动画序列RootMotion</h2><p>用动画序列来执行根骨个运动, 即开启<code>RootMotion From Everything</code></p>
-<p>开启此模式以后,  <code>PerformMovement()</code>会一直调用<code>TickCharacterPose()</code></p>
-<p>随后会执行如下代码</p>
-<p><img src="https://img.supervj.top//img/image-20210802152027895.png" alt="image-20210802152027895"></p>
-<p>这里就要提到动画实例里面的一个多线程辅助类<code>FAnimInstanceProxy</code>,如果当前的<code>RootMotionMode</code>为<code>RootMotion From Everything</code>，那么我们在主线程Tick的时候就会立刻去更新<code>FAnimInstanceProxy::TickAssetPlayerInstances()</code>，这样是为了能及时获取到每一帧的<code>Rootmotion</code>信息</p>
-<p><img src="https://img.supervj.top//img/image-20210802152320194.png" alt="image-20210802152320194"></p>
-<p>随后通过<code>FAnimInstanceProxy</code>类来一直获取<code>RootMotionMovementParams</code>参数</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><ul>
-<li>其实RootMotion本质上走的还是移动组件的处理流程，只不过其移动数据是从动画里面提取的。</li>
-<li>Rootmotion只支持Montage的同步; UE4的状态机太复杂不容易同步</li>
-<li>除非是常规的线性运动的Rootmotion，其他的不规则的运动几乎无法预测, 导致同步效果不理想</li>
-<li>从性能上说，减少数据的同步和校验可以减少服务器的CPU和内存的压力，所以Rootmotion在网络游戏中的使用要慎重考虑。</li>
-</ul>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/raphael/2.2.7/raphael.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/flowchart/1.6.5/flowchart.min.js"></script><textarea id="flowchart-0-code" style="display: none">st=>start: 移动组件::PerformMovement
-cd1=>condition: 是否有RootMotion?
-c1=>operation: TickCharacterPose获取RootMotionParam
-c2=>operation: 通过RootMotionParam计算速度
-e=>end: 刷新位置
-
-st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="display: none">{"scale":1,"line-width":2,"line-length":50,"text-margin":10,"font-size":12}</textarea><script>  var code = document.getElementById("flowchart-0-code").value;  var options = JSON.parse(decodeURIComponent(document.getElementById("flowchart-0-options").value));  var diagram = flowchart.parse(code);  diagram.drawSVG("flowchart-0", options);</script>]]></content>
-      <categories>
-        <category>engine</category>
-      </categories>
-      <tags>
-        <tag>animation</tag>
       </tags>
   </entry>
   <entry>
@@ -2665,50 +2665,6 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </tags>
   </entry>
   <entry>
-    <title>UE4压缩和解压缩工具</title>
-    <url>/2021/03/26/UE4%E5%8E%8B%E7%BC%A9%E5%B7%A5%E5%85%B7/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>UE4编辑器和运行时使用解压缩和压缩功能, 一个简单的蓝图库, 源代码来自GitHub的<a href="https://github.com/getnamo/ZipUtility-ue4">ZipUtility Plugin</a></p>
-<p>对其做了稍微修改, 修复了部分因为版本更新的报错信息(大量头文件包含问题)</p>
-<p><a href="https://github.com/VJien/ZipUtility-UE4-Extra"> ZipUtility-UE4-Extra</a></p>
-<p>本文简单介绍这个插件的使用方式</p>
-<p><img src="https://img.supervj.top//img/UE4Editor_Eenx6GKDoT.png" alt="UE4Editor_Eenx6GKDoT"></p>
-<a id="more"></a>
-
-
-
-
-
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><ul>
-<li>下载/克隆</li>
-<li>放到目录 <code>项目/Plugins/</code>内</li>
-<li>刷新项目</li>
-</ul>
-<blockquote>
-<p>检查VS是否安装了最新的<code>ATL</code>和<code>MFC</code>组件,否则会提示<code>atlbase.h</code>找不到</p>
-</blockquote>
-<blockquote>
-<p> 如果已经安装了还是报错, 检查<code>ZipUtility.Build.cs</code>文件</p>
-</blockquote>
-<p>检查如下字段,默认是vs2017的, 我这里改成了2019</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> VsDirectory</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find VS installation directory from registry</span></span><br><span class="line">            <span class="built_in">string</span> regPath = (<span class="built_in">string</span>)Registry.GetValue(<span class="string">@&quot;HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7\&quot;</span>, <span class="string">&quot;15.0&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(regPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility: Found VS path in registry: &quot;</span> + regPath);</span><br><span class="line">                <span class="keyword">return</span> regPath;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// If failed - using the most common install path</span></span><br><span class="line">                <span class="built_in">string</span> vsDefaultBasePath = <span class="string">@&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019&quot;</span>;</span><br><span class="line">                <span class="built_in">string</span> vsVersion = Directory.GetDirectories(vsDefaultBasePath)[<span class="number">0</span>];</span><br><span class="line">                <span class="built_in">string</span> vsPath = Path.Combine(vsDefaultBasePath, vsVersion);</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Warning: Using default VS path: &quot;</span> + vsPath);</span><br><span class="line">                <span class="keyword">return</span> vsPath;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ATLPath</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find ATL path similar to:</span></span><br><span class="line">            <span class="comment">// C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.14.26428/atlmfc</span></span><br><span class="line">            <span class="built_in">string</span> atlPath = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> vsDir = VsDirectory;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(vsDir))</span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="built_in">string</span> msvcPath = Path.Combine(vsDir, <span class="string">@&quot;VC\Tools\MSVC\&quot;</span>);</span><br><span class="line">                    <span class="built_in">string</span> msvcVersion = Directory.GetDirectories(msvcPath)[<span class="number">0</span>];</span><br><span class="line">                    atlPath = Path.Combine(msvcPath, msvcVersion, <span class="string">&quot;atlmfc&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            catch (Exception ex)</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: can&#x27;t find VS path: &quot;</span> + ex.ToString());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!Directory.Exists(atlPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: Couldn&#x27;t find an ATLPath, fix it in ZipUtility.Build.cs&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> atlPath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>比如我这边的路径是<code>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc</code>,需要与上述csharp指定的atl路径匹配,否则在VS编译会报警告和错误</p>
-<blockquote>
-<p>尝试在 <code>Property-&gt;VC++ Directories-&gt;Include Directories</code>中加入类似<code>Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include</code>的路径</p>
-</blockquote>
-<p><img src="https://img.supervj.top//img/UE4Editor_md5TmgDXhY.png" alt="UE4Editor_md5TmgDXhY"></p>
-<p><img src="https://img.supervj.top//img/image-20210326134323995.png" alt="image-20210326134323995"></p>
-<p>每个方法都需要提供一个<code>UObject</code>类对象, 该对象如果挂上接口就可以获取回调事件</p>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>解压缩</tag>
-        <tag>第三方工具</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>UE4子系统</title>
     <url>/2020/08/03/UE4%E5%AD%90%E7%B3%BB%E7%BB%9F/</url>
     <content><![CDATA[<blockquote>
@@ -2821,117 +2777,6 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       <tags>
         <tag>Zeal</tag>
         <tag>API</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>UE4各种代理(委托)使用方法</title>
-    <url>/2021/02/25/UE%E4%BB%A3%E7%90%86%E6%B1%87%E6%80%BB/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://img.supervj.top//img/chrome_FGGFGHQnkb.png"></p>
-<p>UE4中有茫茫多的代理类型, 对于初学者刚开始都是一头雾水, 本篇文章逐步分析每一种代理的使用方法</p>
-<a id="more"></a>
-
-
-
-
-
-<p>我们先用一个输入整形输入参数的形式,声明所有类型的代理</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//单播代理</span></span><br><span class="line">DECLARE_DELEGATE_OneParam(FDlg_1P,int32);</span><br><span class="line"><span class="comment">//多播代理</span></span><br><span class="line">DECLARE_MULTICAST_DELEGATE_OneParam(FDlgMul_1P, int32);</span><br><span class="line"><span class="comment">//事件</span></span><br><span class="line">DECLARE_EVENT_OneParam(AActor,FDlgEvent_1P,int32);</span><br><span class="line"><span class="comment">//动态代理</span></span><br><span class="line">DECLARE_DYNAMIC_DELEGATE_OneParam(FDlgDy_1P, int32, number);</span><br><span class="line"><span class="comment">//动态多播代理</span></span><br><span class="line">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDlgDyMul_1P, int32, number);</span><br><span class="line"><span class="comment">//带返回的单播</span></span><br><span class="line">DECLARE_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>,FDlgRet_1P,int32);</span><br><span class="line"><span class="comment">//带返回值的动态单播</span></span><br><span class="line">DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>, FDlgDyRet_1P, int32, number);</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">		FDlg_1P Dlg_1P;</span><br><span class="line">		FDlgMul_1P DlgMul_1P;</span><br><span class="line">		FDlgEvent_1P DlgEvent_1P;</span><br><span class="line">		FDlgDy_1P DlgDy_1P;</span><br><span class="line"><span class="comment">//唯一可以声明为蓝图变量的类型</span></span><br><span class="line">	UPROPERTY(BlueprintAssignable, BlueprintCallable)</span><br><span class="line">		FDlgDyMul_1P DlgDyMul_1P;</span><br><span class="line"></span><br><span class="line">		FDlgRet_1P DlgRet_1P;</span><br><span class="line">		FDlgDyRet_1P DlgDyRet_1P;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>按使用方式, 一般就是普通的单播代理, 动态代理, 多播代理以及动态多播代理, 每种类型都有无参数很若干参数的版本以及带返回值的版本(多播无返回值);</p>
-<p>后续我们也按照蓝图可否使用来区分各个代理</p>
-<h2 id="单播代理"><a href="#单播代理" class="headerlink" title="单播代理"></a>单播代理</h2><ul>
-<li>声明</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DELEGATE_OneParam(FDlg_1P,int32);</span><br><span class="line">DECLARE_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>,FDlgRet_1P,int32);<span class="comment">//带返回值</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>定义</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FDlg_1P Dlg_1P;</span><br><span class="line">FDlgRet_1P DlgRet_1P;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>绑定/解绑</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Event_FDlg_1P</span><span class="params">(int32 number)</span></span>;</span><br><span class="line">Dlg_1P.BindUObject(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlg_1P);</span><br><span class="line">Dlg_1P.Unbind();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">Event_DlgRet_1P</span><span class="params">(int32 number)</span></span>;</span><br><span class="line">GetFDlgRet_1P().BindUObject(<span class="keyword">this</span>, &amp;ATestActor::Event_DlgRet_1P);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//Static函数 // BindStatic</span></span><br><span class="line"><span class="comment">//普通C++对象的成员函数 // BindRaw</span></span><br><span class="line"><span class="comment">//Lambda表达式 // BindLambda // BindWeakLambda</span></span><br><span class="line"><span class="comment">//与某个UObject对象关联的Lambda表达式</span></span><br><span class="line"><span class="comment">//共享引用包裹的普通C++对象的成员函数 // BindSP // BindThreadSafeSP</span></span><br><span class="line"><span class="comment">//线程安全的共享引用包裹的普通C++对象的成员函数</span></span><br><span class="line"><span class="comment">//UObject对象的成员函数 // BindUObject</span></span><br><span class="line"><span class="comment">//UObject对象的UFunction成员函数 // BindUFunction</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>调用/触发</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Dlg_1P.ExecuteIfBound(number);</span><br><span class="line"><span class="keyword">if</span> (DlgRet_1P.IsBound())<span class="comment">//有返回值</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> DlgRet_1P.Execute(number);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>不支持反射以及序列化，可以有返回值，支持Playload参数，可以绑定一个</p>
-<p>另外定义的变量无法定义为蓝图变量, 也无法作为参数传递给蓝图;</p>
-<p>绑定以后会顶替掉其他绑定的类,即<strong>绑定唯一</strong></p>
-<h2 id="多播代理-事件"><a href="#多播代理-事件" class="headerlink" title="多播代理/事件"></a>多播代理/事件</h2><ul>
-<li>声明/定义</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_MULTICAST_DELEGATE_OneParam(FDlgMul_1P, int32);</span><br><span class="line">DECLARE_EVENT_OneParam(AActor,FDlgEvent_1P,int32);</span><br><span class="line">FDlgMul_1P DlgMul_1P;</span><br><span class="line">FDlgEvent_1P DlgEvent_1P;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>绑定/解绑</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">GetFDlgMul_1P().AddUObject(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlgMul_1P);</span><br><span class="line">GetFDlgMul_1P().RemoveAll(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//Static函数 // AddStddatic</span></span><br><span class="line"><span class="comment">//普通C++对象的成员函数 // AddRaw</span></span><br><span class="line"><span class="comment">//Lambda表达式 // AddLambda // AddWeakLambda</span></span><br><span class="line"><span class="comment">//与某个UObject对象关联的Lambda表达式</span></span><br><span class="line"><span class="comment">//共享引用包裹的普通C++对象的成员函数 // AddSP // AddThreadSafeSP</span></span><br><span class="line"><span class="comment">//线程安全的共享引用包裹的普通C++对象的成员函数</span></span><br><span class="line"><span class="comment">//UObject对象的成员函数 // AddUObject</span></span><br><span class="line"><span class="comment">//UObject对象的UFunction成员函数 // AddUFunction</span></span><br><span class="line"><span class="comment">//也可以创建FDelegate对象，然后调用Add函数</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>触发/调用</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DlgMul_1P.Broadcast(number);</span><br></pre></td></tr></table></figure>
-
-
-
-<p>不支持反射以及序列化，<strong>无返回值</strong>，支持Playload参数，可以绑定多个</p>
-<h2 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h2><ul>
-<li>声明/定义</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DYNAMIC_DELEGATE_OneParam(FDlgDy_1P, int32, number);</span><br><span class="line">DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>, FDlgDyRet_1P, int32, number);</span><br><span class="line">FDlgDy_1P DlgDy_1P;</span><br><span class="line">FDlgDyRet_1P DlgDyRet_1P;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>绑定/解绑</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Event_FDlgDy_1P</span><span class="params">(int32 number)</span></span>;</span><br><span class="line">GetFDlgDy_1P().BindUFunction(<span class="keyword">this</span>, TEXT(<span class="string">&quot;Event_FDlgDy_1P&quot;</span>));</span><br><span class="line"><span class="comment">//GetFDlgDy_1P().BindDynamic(this, &amp;ATestActor::Event_FDlgDy_1P);//宏绑定</span></span><br><span class="line">GetFDlgDy_1P().Unbind();</span><br><span class="line"></span><br><span class="line"><span class="comment">//带返回值的类同</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>触发/调用</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">GetFDlgDy_1P().Broadcast(number);</span><br><span class="line"><span class="keyword">if</span> (DlgDyRet_1P.IsBound())<span class="comment">//带返回值</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> DlgDyRet_1P.Execute(number);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
-
-<p>支持反射以及序列化，可以有返回值，不支持Playload参数，<strong>绑定唯一</strong></p>
-<p>另外动态代理支持作为蓝图函数的参数, 如下</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, BlueprintNativeEvent)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">TestFunction</span><span class="params">(<span class="keyword">const</span> FDlgDy_1P&amp; callback_Dy, <span class="keyword">const</span> FDlgDyRet_1P&amp; callback_DyRet)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://img.supervj.top//img/UE4Editor_lvL7XrynEG.png" alt="UE4Editor_lvL7XrynEG"></p>
-<blockquote>
-<p>调用此函数以后也作为唯一绑定而顶替掉原有绑定.</p>
-</blockquote>
-<h2 id="动态多播代理"><a href="#动态多播代理" class="headerlink" title="动态多播代理"></a>动态多播代理</h2><ul>
-<li>声明/定义</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDlgDyMul_1P, int32, number);</span><br><span class="line">UPROPERTY(BlueprintAssignable, BlueprintCallable)<span class="comment">//唯一可以声明为蓝图变量的</span></span><br><span class="line">		FDlgDyMul_1P DlgDyMul_1P;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>绑定/解绑</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">GetFDlgDyMul_1P().AddDynamic(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlgDyMul_1P);</span><br><span class="line">GetFDlgDyMul_1P().RemoveDynamic(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlgDyMul_1P);</span><br><span class="line"><span class="comment">//也同样支持Add和AddUnique函数</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>调用/触发</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DlgDyMul_1P.Broadcast(number);</span><br></pre></td></tr></table></figure>
-
-<p>如果定义的时候加入了<code>BlueprintAssignable, BlueprintCallable</code>即可以作为蓝图变量, 类似蓝图的<code>Dispatcher</code>的使用</p>
-<p><img src="https://img.supervj.top//img/UE4Editor_o15wfc0YJ4.png" alt="UE4Editor_o15wfc0YJ4"></p>
-<h2 id="关于Payload"><a href="#关于Payload" class="headerlink" title="关于Payload"></a>关于Payload</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DELEGATE_OneParam(FTestDlg, <span class="keyword">int</span>);</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">TestPayload</span><span class="params">(<span class="keyword">int</span> number, FString txt)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    UE_LOG(LogTemp, Log, TEXT(<span class="string">&quot;TestPayload : %d  %s&quot;</span>), number,  *txt);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">FTestDlg TestDlg;</span><br><span class="line">TestDlg.BindStatic(TestPayload, TEXT(<span class="string">&quot;Hello&quot;</span>)); </span><br><span class="line">TestDlg.ExecuteIfBound(<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
-
-]]></content>
-      <categories>
-        <category>engine</category>
-      </categories>
-      <tags>
-        <tag>代理</tag>
       </tags>
   </entry>
   <entry>
@@ -3054,6 +2899,161 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </tags>
   </entry>
   <entry>
+    <title>UE4各种代理(委托)使用方法</title>
+    <url>/2021/02/25/UE%E4%BB%A3%E7%90%86%E6%B1%87%E6%80%BB/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://img.supervj.top//img/chrome_FGGFGHQnkb.png"></p>
+<p>UE4中有茫茫多的代理类型, 对于初学者刚开始都是一头雾水, 本篇文章逐步分析每一种代理的使用方法</p>
+<a id="more"></a>
+
+
+
+
+
+<p>我们先用一个输入整形输入参数的形式,声明所有类型的代理</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//单播代理</span></span><br><span class="line">DECLARE_DELEGATE_OneParam(FDlg_1P,int32);</span><br><span class="line"><span class="comment">//多播代理</span></span><br><span class="line">DECLARE_MULTICAST_DELEGATE_OneParam(FDlgMul_1P, int32);</span><br><span class="line"><span class="comment">//事件</span></span><br><span class="line">DECLARE_EVENT_OneParam(AActor,FDlgEvent_1P,int32);</span><br><span class="line"><span class="comment">//动态代理</span></span><br><span class="line">DECLARE_DYNAMIC_DELEGATE_OneParam(FDlgDy_1P, int32, number);</span><br><span class="line"><span class="comment">//动态多播代理</span></span><br><span class="line">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDlgDyMul_1P, int32, number);</span><br><span class="line"><span class="comment">//带返回的单播</span></span><br><span class="line">DECLARE_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>,FDlgRet_1P,int32);</span><br><span class="line"><span class="comment">//带返回值的动态单播</span></span><br><span class="line">DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>, FDlgDyRet_1P, int32, number);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">		FDlg_1P Dlg_1P;</span><br><span class="line">		FDlgMul_1P DlgMul_1P;</span><br><span class="line">		FDlgEvent_1P DlgEvent_1P;</span><br><span class="line">		FDlgDy_1P DlgDy_1P;</span><br><span class="line"><span class="comment">//唯一可以声明为蓝图变量的类型</span></span><br><span class="line">	UPROPERTY(BlueprintAssignable, BlueprintCallable)</span><br><span class="line">		FDlgDyMul_1P DlgDyMul_1P;</span><br><span class="line"></span><br><span class="line">		FDlgRet_1P DlgRet_1P;</span><br><span class="line">		FDlgDyRet_1P DlgDyRet_1P;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>按使用方式, 一般就是普通的单播代理, 动态代理, 多播代理以及动态多播代理, 每种类型都有无参数很若干参数的版本以及带返回值的版本(多播无返回值);</p>
+<p>后续我们也按照蓝图可否使用来区分各个代理</p>
+<h2 id="单播代理"><a href="#单播代理" class="headerlink" title="单播代理"></a>单播代理</h2><ul>
+<li>声明</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DELEGATE_OneParam(FDlg_1P,int32);</span><br><span class="line">DECLARE_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>,FDlgRet_1P,int32);<span class="comment">//带返回值</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>定义</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FDlg_1P Dlg_1P;</span><br><span class="line">FDlgRet_1P DlgRet_1P;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>绑定/解绑</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Event_FDlg_1P</span><span class="params">(int32 number)</span></span>;</span><br><span class="line">Dlg_1P.BindUObject(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlg_1P);</span><br><span class="line">Dlg_1P.Unbind();</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">Event_DlgRet_1P</span><span class="params">(int32 number)</span></span>;</span><br><span class="line">GetFDlgRet_1P().BindUObject(<span class="keyword">this</span>, &amp;ATestActor::Event_DlgRet_1P);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//Static函数 // BindStatic</span></span><br><span class="line"><span class="comment">//普通C++对象的成员函数 // BindRaw</span></span><br><span class="line"><span class="comment">//Lambda表达式 // BindLambda // BindWeakLambda</span></span><br><span class="line"><span class="comment">//与某个UObject对象关联的Lambda表达式</span></span><br><span class="line"><span class="comment">//共享引用包裹的普通C++对象的成员函数 // BindSP // BindThreadSafeSP</span></span><br><span class="line"><span class="comment">//线程安全的共享引用包裹的普通C++对象的成员函数</span></span><br><span class="line"><span class="comment">//UObject对象的成员函数 // BindUObject</span></span><br><span class="line"><span class="comment">//UObject对象的UFunction成员函数 // BindUFunction</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>调用/触发</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Dlg_1P.ExecuteIfBound(number);</span><br><span class="line"><span class="keyword">if</span> (DlgRet_1P.IsBound())<span class="comment">//有返回值</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> DlgRet_1P.Execute(number);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不支持反射以及序列化，可以有返回值，支持Playload参数，可以绑定一个</p>
+<p>另外定义的变量无法定义为蓝图变量, 也无法作为参数传递给蓝图;</p>
+<p>绑定以后会顶替掉其他绑定的类,即<strong>绑定唯一</strong></p>
+<h2 id="多播代理-事件"><a href="#多播代理-事件" class="headerlink" title="多播代理/事件"></a>多播代理/事件</h2><ul>
+<li>声明/定义</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_MULTICAST_DELEGATE_OneParam(FDlgMul_1P, int32);</span><br><span class="line">DECLARE_EVENT_OneParam(AActor,FDlgEvent_1P,int32);</span><br><span class="line">FDlgMul_1P DlgMul_1P;</span><br><span class="line">FDlgEvent_1P DlgEvent_1P;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>绑定/解绑</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">GetFDlgMul_1P().AddUObject(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlgMul_1P);</span><br><span class="line">GetFDlgMul_1P().RemoveAll(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//Static函数 // AddStddatic</span></span><br><span class="line"><span class="comment">//普通C++对象的成员函数 // AddRaw</span></span><br><span class="line"><span class="comment">//Lambda表达式 // AddLambda // AddWeakLambda</span></span><br><span class="line"><span class="comment">//与某个UObject对象关联的Lambda表达式</span></span><br><span class="line"><span class="comment">//共享引用包裹的普通C++对象的成员函数 // AddSP // AddThreadSafeSP</span></span><br><span class="line"><span class="comment">//线程安全的共享引用包裹的普通C++对象的成员函数</span></span><br><span class="line"><span class="comment">//UObject对象的成员函数 // AddUObject</span></span><br><span class="line"><span class="comment">//UObject对象的UFunction成员函数 // AddUFunction</span></span><br><span class="line"><span class="comment">//也可以创建FDelegate对象，然后调用Add函数</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>触发/调用</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DlgMul_1P.Broadcast(number);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>不支持反射以及序列化，<strong>无返回值</strong>，支持Playload参数，可以绑定多个</p>
+<h2 id="动态代理"><a href="#动态代理" class="headerlink" title="动态代理"></a>动态代理</h2><ul>
+<li>声明/定义</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DYNAMIC_DELEGATE_OneParam(FDlgDy_1P, int32, number);</span><br><span class="line">DECLARE_DYNAMIC_DELEGATE_RetVal_OneParam(<span class="keyword">bool</span>, FDlgDyRet_1P, int32, number);</span><br><span class="line">FDlgDy_1P DlgDy_1P;</span><br><span class="line">FDlgDyRet_1P DlgDyRet_1P;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>绑定/解绑</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">Event_FDlgDy_1P</span><span class="params">(int32 number)</span></span>;</span><br><span class="line">GetFDlgDy_1P().BindUFunction(<span class="keyword">this</span>, TEXT(<span class="string">&quot;Event_FDlgDy_1P&quot;</span>));</span><br><span class="line"><span class="comment">//GetFDlgDy_1P().BindDynamic(this, &amp;ATestActor::Event_FDlgDy_1P);//宏绑定</span></span><br><span class="line">GetFDlgDy_1P().Unbind();</span><br><span class="line"></span><br><span class="line"><span class="comment">//带返回值的类同</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>触发/调用</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">GetFDlgDy_1P().Broadcast(number);</span><br><span class="line"><span class="keyword">if</span> (DlgDyRet_1P.IsBound())<span class="comment">//带返回值</span></span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span> DlgDyRet_1P.Execute(number);</span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure>
+
+<p>支持反射以及序列化，可以有返回值，不支持Playload参数，<strong>绑定唯一</strong></p>
+<p>另外动态代理支持作为蓝图函数的参数, 如下</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, BlueprintNativeEvent)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">TestFunction</span><span class="params">(<span class="keyword">const</span> FDlgDy_1P&amp; callback_Dy, <span class="keyword">const</span> FDlgDyRet_1P&amp; callback_DyRet)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.supervj.top//img/UE4Editor_lvL7XrynEG.png" alt="UE4Editor_lvL7XrynEG"></p>
+<blockquote>
+<p>调用此函数以后也作为唯一绑定而顶替掉原有绑定.</p>
+</blockquote>
+<h2 id="动态多播代理"><a href="#动态多播代理" class="headerlink" title="动态多播代理"></a>动态多播代理</h2><ul>
+<li>声明/定义</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FDlgDyMul_1P, int32, number);</span><br><span class="line">UPROPERTY(BlueprintAssignable, BlueprintCallable)<span class="comment">//唯一可以声明为蓝图变量的</span></span><br><span class="line">		FDlgDyMul_1P DlgDyMul_1P;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>绑定/解绑</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">GetFDlgDyMul_1P().AddDynamic(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlgDyMul_1P);</span><br><span class="line">GetFDlgDyMul_1P().RemoveDynamic(<span class="keyword">this</span>, &amp;ATestActor::Event_FDlgDyMul_1P);</span><br><span class="line"><span class="comment">//也同样支持Add和AddUnique函数</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>调用/触发</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DlgDyMul_1P.Broadcast(number);</span><br></pre></td></tr></table></figure>
+
+<p>如果定义的时候加入了<code>BlueprintAssignable, BlueprintCallable</code>即可以作为蓝图变量, 类似蓝图的<code>Dispatcher</code>的使用</p>
+<p><img src="https://img.supervj.top//img/UE4Editor_o15wfc0YJ4.png" alt="UE4Editor_o15wfc0YJ4"></p>
+<h2 id="关于Payload"><a href="#关于Payload" class="headerlink" title="关于Payload"></a>关于Payload</h2><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">DECLARE_DELEGATE_OneParam(FTestDlg, <span class="keyword">int</span>);</span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">TestPayload</span><span class="params">(<span class="keyword">int</span> number, FString txt)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    UE_LOG(LogTemp, Log, TEXT(<span class="string">&quot;TestPayload : %d  %s&quot;</span>), number,  *txt);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">FTestDlg TestDlg;</span><br><span class="line">TestDlg.BindStatic(TestPayload, TEXT(<span class="string">&quot;Hello&quot;</span>)); </span><br><span class="line">TestDlg.ExecuteIfBound(<span class="number">2</span>);</span><br></pre></td></tr></table></figure>
+
+]]></content>
+      <categories>
+        <category>engine</category>
+      </categories>
+      <tags>
+        <tag>代理</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>UE4压缩和解压缩工具</title>
+    <url>/2021/03/26/UE4%E5%8E%8B%E7%BC%A9%E5%B7%A5%E5%85%B7/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>UE4编辑器和运行时使用解压缩和压缩功能, 一个简单的蓝图库, 源代码来自GitHub的<a href="https://github.com/getnamo/ZipUtility-ue4">ZipUtility Plugin</a></p>
+<p>对其做了稍微修改, 修复了部分因为版本更新的报错信息(大量头文件包含问题)</p>
+<p><a href="https://github.com/VJien/ZipUtility-UE4-Extra"> ZipUtility-UE4-Extra</a></p>
+<p>本文简单介绍这个插件的使用方式</p>
+<p><img src="https://img.supervj.top//img/UE4Editor_Eenx6GKDoT.png" alt="UE4Editor_Eenx6GKDoT"></p>
+<a id="more"></a>
+
+
+
+
+
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><ul>
+<li>下载/克隆</li>
+<li>放到目录 <code>项目/Plugins/</code>内</li>
+<li>刷新项目</li>
+</ul>
+<blockquote>
+<p>检查VS是否安装了最新的<code>ATL</code>和<code>MFC</code>组件,否则会提示<code>atlbase.h</code>找不到</p>
+</blockquote>
+<blockquote>
+<p> 如果已经安装了还是报错, 检查<code>ZipUtility.Build.cs</code>文件</p>
+</blockquote>
+<p>检查如下字段,默认是vs2017的, 我这里改成了2019</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> VsDirectory</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find VS installation directory from registry</span></span><br><span class="line">            <span class="built_in">string</span> regPath = (<span class="built_in">string</span>)Registry.GetValue(<span class="string">@&quot;HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7\&quot;</span>, <span class="string">&quot;15.0&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(regPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility: Found VS path in registry: &quot;</span> + regPath);</span><br><span class="line">                <span class="keyword">return</span> regPath;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// If failed - using the most common install path</span></span><br><span class="line">                <span class="built_in">string</span> vsDefaultBasePath = <span class="string">@&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019&quot;</span>;</span><br><span class="line">                <span class="built_in">string</span> vsVersion = Directory.GetDirectories(vsDefaultBasePath)[<span class="number">0</span>];</span><br><span class="line">                <span class="built_in">string</span> vsPath = Path.Combine(vsDefaultBasePath, vsVersion);</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Warning: Using default VS path: &quot;</span> + vsPath);</span><br><span class="line">                <span class="keyword">return</span> vsPath;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ATLPath</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find ATL path similar to:</span></span><br><span class="line">            <span class="comment">// C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.14.26428/atlmfc</span></span><br><span class="line">            <span class="built_in">string</span> atlPath = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> vsDir = VsDirectory;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(vsDir))</span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="built_in">string</span> msvcPath = Path.Combine(vsDir, <span class="string">@&quot;VC\Tools\MSVC\&quot;</span>);</span><br><span class="line">                    <span class="built_in">string</span> msvcVersion = Directory.GetDirectories(msvcPath)[<span class="number">0</span>];</span><br><span class="line">                    atlPath = Path.Combine(msvcPath, msvcVersion, <span class="string">&quot;atlmfc&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            catch (Exception ex)</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: can&#x27;t find VS path: &quot;</span> + ex.ToString());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!Directory.Exists(atlPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: Couldn&#x27;t find an ATLPath, fix it in ZipUtility.Build.cs&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> atlPath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>比如我这边的路径是<code>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc</code>,需要与上述csharp指定的atl路径匹配,否则在VS编译会报警告和错误</p>
+<blockquote>
+<p>尝试在 <code>Property-&gt;VC++ Directories-&gt;Include Directories</code>中加入类似<code>Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include</code>的路径</p>
+</blockquote>
+<p><img src="https://img.supervj.top//img/UE4Editor_md5TmgDXhY.png" alt="UE4Editor_md5TmgDXhY"></p>
+<p><img src="https://img.supervj.top//img/image-20210326134323995.png" alt="image-20210326134323995"></p>
+<p>每个方法都需要提供一个<code>UObject</code>类对象, 该对象如果挂上接口就可以获取回调事件</p>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>解压缩</tag>
+        <tag>第三方工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>VS中使用UE代码片段</title>
     <url>/2020/12/03/VS%E4%B8%AD%E4%BD%BF%E7%94%A8UE%E4%BB%A3%E7%A0%81%E7%89%87%E6%AE%B5/</url>
     <content><![CDATA[<p><img src="https://img.supervj.top//img/image-20201203141501722.png" alt="image-20201203141501722"></p>
@@ -3161,70 +3161,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>随机数</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>ubuntu修改静态IP</title>
-    <url>/2020/08/20/ubuntu%E4%BF%AE%E6%94%B9IP/</url>
-    <content><![CDATA[<p>第一步我们需要将虚拟机的网络模式修改为<code>桥接模式</code>,并且勾选<code>复制物理网络连接状态</code>选项</p>
-<p>ubuntu在20.4版本以后修改IP的方法与之前的有了比较大的区别，在之前的版本是通过编辑<code>/etc/network/interfaces</code>文件去修改IP，在新版本以后修改的配置文件是</p>
-<p><code>/etc/netplan/01-cloud-init.yaml</code>,这个<code>01</code>可能每个人不相同，网上有些人是00，我这边是01</p>
-<p>所以，我们用用<code>sudo vim /etc/netplan/01-network-manager-all.yaml</code>打开，输入以下指令</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Let NetworkManager manage all devices on this system</span><br><span class="line">network:</span><br><span class="line">  version: 2</span><br><span class="line">  renderer: NetworkManager</span><br><span class="line">  ethernets:</span><br><span class="line">    ens33:</span><br><span class="line">      dhcp4: false</span><br><span class="line">      addresses: [192.168.1.222&#x2F;24]&#x2F;&#x2F;ip地址，后面的24不需要改，更掩码有关系</span><br><span class="line">      nameservers:</span><br><span class="line">        addresses: [8.8.8.8,192.168.0.1]</span><br><span class="line">~                                        </span><br></pre></td></tr></table></figure>
-
-<p>上面的222是你自己设定的IP地址，前面需要参考你真是物理IP的情况</p>
-<p>然后输入<code>sudo netplan --debug apply</code>应用</p>
-<p>然后通过<code>ifconfig</code>查看IP</p>
-]]></content>
-      <categories>
-        <category>other</category>
-      </categories>
-      <tags>
-        <tag>Linux</tag>
-        <tag>ubuntu</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>VsCode配置MaxScript开发环境</title>
-    <url>/2020/04/30/vscode%E9%85%8D%E7%BD%AEmax/</url>
-    <content><![CDATA[<h3 id="开发环境配置流程"><a href="#开发环境配置流程" class="headerlink" title="开发环境配置流程"></a>开发环境配置流程</h3><h5 id="MXSPyCom"><a href="#MXSPyCom" class="headerlink" title="MXSPyCom"></a>MXSPyCom</h5><ol>
-<li>下载GitHub的MXSPyComRelease包,<a href="https://github.com/techartorg/MXSPyCOM/releases">链接</a></li>
-<li>解压，并将安装包内的<code>MXSPyCOM.exe</code>文件复制到自定义目录</li>
-<li><code>initialize_COM_server.ms</code>脚本放到max对应版本的startup目录中，默认路径是<code>%localappdata%\autodesk\3dsmax\scripts\startup</code></li>
-</ol>
-<h5 id="VsCode"><a href="#VsCode" class="headerlink" title="VsCode"></a>VsCode</h5><ol>
-<li><p>下载LanguageMaxScript插件<img src="https://img.supervj.top/img1.png"></p>
-</li>
-<li><p>设置工作区</p>
-</li>
-<li><p>创建/配置*<strong>task.json**<em>,可以</em></strong>ctrl+e***搜索框中输入<code>&gt;task</code>搜索到<code>Configure Default Build Task</code>,在文件内设置如下代码</p>
-<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;version&quot;</span>: <span class="string">&quot;2.0.0&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;tasks&quot;</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;Execute in Max&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;process&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;C:/MXSPyCOM.exe&quot;</span>,  <span class="comment">//MXSPyCom.exe的路径</span></span><br><span class="line">            <span class="attr">&quot;args&quot;</span>: [<span class="string">&quot;-f&quot;</span>, <span class="string">&quot;$&#123;file&#125;&quot;</span>],</span><br><span class="line">            <span class="attr">&quot;presentation&quot;</span>: &#123;</span><br><span class="line">              <span class="attr">&quot;reveal&quot;</span>: <span class="string">&quot;always&quot;</span>,</span><br><span class="line">              <span class="attr">&quot;panel&quot;</span>: <span class="string">&quot;new&quot;</span></span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br></pre></td></tr></table></figure>
-</li>
-<li><p>更改快捷键配置,方便调试</p>
-<p><img src="https://img.supervj.top/imgmax2.png"></p>
-</li>
-</ol>
-   <figure class="highlight json"><table><tr><td class="code"><pre><span class="line">[</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;ctrl+e&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.tasks.runTask&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;args&quot;</span>: <span class="string">&quot;Execute in Max&quot;</span>      <span class="comment">//对应任务的名称   </span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;shift+e&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.quickOpen&quot;</span>  <span class="comment">//原来的ctrl+e功能</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;shift+e&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.quickOpenNavigateNextInFilePicker&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;when&quot;</span>: <span class="string">&quot;inFilesPicker &amp;&amp; inQuickOpen&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<h5 id="测试脚本"><a href="#测试脚本" class="headerlink" title="测试脚本"></a>测试脚本</h5><ol>
-<li>在工作目录创建后缀为 ms格式的脚本文件</li>
-<li>启动max</li>
-<li>复制如下代码到脚本文件内，按 ctrl+e  调试</li>
-</ol>
-<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">rollout rename_rollout <span class="string">&quot;Enter New Base Name&quot;</span></span><br><span class="line">    (</span><br><span class="line">        edittext base_name <span class="string">&quot;&quot;</span></span><br><span class="line">        button rename_them <span class="string">&quot;RENAME&quot;</span></span><br><span class="line">        On rename_them pressed <span class="keyword">do</span> </span><br><span class="line">        (</span><br><span class="line">            <span class="keyword">if</span> base_name.text!=<span class="string">&quot;&quot;</span> <span class="keyword">do</span> (</span><br><span class="line">                <span class="keyword">for</span> i <span class="keyword">in</span> selection <span class="keyword">do</span> i.name=uniqueName base_name.text</span><br><span class="line">            ) </span><br><span class="line">        ) </span><br><span class="line">    )</span><br><span class="line">    CreateDialog rename_rollout <span class="number">250</span> <span class="number">50</span></span><br><span class="line">    </span><br></pre></td></tr></table></figure>
-
-<ol start="4">
-<li>max生成如下窗口</li>
-</ol>
-<p><img src="https://img.supervj.top/img2.png"></p>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>3dMax</tag>
       </tags>
   </entry>
   <entry>
@@ -3376,6 +3312,70 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>obj</tag>
         <tag>模型</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>ubuntu修改静态IP</title>
+    <url>/2020/08/20/ubuntu%E4%BF%AE%E6%94%B9IP/</url>
+    <content><![CDATA[<p>第一步我们需要将虚拟机的网络模式修改为<code>桥接模式</code>,并且勾选<code>复制物理网络连接状态</code>选项</p>
+<p>ubuntu在20.4版本以后修改IP的方法与之前的有了比较大的区别，在之前的版本是通过编辑<code>/etc/network/interfaces</code>文件去修改IP，在新版本以后修改的配置文件是</p>
+<p><code>/etc/netplan/01-cloud-init.yaml</code>,这个<code>01</code>可能每个人不相同，网上有些人是00，我这边是01</p>
+<p>所以，我们用用<code>sudo vim /etc/netplan/01-network-manager-all.yaml</code>打开，输入以下指令</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Let NetworkManager manage all devices on this system</span><br><span class="line">network:</span><br><span class="line">  version: 2</span><br><span class="line">  renderer: NetworkManager</span><br><span class="line">  ethernets:</span><br><span class="line">    ens33:</span><br><span class="line">      dhcp4: false</span><br><span class="line">      addresses: [192.168.1.222&#x2F;24]&#x2F;&#x2F;ip地址，后面的24不需要改，更掩码有关系</span><br><span class="line">      nameservers:</span><br><span class="line">        addresses: [8.8.8.8,192.168.0.1]</span><br><span class="line">~                                        </span><br></pre></td></tr></table></figure>
+
+<p>上面的222是你自己设定的IP地址，前面需要参考你真是物理IP的情况</p>
+<p>然后输入<code>sudo netplan --debug apply</code>应用</p>
+<p>然后通过<code>ifconfig</code>查看IP</p>
+]]></content>
+      <categories>
+        <category>other</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>ubuntu</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>VsCode配置MaxScript开发环境</title>
+    <url>/2020/04/30/vscode%E9%85%8D%E7%BD%AEmax/</url>
+    <content><![CDATA[<h3 id="开发环境配置流程"><a href="#开发环境配置流程" class="headerlink" title="开发环境配置流程"></a>开发环境配置流程</h3><h5 id="MXSPyCom"><a href="#MXSPyCom" class="headerlink" title="MXSPyCom"></a>MXSPyCom</h5><ol>
+<li>下载GitHub的MXSPyComRelease包,<a href="https://github.com/techartorg/MXSPyCOM/releases">链接</a></li>
+<li>解压，并将安装包内的<code>MXSPyCOM.exe</code>文件复制到自定义目录</li>
+<li><code>initialize_COM_server.ms</code>脚本放到max对应版本的startup目录中，默认路径是<code>%localappdata%\autodesk\3dsmax\scripts\startup</code></li>
+</ol>
+<h5 id="VsCode"><a href="#VsCode" class="headerlink" title="VsCode"></a>VsCode</h5><ol>
+<li><p>下载LanguageMaxScript插件<img src="https://img.supervj.top/img1.png"></p>
+</li>
+<li><p>设置工作区</p>
+</li>
+<li><p>创建/配置*<strong>task.json**<em>,可以</em></strong>ctrl+e***搜索框中输入<code>&gt;task</code>搜索到<code>Configure Default Build Task</code>,在文件内设置如下代码</p>
+<figure class="highlight json"><table><tr><td class="code"><pre><span class="line">&#123;</span><br><span class="line">    <span class="attr">&quot;version&quot;</span>: <span class="string">&quot;2.0.0&quot;</span>,</span><br><span class="line">    <span class="attr">&quot;tasks&quot;</span>: [</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="attr">&quot;label&quot;</span>: <span class="string">&quot;Execute in Max&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;type&quot;</span>: <span class="string">&quot;process&quot;</span>,</span><br><span class="line">            <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;C:/MXSPyCOM.exe&quot;</span>,  <span class="comment">//MXSPyCom.exe的路径</span></span><br><span class="line">            <span class="attr">&quot;args&quot;</span>: [<span class="string">&quot;-f&quot;</span>, <span class="string">&quot;$&#123;file&#125;&quot;</span>],</span><br><span class="line">            <span class="attr">&quot;presentation&quot;</span>: &#123;</span><br><span class="line">              <span class="attr">&quot;reveal&quot;</span>: <span class="string">&quot;always&quot;</span>,</span><br><span class="line">              <span class="attr">&quot;panel&quot;</span>: <span class="string">&quot;new&quot;</span></span><br><span class="line">          &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    ]</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br></pre></td></tr></table></figure>
+</li>
+<li><p>更改快捷键配置,方便调试</p>
+<p><img src="https://img.supervj.top/imgmax2.png"></p>
+</li>
+</ol>
+   <figure class="highlight json"><table><tr><td class="code"><pre><span class="line">[</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;ctrl+e&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.tasks.runTask&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;args&quot;</span>: <span class="string">&quot;Execute in Max&quot;</span>      <span class="comment">//对应任务的名称   </span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;shift+e&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.quickOpen&quot;</span>  <span class="comment">//原来的ctrl+e功能</span></span><br><span class="line">    &#125;,</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="attr">&quot;key&quot;</span>: <span class="string">&quot;shift+e&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;command&quot;</span>: <span class="string">&quot;workbench.action.quickOpenNavigateNextInFilePicker&quot;</span>,</span><br><span class="line">        <span class="attr">&quot;when&quot;</span>: <span class="string">&quot;inFilesPicker &amp;&amp; inQuickOpen&quot;</span></span><br><span class="line">    &#125;</span><br><span class="line">]</span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="测试脚本"><a href="#测试脚本" class="headerlink" title="测试脚本"></a>测试脚本</h5><ol>
+<li>在工作目录创建后缀为 ms格式的脚本文件</li>
+<li>启动max</li>
+<li>复制如下代码到脚本文件内，按 ctrl+e  调试</li>
+</ol>
+<figure class="highlight lua"><table><tr><td class="code"><pre><span class="line">rollout rename_rollout <span class="string">&quot;Enter New Base Name&quot;</span></span><br><span class="line">    (</span><br><span class="line">        edittext base_name <span class="string">&quot;&quot;</span></span><br><span class="line">        button rename_them <span class="string">&quot;RENAME&quot;</span></span><br><span class="line">        On rename_them pressed <span class="keyword">do</span> </span><br><span class="line">        (</span><br><span class="line">            <span class="keyword">if</span> base_name.text!=<span class="string">&quot;&quot;</span> <span class="keyword">do</span> (</span><br><span class="line">                <span class="keyword">for</span> i <span class="keyword">in</span> selection <span class="keyword">do</span> i.name=uniqueName base_name.text</span><br><span class="line">            ) </span><br><span class="line">        ) </span><br><span class="line">    )</span><br><span class="line">    CreateDialog rename_rollout <span class="number">250</span> <span class="number">50</span></span><br><span class="line">    </span><br></pre></td></tr></table></figure>
+
+<ol start="4">
+<li>max生成如下窗口</li>
+</ol>
+<p><img src="https://img.supervj.top/img2.png"></p>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>3dMax</tag>
       </tags>
   </entry>
   <entry>
@@ -4911,6 +4911,42 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
+    <title>编辑器扩展：消息窗口</title>
+    <url>/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自定义和扩展消息窗口</p>
+<p><img src="https://img.supervj.top//img/image-20210809102920800.png" alt="image-20210809102920800"></p>
+<p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
+<a id="more"></a>
+
+
+
+<h2 id="消息窗口"><a href="#消息窗口" class="headerlink" title="消息窗口"></a>消息窗口</h2><p>先看两个枚举</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> EAppMsgType</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Enumerates supported message dialog button types.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		Ok,</span><br><span class="line">		YesNo,</span><br><span class="line">		OkCancel,</span><br><span class="line">		YesNoCancel,</span><br><span class="line">		CancelRetryContinue,</span><br><span class="line">		YesNoYesAllNoAll,</span><br><span class="line">		YesNoYesAllNoAllCancel,</span><br><span class="line">		YesNoYesAll,</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> EAppReturnType</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Enumerates message dialog return types.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		No,</span><br><span class="line">		Yes,</span><br><span class="line">		YesAll,</span><br><span class="line">		NoAll,</span><br><span class="line">		Cancel,</span><br><span class="line">		Ok,</span><br><span class="line">		Retry,</span><br><span class="line">		Continue,</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>前者为输入,后者会返回</p>
+<p>可以通过返回类型的不同来做不同的逻辑</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::OkCancel, DialogText);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>强行封装蓝图库</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">EMsgType</span> :</span> uint8</span><br><span class="line">&#123;</span><br><span class="line">	Ok,</span><br><span class="line">	YesNo,</span><br><span class="line">	OkCancel,</span><br><span class="line">	YesNoCancel,</span><br><span class="line">	CancelRetryContinue,</span><br><span class="line">	YesNoYesAllNoAll,</span><br><span class="line">	YesNoYesAllNoAllCancel,</span><br><span class="line">	YesNoYesAll,</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">EMsgRetType</span> :</span> uint8</span><br><span class="line">&#123;</span><br><span class="line">	No,</span><br><span class="line">	Yes,</span><br><span class="line">	YesAll,</span><br><span class="line">	NoAll,</span><br><span class="line">	Cancel,</span><br><span class="line">	Ok,</span><br><span class="line">	Retry,</span><br><span class="line">	Continue,</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">EMsgRetType <span class="title">UFlib_IO::OpenMessageWindow</span><span class="params">(EMsgType Type, FText Msg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	EAppMsgType::Type  tp;</span><br><span class="line">	<span class="keyword">switch</span> (Type)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::Ok:</span><br><span class="line">	tp = EAppMsgType::Ok; </span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNo:</span><br><span class="line">		tp = EAppMsgType::YesNo;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::OkCancel:</span><br><span class="line">		tp = EAppMsgType::OkCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoCancel:</span><br><span class="line">		tp = EAppMsgType::YesNoCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::CancelRetryContinue:</span><br><span class="line">		tp = EAppMsgType::CancelRetryContinue;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAllNoAll:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAllNoAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAllNoAllCancel:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAllNoAllCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAll:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	EAppReturnType::Type retType = FMessageDialog::Open(tp, Msg);</span><br><span class="line">	EMsgRetType returnType = EMsgRetType::Ok;</span><br><span class="line">	<span class="keyword">switch</span> (retType)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::No:</span><br><span class="line">		returnType = EMsgRetType::No;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Yes:</span><br><span class="line">		returnType = EMsgRetType::Yes;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::YesAll:</span><br><span class="line">		returnType = EMsgRetType::YesAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::NoAll:</span><br><span class="line">		returnType = EMsgRetType::NoAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Cancel:</span><br><span class="line">		returnType = EMsgRetType::Cancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Ok:</span><br><span class="line">		returnType = EMsgRetType::Ok;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Retry:</span><br><span class="line">		returnType = EMsgRetType::Retry;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Continue:</span><br><span class="line">		returnType = EMsgRetType::Continue;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> returnType;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
+]]></content>
+      <categories>
+        <category>editor</category>
+      </categories>
+      <tags>
+        <tag>Slate</tag>
+        <tag>编辑器扩展</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>编辑器扩展:自定义PlaceActors</title>
     <url>/2021/08/13/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E8%87%AA%E5%AE%9A%E4%B9%89PlaceActors/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://img.supervj.top//img/image-20210813111004071.png" alt="image-20210813111004071"></p>
@@ -4967,42 +5003,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>PlacementActors</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>编辑器扩展：消息窗口</title>
-    <url>/2021/08/09/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E6%B6%88%E6%81%AF%E7%AA%97%E5%8F%A3/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自定义和扩展消息窗口</p>
-<p><img src="https://img.supervj.top//img/image-20210809102920800.png" alt="image-20210809102920800"></p>
-<p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
-<a id="more"></a>
-
-
-
-<h2 id="消息窗口"><a href="#消息窗口" class="headerlink" title="消息窗口"></a>消息窗口</h2><p>先看两个枚举</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> EAppMsgType</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Enumerates supported message dialog button types.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		Ok,</span><br><span class="line">		YesNo,</span><br><span class="line">		OkCancel,</span><br><span class="line">		YesNoCancel,</span><br><span class="line">		CancelRetryContinue,</span><br><span class="line">		YesNoYesAllNoAll,</span><br><span class="line">		YesNoYesAllNoAllCancel,</span><br><span class="line">		YesNoYesAll,</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> EAppReturnType</span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">/**</span></span><br><span class="line"><span class="comment">	 * Enumerates message dialog return types.</span></span><br><span class="line"><span class="comment">	 */</span></span><br><span class="line">	<span class="class"><span class="keyword">enum</span> <span class="title">Type</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		No,</span><br><span class="line">		Yes,</span><br><span class="line">		YesAll,</span><br><span class="line">		NoAll,</span><br><span class="line">		Cancel,</span><br><span class="line">		Ok,</span><br><span class="line">		Retry,</span><br><span class="line">		Continue,</span><br><span class="line">	&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>前者为输入,后者会返回</p>
-<p>可以通过返回类型的不同来做不同的逻辑</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">EAppReturnType::Type ReturnType = FMessageDialog::Open(EAppMsgType::OkCancel, DialogText);</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>强行封装蓝图库</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">EMsgType</span> :</span> uint8</span><br><span class="line">&#123;</span><br><span class="line">	Ok,</span><br><span class="line">	YesNo,</span><br><span class="line">	OkCancel,</span><br><span class="line">	YesNoCancel,</span><br><span class="line">	CancelRetryContinue,</span><br><span class="line">	YesNoYesAllNoAll,</span><br><span class="line">	YesNoYesAllNoAllCancel,</span><br><span class="line">	YesNoYesAll,</span><br><span class="line"></span><br><span class="line">&#125;;</span><br><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">EMsgRetType</span> :</span> uint8</span><br><span class="line">&#123;</span><br><span class="line">	No,</span><br><span class="line">	Yes,</span><br><span class="line">	YesAll,</span><br><span class="line">	NoAll,</span><br><span class="line">	Cancel,</span><br><span class="line">	Ok,</span><br><span class="line">	Retry,</span><br><span class="line">	Continue,</span><br><span class="line"></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">EMsgRetType <span class="title">UFlib_IO::OpenMessageWindow</span><span class="params">(EMsgType Type, FText Msg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	EAppMsgType::Type  tp;</span><br><span class="line">	<span class="keyword">switch</span> (Type)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::Ok:</span><br><span class="line">	tp = EAppMsgType::Ok; </span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNo:</span><br><span class="line">		tp = EAppMsgType::YesNo;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::OkCancel:</span><br><span class="line">		tp = EAppMsgType::OkCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoCancel:</span><br><span class="line">		tp = EAppMsgType::YesNoCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::CancelRetryContinue:</span><br><span class="line">		tp = EAppMsgType::CancelRetryContinue;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAllNoAll:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAllNoAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAllNoAllCancel:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAllNoAllCancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EMsgType::YesNoYesAll:</span><br><span class="line">		tp = EAppMsgType::YesNoYesAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	EAppReturnType::Type retType = FMessageDialog::Open(tp, Msg);</span><br><span class="line">	EMsgRetType returnType = EMsgRetType::Ok;</span><br><span class="line">	<span class="keyword">switch</span> (retType)</span><br><span class="line">	&#123;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::No:</span><br><span class="line">		returnType = EMsgRetType::No;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Yes:</span><br><span class="line">		returnType = EMsgRetType::Yes;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::YesAll:</span><br><span class="line">		returnType = EMsgRetType::YesAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::NoAll:</span><br><span class="line">		returnType = EMsgRetType::NoAll;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Cancel:</span><br><span class="line">		returnType = EMsgRetType::Cancel;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Ok:</span><br><span class="line">		returnType = EMsgRetType::Ok;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Retry:</span><br><span class="line">		returnType = EMsgRetType::Retry;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	<span class="keyword">case</span> EAppReturnType::Continue:</span><br><span class="line">		returnType = EMsgRetType::Continue;</span><br><span class="line">		<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> returnType;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://img.supervj.top//img/image-20210108110520787.png" alt="image-20210108110520787"></p>
-]]></content>
-      <categories>
-        <category>editor</category>
-      </categories>
-      <tags>
-        <tag>Slate</tag>
-        <tag>编辑器扩展</tag>
       </tags>
   </entry>
   <entry>
@@ -5364,129 +5364,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
-    <title>《Multiplayer RPG Template》说明文档</title>
-    <url>/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/</url>
-    <content><![CDATA[<blockquote>
-<p> 这是一份<a href="https://www.unrealengine.com/marketplace/zh-CN/product/multiplayer-rpg-template">Multiplayer RPG Template</a>的说明文档,内容包含其中主要系统的配置和制作方法</p>
-<p>此案例是基于UE4的<strong>ListerServer</strong>建立的局域网联机游戏demo，参考作品WOW</p>
-<p>基于UE4版本4.25</p>
-<p>demo尚且有未完善的地方，后续会跟进优化和修复</p>
-</blockquote>
-<h3 id="技能系统"><a href="#技能系统" class="headerlink" title="技能系统"></a>技能系统</h3><p><img src="https://img.supervj.top/imgchao4_skill1.jpg"></p>
-<p>如上图所示，此图为技能表的配置信息，下面简述其中重要的参数</p>
-<ul>
-<li>Action: 这个变量代表这个行为的唯一ID，原则上跟表格的RowName相同，很多逻辑中需要通过这个ID查找关于这个技能的所有信息，或者通过这个ID执行这个技能等</li>
-<li>Display(struct)：3个参数用来显示这个技能一般信息，比如名字或者说明还有图标的显示，在UMG上有相关的体现，当然你也可以用来自定义<ul>
-<li><img src="https://img.supervj.top/imgchao4_skill4.jpg"></li>
-<li><img src="https://img.supervj.top/imgchao4_skill5.jpg"></li>
-</ul>
-</li>
-<li>CastData(struct)：这个是一个施法的结构体，主要设置的是施法的方式和条件<ul>
-<li>Type:比如默认的读条施法，持续施法，攻击叠加类的施法等方式</li>
-<li>Time:施法所需要的时长，0意味着瞬发</li>
-<li>Duration:如果是持续施法，那么这个参数意味着引导时间</li>
-<li>KeepAttackStat:施法完以后会继续进行普通攻击</li>
-<li>MotionCast:移动施法，设置为否的话必须站立施法，一旦移动就打断施法</li>
-<li>NotTargetCast:不需要目标的施法，一般用于范围技能比如火雨之类</li>
-</ul>
-</li>
-<li>Mp:消耗魔法值，战士为怒气值</li>
-<li>CD:冷却时间</li>
-<li>MaxRange：最大释放范围，按照虚幻单位计算，0意味着无限制</li>
-<li>LearnGold/Level:学习该技能的前置条件，0意味着无要求</li>
-<li>RangeSelectRange:如果是范围选择的技能，此参数表示作用的半径</li>
-<li>TargetType:目标类型，作用地方还是友方等</li>
-<li>SkillClass:技能实例的类，无需手动创建</li>
-</ul>
-<h5 id="SkillRef"><a href="#SkillRef" class="headerlink" title="SkillRef"></a>SkillRef</h5><blockquote>
-<p>这个是通过表格配置的SkillClass创建的，无需手动创建，你只需要制作这个类的逻辑和效果</p>
-<p>这个类是继承自<code>BP_BaseSkill</code>,里面有一些乱七八糟的蓝图逻辑，不过并不是全部都是必须使用的，这个类很多情况下你可以自由发挥，反正技能释放了以后就通过这个类来控制这个技能实例的运行</p>
-<p>下面就通过<code>IceBullet</code>这个技能类来说明一下</p>
-</blockquote>
-<p><img src="https://img.supervj.top/imgchao4_skill2.jpg"></p>
-<p><code>IceBullet</code>继承于<code>ProjectileBase</code>，如上图所示，这是这个类的基本参数类型</p>
-<ul>
-<li>speed:飞行速度，依赖<code>ProjectileComponent</code></li>
-<li>StopDistance:停止的距离，因为这个类是追踪目标飞行的，所以会总有接近并且到达目标的时候，到达目标并停止以后会产生一段逻辑</li>
-<li>Duration:持续时间，如果没有命中到达时间以后也会摧毁自己</li>
-<li>Sound/FX:相关的特效配置，Start可以用于产生的时候播放，Hit可以用于打中目标以后播放，但都需要手动释放，<ul>
-<li>在<code>ProjectileBase</code>已经实现了<code>BeginPlay</code>以后调用Start的效果</li>
-<li>在打中目标后已经实现播放Hit的效果</li>
-</ul>
-</li>
-<li>BuffData：如果这个技能有buff/debuff可以设置这个类，需要手动调用方法来创建并运行buff类,如下图</li>
-</ul>
-<p><img src="https://img.supervj.top/imgchao4_skill3.jpg"></p>
-<h5 id="BuffRef"><a href="#BuffRef" class="headerlink" title="BuffRef"></a>BuffRef</h5><blockquote>
-<p>这是Buff的实例类，通过SkillRef内部调用<code>CreateBuff</code>方法创建</p>
-<p>通过重写<code>BuffInit</code>和<code>BuffEnd</code>方法来实现自定义的逻辑，如果是拥有持续效果，那么你可以重写<code>BuffDelta</code> 方法来制作持续调用的逻辑</p>
-</blockquote>
-<h3 id="装备系统"><a href="#装备系统" class="headerlink" title="装备系统"></a>装备系统</h3><p><img src="https://img.supervj.top/imgchao4_equp1.jpg"></p>
-<blockquote>
-<p>如上图所示，这个是装备信息的配置表，下面简单介绍其中主要参数的作用</p>
-</blockquote>
-<ul>
-<li>BodyPart：装备对应的位置</li>
-<li>Mesh/Mat:用于显示这个装备实体的模型，装备在人物上或者丢弃到世界中的显示</li>
-<li>Property:如字面意思就是2种属性，其中Adv属性会随着Base的更改而变化</li>
-</ul>
-<h3 id="道具系统"><a href="#道具系统" class="headerlink" title="道具系统"></a>道具系统</h3><p><img src="https://img.supervj.top/imgchao4_prop1.jpg"></p>
-<blockquote>
-<p>道具系统类似于装备系统</p>
-</blockquote>
-<ul>
-<li>EffectType:作用类型，本案例只制作了治疗效果和增加魔法的效果</li>
-<li>Value: 可以设置作用效果的范围值，当然这个不是必须的，具体是下面的道具类内部实现</li>
-<li>CanBeStacked:如果是否那么一个道具占据背包栏的一格，否则么可以堆放到一起</li>
-<li>ActionClass:道具类实现逻辑的类，参考Skill的实例实现，具体逻辑可以写到这个类里面</li>
-</ul>
-<h3 id="掉落系统"><a href="#掉落系统" class="headerlink" title="掉落系统"></a>掉落系统</h3><p><img src="https://img.supervj.top/imgchao4_drop1.jpg"></p>
-<blockquote>
-<p>如上图所示，掉落系统的配置放在<code>DataSystem</code> 这个类里面，为什么没有配置表格呢？O(∩_∩)O</p>
-<p>当然也可以，你可以自己创建一个类似的表格然后替换其中的逻辑，这个很简单</p>
-</blockquote>
-<p>这个配置信息是一个Map键值对，键对应的是角色的类，值即是掉落信息数组</p>
-<ul>
-<li>Action:选择装备/道具等的Action名称</li>
-<li>Type:选择是装备/道具，当然你要是想掉落技能的话理论上也可以，请自由发挥</li>
-<li>Amount:掉落数量</li>
-<li>Probability:概率，这个概率计算是在角色创建的时候就完成的，非击杀的时候</li>
-</ul>
-<h3 id="任务系统"><a href="#任务系统" class="headerlink" title="任务系统"></a>任务系统</h3><p><img src="https://img.supervj.top/imgchao4_task1.jpg"></p>
-<blockquote>
-<p> 如上图所示，这是任务表格的配置信息</p>
-</blockquote>
-<ul>
-<li>Titile：任务的标题，会显示在任务栏内的抬头标题部分</li>
-<li>Target：任务的目标</li>
-<li>DynamicTargetStat:这个会动态的刷新，具体实现的逻辑在下面的TaskClass内</li>
-<li>Descripion:任务描述</li>
-<li>Reward：奖励</li>
-</ul>
-<h5 id="TaskRef"><a href="#TaskRef" class="headerlink" title="TaskRef"></a>TaskRef</h5><p><img src="https://img.supervj.top/imgchao4_task2.jpg"></p>
-<p><img src="https://img.supervj.top/imgchao4_task3.jpg"></p>
-<blockquote>
-<p>如上图所示，每接受一个任务以后就会产生一个任务类来作为该任务的观察者(代理)</p>
-<p>具体这个任务是干什么的你可以通过实现这个类内的逻辑来管理，同时设置任务目标里的动态信息</p>
-</blockquote>
-<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><h5 id="怪物刷新"><a href="#怪物刷新" class="headerlink" title="怪物刷新"></a>怪物刷新</h5><p><img src="https://img.supervj.top/imgchao4_aigenerat1.jpg"></p>
-<blockquote>
-<p>怪物刷新是在场景里放置一个<code>BP_AIGenerator</code>管理类来完成的</p>
-</blockquote>
-<ul>
-<li>MaxNum:刷新的最大数量</li>
-<li>AIClass:设置刷新角色的类，超过1个的时候就随机从中刷新</li>
-<li>Range:以该管理类的位置为中心的半径内刷新怪物</li>
-</ul>
-]]></content>
-      <categories>
-        <category>other</category>
-      </categories>
-      <tags>
-        <tag>教程</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>资源注册模块AssetRegistry分析</title>
     <url>/2020/11/27/%E8%B5%84%E6%BA%90%E6%B3%A8%E5%86%8C%E6%A8%A1%E5%9D%97%E5%88%86%E6%9E%90/</url>
     <content><![CDATA[<blockquote>
@@ -5659,90 +5536,126 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
-    <title>路径点优化</title>
-    <url>/2020/06/12/%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96/</url>
+    <title>《Multiplayer RPG Template》说明文档</title>
+    <url>/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/</url>
     <content><![CDATA[<blockquote>
-<p>本文介绍路径点的优化方式，或者叫做多线段优化、轨迹点优化</p>
-<p>根据设定阈值，去掉路径点中的部分多余点，以达到方便传输的目的</p>
-<p>本文用UE4蓝图和C++蓝图函数库的2个方式解释</p>
-<p><strong>注:多种方法可以叠加使用</strong></p>
+<p> 这是一份<a href="https://www.unrealengine.com/marketplace/zh-CN/product/multiplayer-rpg-template">Multiplayer RPG Template</a>的说明文档,内容包含其中主要系统的配置和制作方法</p>
+<p>此案例是基于UE4的<strong>ListerServer</strong>建立的局域网联机游戏demo，参考作品WOW</p>
+<p>基于UE4版本4.25</p>
+<p>demo尚且有未完善的地方，后续会跟进优化和修复</p>
 </blockquote>
-<p>本算法提供了基于UE4的Demo，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/EdZ7WHvq8mdHm2b0xRcJtWsBnhqVdqBx07E_Tr_s7mshDQ?e=8lhWkm">PC</a>，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/ET-Wm3V8br1PuSrS0qUnwekBLP5bGpnZqZ8cGb3tGSLK-w?e=Y7wQmT">安卓</a></p>
-<p><a href="https://github.com/VJien/PathOptimazation">GitHub工程下载</a></p>
-<p>Demo演示动图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_10.gif"></p>
-<a id="more"></a>
-
-
-
-<h3 id="径向距离算法"><a href="#径向距离算法" class="headerlink" title="径向距离算法"></a>径向距离算法</h3><blockquote>
-<p>又称为临近点优化，比较暴力的算法，效率高，精准度尚可</p>
-<p>目的：去掉太接近的点</p>
-</blockquote>
-<p>如果路径点中的相邻两点的距离小于设定的阈值，则舍去其中一个点。首先，以笔迹中的第一个点为基准点，计算第二个点与第一个点之间的距离，如果此距离小于给定的阈值，则舍去第二个点；如果此距离大于给定的阈值，则保留第二个点，并以其为新的基准点。然后再拿第三个点来与基准点判断距离，如此向后循环。</p>
-<p>先贴代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//径向距离优化，小于distance的点会被优化</span></span><br><span class="line">	UFUNCTION(BlueprintCallable,Category=<span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance=<span class="number">50</span>)</span></span>;</span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,  TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num()&lt;<span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey= InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt; InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ((vKey- InPath[i]).Size()&gt; Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">			vKey = InPath[i];</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ((InPath.Last()-vKey).Size()&lt;=Distance)<span class="comment">//处理最后一个点</span></span><br><span class="line">	&#123;</span><br><span class="line">		OutPath.Pop();</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_1.jpg"></p>
-<h3 id="曲率算法"><a href="#曲率算法" class="headerlink" title="曲率算法"></a>曲率算法</h3><blockquote>
-<p>去除大于设定曲率阈值的角度的点</p>
-<p>目的：去除角度偏移过大的线段</p>
-</blockquote>
-<p>设定3个点：p1,p2,p3</p>
-<p>方向向量：前置向量v1=p2-p1,后置向量v2=p3-p2</p>
-<p>v1和v2的夹角angle即我们需要与阈值比较的角度，如果大于阈值，那么点p2就不满足条件而被移除</p>
-<p>这里带来了一个问题，即移除了p2以后，下一次计算的时候后置向量v2保持不变即当前点指向下一个点；但是前置向量怎么选择是一个问题，所以我们分别用了<code>T124,T134,T234</code>来分别3种计算方式，3种方式取前置向量的方式分别是</p>
+<h3 id="技能系统"><a href="#技能系统" class="headerlink" title="技能系统"></a>技能系统</h3><p><img src="https://img.supervj.top/imgchao4_skill1.jpg"></p>
+<p>如上图所示，此图为技能表的配置信息，下面简述其中重要的参数</p>
 <ul>
-<li>T124：前置向量v1=p2-p1，即保持原样</li>
-<li>T134：v1=p3-p1，即跳过被移除点</li>
-<li>T234：v1=p3-p2，即跟后置向量保持统一节奏</li>
+<li>Action: 这个变量代表这个行为的唯一ID，原则上跟表格的RowName相同，很多逻辑中需要通过这个ID查找关于这个技能的所有信息，或者通过这个ID执行这个技能等</li>
+<li>Display(struct)：3个参数用来显示这个技能一般信息，比如名字或者说明还有图标的显示，在UMG上有相关的体现，当然你也可以用来自定义<ul>
+<li><img src="https://img.supervj.top/imgchao4_skill4.jpg"></li>
+<li><img src="https://img.supervj.top/imgchao4_skill5.jpg"></li>
 </ul>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_6.jpg"></p>
-<p>三种方式计算方式大同小异，下面先贴代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">ECurvatureType</span>:</span>uint8</span><br><span class="line">&#123;</span><br><span class="line">	T124,</span><br><span class="line">	T134,</span><br><span class="line">	T234</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//曲率优化，大于角度angle的点会被优化，分为3个模式，推荐使用T134</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type=ECurvatureType::T134, <span class="keyword">float</span> Angle = <span class="number">90</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type, <span class="keyword">float</span> Angle <span class="comment">/*= 90*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(p1);</span><br><span class="line">	FVector p2, p3, dirFWD, dirBWD;</span><br><span class="line">	<span class="keyword">bool</span> b124Found = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">if</span> (b124Found||type!=ECurvatureType::T124)</span><br><span class="line">		&#123;</span><br><span class="line">			dirFWD = p2 - p1;</span><br><span class="line">		&#125;</span><br><span class="line">		dirBWD = p3 - p2;</span><br><span class="line">		<span class="keyword">if</span> (AngleBetween(dirBWD, dirFWD) &lt;= Angle)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">			b124Found = <span class="literal">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			b124Found = <span class="literal">false</span>;</span><br><span class="line">			<span class="keyword">if</span> (type==ECurvatureType::T234)</span><br><span class="line">			&#123;</span><br><span class="line">				p1 = p2;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">UFlibAlgorithm::AngleBetween</span><span class="params">(FVector A, FVector B)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A.Normalize();</span><br><span class="line">	B.Normalize();</span><br><span class="line">	<span class="keyword">return</span> UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(A, B));</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1.jpg"></p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1pathOpt_3_2.jpg"></p>
+</li>
+<li>CastData(struct)：这个是一个施法的结构体，主要设置的是施法的方式和条件<ul>
+<li>Type:比如默认的读条施法，持续施法，攻击叠加类的施法等方式</li>
+<li>Time:施法所需要的时长，0意味着瞬发</li>
+<li>Duration:如果是持续施法，那么这个参数意味着引导时间</li>
+<li>KeepAttackStat:施法完以后会继续进行普通攻击</li>
+<li>MotionCast:移动施法，设置为否的话必须站立施法，一旦移动就打断施法</li>
+<li>NotTargetCast:不需要目标的施法，一般用于范围技能比如火雨之类</li>
+</ul>
+</li>
+<li>Mp:消耗魔法值，战士为怒气值</li>
+<li>CD:冷却时间</li>
+<li>MaxRange：最大释放范围，按照虚幻单位计算，0意味着无限制</li>
+<li>LearnGold/Level:学习该技能的前置条件，0意味着无要求</li>
+<li>RangeSelectRange:如果是范围选择的技能，此参数表示作用的半径</li>
+<li>TargetType:目标类型，作用地方还是友方等</li>
+<li>SkillClass:技能实例的类，无需手动创建</li>
+</ul>
+<h5 id="SkillRef"><a href="#SkillRef" class="headerlink" title="SkillRef"></a>SkillRef</h5><blockquote>
+<p>这个是通过表格配置的SkillClass创建的，无需手动创建，你只需要制作这个类的逻辑和效果</p>
+<p>这个类是继承自<code>BP_BaseSkill</code>,里面有一些乱七八糟的蓝图逻辑，不过并不是全部都是必须使用的，这个类很多情况下你可以自由发挥，反正技能释放了以后就通过这个类来控制这个技能实例的运行</p>
+<p>下面就通过<code>IceBullet</code>这个技能类来说明一下</p>
+</blockquote>
+<p><img src="https://img.supervj.top/imgchao4_skill2.jpg"></p>
+<p><code>IceBullet</code>继承于<code>ProjectileBase</code>，如上图所示，这是这个类的基本参数类型</p>
+<ul>
+<li>speed:飞行速度，依赖<code>ProjectileComponent</code></li>
+<li>StopDistance:停止的距离，因为这个类是追踪目标飞行的，所以会总有接近并且到达目标的时候，到达目标并停止以后会产生一段逻辑</li>
+<li>Duration:持续时间，如果没有命中到达时间以后也会摧毁自己</li>
+<li>Sound/FX:相关的特效配置，Start可以用于产生的时候播放，Hit可以用于打中目标以后播放，但都需要手动释放，<ul>
+<li>在<code>ProjectileBase</code>已经实现了<code>BeginPlay</code>以后调用Start的效果</li>
+<li>在打中目标后已经实现播放Hit的效果</li>
+</ul>
+</li>
+<li>BuffData：如果这个技能有buff/debuff可以设置这个类，需要手动调用方法来创建并运行buff类,如下图</li>
+</ul>
+<p><img src="https://img.supervj.top/imgchao4_skill3.jpg"></p>
+<h5 id="BuffRef"><a href="#BuffRef" class="headerlink" title="BuffRef"></a>BuffRef</h5><blockquote>
+<p>这是Buff的实例类，通过SkillRef内部调用<code>CreateBuff</code>方法创建</p>
+<p>通过重写<code>BuffInit</code>和<code>BuffEnd</code>方法来实现自定义的逻辑，如果是拥有持续效果，那么你可以重写<code>BuffDelta</code> 方法来制作持续调用的逻辑</p>
+</blockquote>
+<h3 id="装备系统"><a href="#装备系统" class="headerlink" title="装备系统"></a>装备系统</h3><p><img src="https://img.supervj.top/imgchao4_equp1.jpg"></p>
 <blockquote>
-<p>从结果测试发现，效果 T134&gt;T124&gt;T234</p>
+<p>如上图所示，这个是装备信息的配置表，下面简单介绍其中主要参数的作用</p>
 </blockquote>
-<h3 id="垂直距离算法"><a href="#垂直距离算法" class="headerlink" title="垂直距离算法"></a>垂直距离算法</h3><blockquote>
-<p>将点-线段的距离作为误差判据。对于每个顶点p，需要计算它与线段[p-1， p+1]的垂直距离，距离比给定误差小的点都将被移除。</p>
-<p>目的:去除垂直距离偏移过大的点</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_5.jpg"></p>
-<p>如图，如果蓝色线段即垂直距离大于设定阈值，则左右两天线段会被优化成红色线段</p>
-<p>代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//垂直距离优化，大于distance的点会被优化</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	FVector p1, p2, p3;</span><br><span class="line">	p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(p2, p1, p3 - p1);</span><br><span class="line">		<span class="keyword">if</span> (dis&lt;=Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_2.jpg"></p>
+<ul>
+<li>BodyPart：装备对应的位置</li>
+<li>Mesh/Mat:用于显示这个装备实体的模型，装备在人物上或者丢弃到世界中的显示</li>
+<li>Property:如字面意思就是2种属性，其中Adv属性会随着Base的更改而变化</li>
+</ul>
+<h3 id="道具系统"><a href="#道具系统" class="headerlink" title="道具系统"></a>道具系统</h3><p><img src="https://img.supervj.top/imgchao4_prop1.jpg"></p>
 <blockquote>
-<p>其实参考曲率优化方式，这个方式也可以考虑3种前置向量即本代码中<code>p1</code>的选择问题，本代码种应该是类似T234的方式，有兴趣的可以自己尝试其他几个方式</p>
+<p>道具系统类似于装备系统</p>
 </blockquote>
-<h3 id="道格拉斯-普克算法"><a href="#道格拉斯-普克算法" class="headerlink" title="道格拉斯-普克算法"></a>道格拉斯-普克算法</h3><blockquote>
-<p> 一种迭代适应点算法，它将曲线近似表示为一系列点，并减少点的数量。</p>
-<p>算法的基本思路是：对每一条曲线的首末点虚连一条直线，求所有点与直线的距离，并找出最大距离值 dmax ，用 dmax 与阈值 D 相比。若 dmax &lt; D ，这条曲线上的中间点全部舍去；若 dmax ≥ D ，则保留 dmax 对应的坐标点，并以该点为界，把曲线分为两部分，对这两部分循环使用该方法。<br>此算法在时间复杂度和空间复杂度要明显高于其它两种，但是它的效果较好</p>
+<ul>
+<li>EffectType:作用类型，本案例只制作了治疗效果和增加魔法的效果</li>
+<li>Value: 可以设置作用效果的范围值，当然这个不是必须的，具体是下面的道具类内部实现</li>
+<li>CanBeStacked:如果是否那么一个道具占据背包栏的一格，否则么可以堆放到一起</li>
+<li>ActionClass:道具类实现逻辑的类，参考Skill的实例实现，具体逻辑可以写到这个类里面</li>
+</ul>
+<h3 id="掉落系统"><a href="#掉落系统" class="headerlink" title="掉落系统"></a>掉落系统</h3><p><img src="https://img.supervj.top/imgchao4_drop1.jpg"></p>
+<blockquote>
+<p>如上图所示，掉落系统的配置放在<code>DataSystem</code> 这个类里面，为什么没有配置表格呢？O(∩_∩)O</p>
+<p>当然也可以，你可以自己创建一个类似的表格然后替换其中的逻辑，这个很简单</p>
 </blockquote>
-<p>先来一个动图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_7.gif"></p>
-<p>贴代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	达格拉斯多普优化，使用迭代计算</span></span><br><span class="line"><span class="comment">	效率相对低但是精度高</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	int32 idx, first, last;</span><br><span class="line">	first = idx = <span class="number">0</span>;</span><br><span class="line">	last = InPath.Num() - <span class="number">1</span>;</span><br><span class="line">	TArray&lt;<span class="keyword">bool</span>&gt; Markers;</span><br><span class="line">	Markers.AddUninitialized(last + <span class="number">1</span>);</span><br><span class="line">	Markers[<span class="number">0</span>] = <span class="literal">true</span>;</span><br><span class="line">	Markers.Last() = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">float</span> maxDis = <span class="number">0</span>;</span><br><span class="line">	TArray&lt;int32&gt; <span class="built_in">stack</span>;</span><br><span class="line">	<span class="keyword">while</span> (first&gt;=<span class="number">0</span> &amp;&amp; last&gt;=<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		maxDis = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">for</span> (int32 i=first+<span class="number">1</span>;i&lt;last;i++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(InPath[i], InPath[first], InPath[last] - InPath[first]);</span><br><span class="line">			<span class="keyword">if</span> (dis&gt;maxDis)</span><br><span class="line">			&#123;</span><br><span class="line">				idx = i;</span><br><span class="line">				maxDis = dis;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (maxDis&gt;Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			Markers[idx] = <span class="literal">true</span>;</span><br><span class="line">			<span class="built_in">stack</span>.Add(first);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(last);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num()&gt;<span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num() &gt; <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">0</span>;i&lt;Markers.Num();i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (Markers[i])</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_4.jpg"></p>
+<p>这个配置信息是一个Map键值对，键对应的是角色的类，值即是掉落信息数组</p>
+<ul>
+<li>Action:选择装备/道具等的Action名称</li>
+<li>Type:选择是装备/道具，当然你要是想掉落技能的话理论上也可以，请自由发挥</li>
+<li>Amount:掉落数量</li>
+<li>Probability:概率，这个概率计算是在角色创建的时候就完成的，非击杀的时候</li>
+</ul>
+<h3 id="任务系统"><a href="#任务系统" class="headerlink" title="任务系统"></a>任务系统</h3><p><img src="https://img.supervj.top/imgchao4_task1.jpg"></p>
+<blockquote>
+<p> 如上图所示，这是任务表格的配置信息</p>
+</blockquote>
+<ul>
+<li>Titile：任务的标题，会显示在任务栏内的抬头标题部分</li>
+<li>Target：任务的目标</li>
+<li>DynamicTargetStat:这个会动态的刷新，具体实现的逻辑在下面的TaskClass内</li>
+<li>Descripion:任务描述</li>
+<li>Reward：奖励</li>
+</ul>
+<h5 id="TaskRef"><a href="#TaskRef" class="headerlink" title="TaskRef"></a>TaskRef</h5><p><img src="https://img.supervj.top/imgchao4_task2.jpg"></p>
+<p><img src="https://img.supervj.top/imgchao4_task3.jpg"></p>
+<blockquote>
+<p>如上图所示，每接受一个任务以后就会产生一个任务类来作为该任务的观察者(代理)</p>
+<p>具体这个任务是干什么的你可以通过实现这个类内的逻辑来管理，同时设置任务目标里的动态信息</p>
+</blockquote>
+<h3 id="其他"><a href="#其他" class="headerlink" title="其他"></a>其他</h3><h5 id="怪物刷新"><a href="#怪物刷新" class="headerlink" title="怪物刷新"></a>怪物刷新</h5><p><img src="https://img.supervj.top/imgchao4_aigenerat1.jpg"></p>
+<blockquote>
+<p>怪物刷新是在场景里放置一个<code>BP_AIGenerator</code>管理类来完成的</p>
+</blockquote>
+<ul>
+<li>MaxNum:刷新的最大数量</li>
+<li>AIClass:设置刷新角色的类，超过1个的时候就随机从中刷新</li>
+<li>Range:以该管理类的位置为中心的半径内刷新怪物</li>
+</ul>
 ]]></content>
       <categories>
-        <category>math</category>
+        <category>other</category>
       </categories>
       <tags>
-        <tag>算法</tag>
+        <tag>教程</tag>
       </tags>
   </entry>
   <entry>
@@ -5872,6 +5785,93 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>教程</tag>
         <tag>案例</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>路径点优化</title>
+    <url>/2020/06/12/%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<blockquote>
+<p>本文介绍路径点的优化方式，或者叫做多线段优化、轨迹点优化</p>
+<p>根据设定阈值，去掉路径点中的部分多余点，以达到方便传输的目的</p>
+<p>本文用UE4蓝图和C++蓝图函数库的2个方式解释</p>
+<p><strong>注:多种方法可以叠加使用</strong></p>
+</blockquote>
+<p>本算法提供了基于UE4的Demo，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/EdZ7WHvq8mdHm2b0xRcJtWsBnhqVdqBx07E_Tr_s7mshDQ?e=8lhWkm">PC</a>，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/ET-Wm3V8br1PuSrS0qUnwekBLP5bGpnZqZ8cGb3tGSLK-w?e=Y7wQmT">安卓</a></p>
+<p><a href="https://github.com/VJien/PathOptimazation">GitHub工程下载</a></p>
+<p>Demo演示动图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_10.gif"></p>
+<a id="more"></a>
+
+
+
+<h3 id="径向距离算法"><a href="#径向距离算法" class="headerlink" title="径向距离算法"></a>径向距离算法</h3><blockquote>
+<p>又称为临近点优化，比较暴力的算法，效率高，精准度尚可</p>
+<p>目的：去掉太接近的点</p>
+</blockquote>
+<p>如果路径点中的相邻两点的距离小于设定的阈值，则舍去其中一个点。首先，以笔迹中的第一个点为基准点，计算第二个点与第一个点之间的距离，如果此距离小于给定的阈值，则舍去第二个点；如果此距离大于给定的阈值，则保留第二个点，并以其为新的基准点。然后再拿第三个点来与基准点判断距离，如此向后循环。</p>
+<p>先贴代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//径向距离优化，小于distance的点会被优化</span></span><br><span class="line">	UFUNCTION(BlueprintCallable,Category=<span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance=<span class="number">50</span>)</span></span>;</span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,  TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num()&lt;<span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey= InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt; InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ((vKey- InPath[i]).Size()&gt; Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">			vKey = InPath[i];</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ((InPath.Last()-vKey).Size()&lt;=Distance)<span class="comment">//处理最后一个点</span></span><br><span class="line">	&#123;</span><br><span class="line">		OutPath.Pop();</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_1.jpg"></p>
+<h3 id="曲率算法"><a href="#曲率算法" class="headerlink" title="曲率算法"></a>曲率算法</h3><blockquote>
+<p>去除大于设定曲率阈值的角度的点</p>
+<p>目的：去除角度偏移过大的线段</p>
+</blockquote>
+<p>设定3个点：p1,p2,p3</p>
+<p>方向向量：前置向量v1=p2-p1,后置向量v2=p3-p2</p>
+<p>v1和v2的夹角angle即我们需要与阈值比较的角度，如果大于阈值，那么点p2就不满足条件而被移除</p>
+<p>这里带来了一个问题，即移除了p2以后，下一次计算的时候后置向量v2保持不变即当前点指向下一个点；但是前置向量怎么选择是一个问题，所以我们分别用了<code>T124,T134,T234</code>来分别3种计算方式，3种方式取前置向量的方式分别是</p>
+<ul>
+<li>T124：前置向量v1=p2-p1，即保持原样</li>
+<li>T134：v1=p3-p1，即跳过被移除点</li>
+<li>T234：v1=p3-p2，即跟后置向量保持统一节奏</li>
+</ul>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_6.jpg"></p>
+<p>三种方式计算方式大同小异，下面先贴代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">ECurvatureType</span>:</span>uint8</span><br><span class="line">&#123;</span><br><span class="line">	T124,</span><br><span class="line">	T134,</span><br><span class="line">	T234</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//曲率优化，大于角度angle的点会被优化，分为3个模式，推荐使用T134</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type=ECurvatureType::T134, <span class="keyword">float</span> Angle = <span class="number">90</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type, <span class="keyword">float</span> Angle <span class="comment">/*= 90*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(p1);</span><br><span class="line">	FVector p2, p3, dirFWD, dirBWD;</span><br><span class="line">	<span class="keyword">bool</span> b124Found = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">if</span> (b124Found||type!=ECurvatureType::T124)</span><br><span class="line">		&#123;</span><br><span class="line">			dirFWD = p2 - p1;</span><br><span class="line">		&#125;</span><br><span class="line">		dirBWD = p3 - p2;</span><br><span class="line">		<span class="keyword">if</span> (AngleBetween(dirBWD, dirFWD) &lt;= Angle)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">			b124Found = <span class="literal">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			b124Found = <span class="literal">false</span>;</span><br><span class="line">			<span class="keyword">if</span> (type==ECurvatureType::T234)</span><br><span class="line">			&#123;</span><br><span class="line">				p1 = p2;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">UFlibAlgorithm::AngleBetween</span><span class="params">(FVector A, FVector B)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A.Normalize();</span><br><span class="line">	B.Normalize();</span><br><span class="line">	<span class="keyword">return</span> UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(A, B));</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1.jpg"></p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1pathOpt_3_2.jpg"></p>
+<blockquote>
+<p>从结果测试发现，效果 T134&gt;T124&gt;T234</p>
+</blockquote>
+<h3 id="垂直距离算法"><a href="#垂直距离算法" class="headerlink" title="垂直距离算法"></a>垂直距离算法</h3><blockquote>
+<p>将点-线段的距离作为误差判据。对于每个顶点p，需要计算它与线段[p-1， p+1]的垂直距离，距离比给定误差小的点都将被移除。</p>
+<p>目的:去除垂直距离偏移过大的点</p>
+</blockquote>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_5.jpg"></p>
+<p>如图，如果蓝色线段即垂直距离大于设定阈值，则左右两天线段会被优化成红色线段</p>
+<p>代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//垂直距离优化，大于distance的点会被优化</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	FVector p1, p2, p3;</span><br><span class="line">	p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(p2, p1, p3 - p1);</span><br><span class="line">		<span class="keyword">if</span> (dis&lt;=Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_2.jpg"></p>
+<blockquote>
+<p>其实参考曲率优化方式，这个方式也可以考虑3种前置向量即本代码中<code>p1</code>的选择问题，本代码种应该是类似T234的方式，有兴趣的可以自己尝试其他几个方式</p>
+</blockquote>
+<h3 id="道格拉斯-普克算法"><a href="#道格拉斯-普克算法" class="headerlink" title="道格拉斯-普克算法"></a>道格拉斯-普克算法</h3><blockquote>
+<p> 一种迭代适应点算法，它将曲线近似表示为一系列点，并减少点的数量。</p>
+<p>算法的基本思路是：对每一条曲线的首末点虚连一条直线，求所有点与直线的距离，并找出最大距离值 dmax ，用 dmax 与阈值 D 相比。若 dmax &lt; D ，这条曲线上的中间点全部舍去；若 dmax ≥ D ，则保留 dmax 对应的坐标点，并以该点为界，把曲线分为两部分，对这两部分循环使用该方法。<br>此算法在时间复杂度和空间复杂度要明显高于其它两种，但是它的效果较好</p>
+</blockquote>
+<p>先来一个动图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_7.gif"></p>
+<p>贴代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	达格拉斯多普优化，使用迭代计算</span></span><br><span class="line"><span class="comment">	效率相对低但是精度高</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	int32 idx, first, last;</span><br><span class="line">	first = idx = <span class="number">0</span>;</span><br><span class="line">	last = InPath.Num() - <span class="number">1</span>;</span><br><span class="line">	TArray&lt;<span class="keyword">bool</span>&gt; Markers;</span><br><span class="line">	Markers.AddUninitialized(last + <span class="number">1</span>);</span><br><span class="line">	Markers[<span class="number">0</span>] = <span class="literal">true</span>;</span><br><span class="line">	Markers.Last() = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">float</span> maxDis = <span class="number">0</span>;</span><br><span class="line">	TArray&lt;int32&gt; <span class="built_in">stack</span>;</span><br><span class="line">	<span class="keyword">while</span> (first&gt;=<span class="number">0</span> &amp;&amp; last&gt;=<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		maxDis = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">for</span> (int32 i=first+<span class="number">1</span>;i&lt;last;i++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(InPath[i], InPath[first], InPath[last] - InPath[first]);</span><br><span class="line">			<span class="keyword">if</span> (dis&gt;maxDis)</span><br><span class="line">			&#123;</span><br><span class="line">				idx = i;</span><br><span class="line">				maxDis = dis;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (maxDis&gt;Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			Markers[idx] = <span class="literal">true</span>;</span><br><span class="line">			<span class="built_in">stack</span>.Add(first);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(last);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num()&gt;<span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num() &gt; <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">0</span>;i&lt;Markers.Num();i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (Markers[i])</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_4.jpg"></p>
+]]></content>
+      <categories>
+        <category>math</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
       </tags>
   </entry>
   <entry>
