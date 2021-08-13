@@ -79,71 +79,6 @@
       </tags>
   </entry>
   <entry>
-    <title>AdvancedLocomotionSystemV4分析(四):布娃娃和起身</title>
-    <url>/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/</url>
-    <content><![CDATA[<blockquote>
-<p>  接下来就是布娃娃系统，对应的就有从布娃娃恢复成正常状态的起身动作。</p>
-<p>这里还同时分析了一下站立和下蹲姿势的切换，因为起身动作会涉及到这一块</p>
-</blockquote>
-<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
-<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
-<p><a href="https://supervj.top/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/">AdvancedLocomotionSystemV4分析(三):动作叠加</a></p>
-<a id="more"></a>
-
-<h3 id="输入"><a href="#输入" class="headerlink" title="输入"></a>输入</h3><p>站姿切换的输入比较简单粗暴，<code>ASL</code>项目用一个按键来实现姿势切换和翻滚，我这里方便测试就直接把这两个功能分开了，只需要设定一个按键直接调用<code>Crouch</code>和<code>UnCrouch</code>即可，然后在角色自带的时间<code>OnStartCrouch</code>和<code>OnEndCrouch</code>去调用方法<code>OnStanceChanged</code></p>
-<p>然后是布娃娃的输入，直接按键以后调用<code>RagdollStart</code>即可，如果已经处于<code>Ragdoll</code>状态就调用<code>RagdollEnd</code>结束布娃娃状态</p>
-<h3 id="布娃娃"><a href="#布娃娃" class="headerlink" title="布娃娃"></a>布娃娃</h3><h5 id="开始-进入布娃娃状态"><a href="#开始-进入布娃娃状态" class="headerlink" title="开始/进入布娃娃状态"></a>开始/进入布娃娃状态</h5><p><img src="https://img.supervj.top/img/temp/image-20201030105803687.png" alt="image-20201030105803687"></p>
-<p>进入布娃娃状态我们分3步走</p>
-<ol>
-<li>设置移动状态为<code>None</code>，设置<code>MovementState</code>为<code>Ragdoll</code></li>
-<li>关闭胶囊体碰撞，设置骨骼模型的碰撞为<code>PhysicsBody</code>，开启物理和检测效果，打开<code>pelvis</code>及以下的所有骨骼物理效果</li>
-<li>停止当前蒙太奇动画</li>
-</ol>
-<p>这里有一个非常大的坑需要注意，第2条的开启骨骼物理效果需要修改默认的骨骼物理资产，见下图</p>
-<p><img src="https://i.loli.net/2020/10/30/J5BqkUfN9OT6iwC.png" alt="image-20201030110213472"></p>
-<p>需要注意几点</p>
-<ol>
-<li>给<code>root</code>添加一个碰撞体</li>
-<li>修改碰撞体属性，<code>PhysicsType</code>设置为<code>Kinematic</code>，关闭碰撞检测</li>
-<li>修改<code>root</code>与<code>pelvis</code>碰撞体之间的约束，线性约束全部设置为<code>free</code></li>
-</ol>
-<p>如果不做以上几点你就会发现起身以后位置的异常，是因为<code>pelvis</code>碰撞体如果最为最上层碰撞体必然会导致的异常位置缘故</p>
-<hr>
-<p>进入布娃娃以后我们也需要看一下动画蓝图中的内容</p>
-<p><img src="https://i.loli.net/2020/10/30/yBKTroaSxOXpq1A.png" alt="image-20201030111405881"></p>
-<p>在主动画视图里的最后节点混合了布娃娃状态机</p>
-<p><img src="https://i.loli.net/2020/10/30/FCjpBRAJ6GuMlVE.png" alt="image-20201030111447376"></p>
-<p>比较简单，2个状态机切换而已</p>
-<p>刚进入布娃娃的时候使用动画<code>Flail</code>动画来过度</p>
-<p><img src="https://i.loli.net/2020/10/30/OEUAsicdynKHXfl.png" alt="image-20201030111604063"></p>
-<p>离开布娃娃时会使用离开布娃娃瞬间保存的<strong>快照动作</strong>来过度，很巧妙</p>
-<h5 id="刷新布娃娃状态"><a href="#刷新布娃娃状态" class="headerlink" title="刷新布娃娃状态"></a>刷新布娃娃状态</h5><p><img src="https://i.loli.net/2020/10/30/M6uotmZCwDh3eE4.png" alt="image-20201030111139863"></p>
-<p><img src="https://i.loli.net/2020/10/30/EGlQo1g3qYVsmKn.png" alt="image-20201030111151057"></p>
-<p>图片上的注释已经说的比较详细了，用的方法比较传统，这个<strong>线速度</strong>保存着是为了在结束布娃娃状态的时候在特定时候需要继续使用</p>
-<h5 id="结束布娃娃状态"><a href="#结束布娃娃状态" class="headerlink" title="结束布娃娃状态"></a>结束布娃娃状态</h5><p><img src="https://i.loli.net/2020/10/30/eVtYHkbiJg38AhQ.png" alt="image-20201030111753682"></p>
-<p>需要稍微注意的是这里有一个方法<code>GetGetUpAnimation</code>来得到具体的起身蒙太奇动画，考虑到的主要就是动作叠加问题，其实动画序列来自于同一个，只是动画通知内容不一样</p>
-<p><img src="https://i.loli.net/2020/10/30/KMrmGi8ba541VUh.png" alt="image-20201030112204582"></p>
-<p>动画通知调用了接口设置角色的状态为<code>GettingUp</code></p>
-<hr>
-<p>到这里，整个布娃娃和起身逻辑基本上完成了，但是实现的时候还会发现一个问题，就是起身以后会异常抖动</p>
-<p>原因是这套系统需要配合站立/下蹲的过度切换，如果不参用这个套路或者<strong>把起身动画里的下蹲权重=1的曲线<code>BasePose_CLF</code>删掉或设置为0</strong>都可以让角色直接成为站立状态，不需要下蹲姿势的过度，不过这个效果稍微差劲一点，看下图对比</p>
-<p><img src="https://i.loli.net/2020/10/30/JpYtPrWhNVEjwb2.gif" alt="录制_2020_10_30_11_28_27_728"></p>
-<p><img src="https://i.loli.net/2020/10/30/KZQO1R8egDhTXPH.gif" alt="录制_2020_10_30_11_29_12_605"></p>
-<h5 id="站立-下蹲切换"><a href="#站立-下蹲切换" class="headerlink" title="站立/下蹲切换"></a>站立/下蹲切换</h5><p><img src="https://i.loli.net/2020/10/30/1IVeWwyZxJpT2K3.png" alt="image-20201030113156852"></p>
-<p>下蹲在<code>Baselayer</code>层内也有类似站姿的2个状态机，实现内容也大同小异不过多讲述了</p>
-<p><code>Cycles</code>内6方向混合，<code>States</code>内停止/移动切换，转身</p>
-<p>重点看一下<code>MainGrounded</code>状态机内的姿势切换状态机</p>
-<p><img src="https://i.loli.net/2020/10/30/EsPUB8oyIfOwcR6.png" alt="image-20201030113355979"></p>
-<p>拿一张脑图来说明一下</p>
-<p><img src="https://i.loli.net/2020/10/30/meMcgWJy7s6UlH3.png" alt="image-20201030115438341"></p>
-<p>两个过渡状态机添加了通知<code>StopTransition</code></p>
-<p>另外，目前阶段的切换站姿会导致视角抖动，因为UE4本身<code>Crouch</code>的瞬间会把胶囊体的大小缩放为<code>CrouchHalfHeight</code>的高度，解决方法是把相机独立出去，即不挂载在角色身上，后续分析</p>
-]]></content>
-      <categories>
-        <category>animation</category>
-      </categories>
-  </entry>
-  <entry>
     <title>AdvancedLocomotionSystemV4分析(三):动作叠加</title>
     <url>/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/</url>
     <content><![CDATA[<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
@@ -213,6 +148,71 @@
       <tags>
         <tag>animation</tag>
       </tags>
+  </entry>
+  <entry>
+    <title>AdvancedLocomotionSystemV4分析(四):布娃娃和起身</title>
+    <url>/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/</url>
+    <content><![CDATA[<blockquote>
+<p>  接下来就是布娃娃系统，对应的就有从布娃娃恢复成正常状态的起身动作。</p>
+<p>这里还同时分析了一下站立和下蹲姿势的切换，因为起身动作会涉及到这一块</p>
+</blockquote>
+<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
+<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
+<p><a href="https://supervj.top/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/">AdvancedLocomotionSystemV4分析(三):动作叠加</a></p>
+<a id="more"></a>
+
+<h3 id="输入"><a href="#输入" class="headerlink" title="输入"></a>输入</h3><p>站姿切换的输入比较简单粗暴，<code>ASL</code>项目用一个按键来实现姿势切换和翻滚，我这里方便测试就直接把这两个功能分开了，只需要设定一个按键直接调用<code>Crouch</code>和<code>UnCrouch</code>即可，然后在角色自带的时间<code>OnStartCrouch</code>和<code>OnEndCrouch</code>去调用方法<code>OnStanceChanged</code></p>
+<p>然后是布娃娃的输入，直接按键以后调用<code>RagdollStart</code>即可，如果已经处于<code>Ragdoll</code>状态就调用<code>RagdollEnd</code>结束布娃娃状态</p>
+<h3 id="布娃娃"><a href="#布娃娃" class="headerlink" title="布娃娃"></a>布娃娃</h3><h5 id="开始-进入布娃娃状态"><a href="#开始-进入布娃娃状态" class="headerlink" title="开始/进入布娃娃状态"></a>开始/进入布娃娃状态</h5><p><img src="https://img.supervj.top/img/temp/image-20201030105803687.png" alt="image-20201030105803687"></p>
+<p>进入布娃娃状态我们分3步走</p>
+<ol>
+<li>设置移动状态为<code>None</code>，设置<code>MovementState</code>为<code>Ragdoll</code></li>
+<li>关闭胶囊体碰撞，设置骨骼模型的碰撞为<code>PhysicsBody</code>，开启物理和检测效果，打开<code>pelvis</code>及以下的所有骨骼物理效果</li>
+<li>停止当前蒙太奇动画</li>
+</ol>
+<p>这里有一个非常大的坑需要注意，第2条的开启骨骼物理效果需要修改默认的骨骼物理资产，见下图</p>
+<p><img src="https://i.loli.net/2020/10/30/J5BqkUfN9OT6iwC.png" alt="image-20201030110213472"></p>
+<p>需要注意几点</p>
+<ol>
+<li>给<code>root</code>添加一个碰撞体</li>
+<li>修改碰撞体属性，<code>PhysicsType</code>设置为<code>Kinematic</code>，关闭碰撞检测</li>
+<li>修改<code>root</code>与<code>pelvis</code>碰撞体之间的约束，线性约束全部设置为<code>free</code></li>
+</ol>
+<p>如果不做以上几点你就会发现起身以后位置的异常，是因为<code>pelvis</code>碰撞体如果最为最上层碰撞体必然会导致的异常位置缘故</p>
+<hr>
+<p>进入布娃娃以后我们也需要看一下动画蓝图中的内容</p>
+<p><img src="https://i.loli.net/2020/10/30/yBKTroaSxOXpq1A.png" alt="image-20201030111405881"></p>
+<p>在主动画视图里的最后节点混合了布娃娃状态机</p>
+<p><img src="https://i.loli.net/2020/10/30/FCjpBRAJ6GuMlVE.png" alt="image-20201030111447376"></p>
+<p>比较简单，2个状态机切换而已</p>
+<p>刚进入布娃娃的时候使用动画<code>Flail</code>动画来过度</p>
+<p><img src="https://i.loli.net/2020/10/30/OEUAsicdynKHXfl.png" alt="image-20201030111604063"></p>
+<p>离开布娃娃时会使用离开布娃娃瞬间保存的<strong>快照动作</strong>来过度，很巧妙</p>
+<h5 id="刷新布娃娃状态"><a href="#刷新布娃娃状态" class="headerlink" title="刷新布娃娃状态"></a>刷新布娃娃状态</h5><p><img src="https://i.loli.net/2020/10/30/M6uotmZCwDh3eE4.png" alt="image-20201030111139863"></p>
+<p><img src="https://i.loli.net/2020/10/30/EGlQo1g3qYVsmKn.png" alt="image-20201030111151057"></p>
+<p>图片上的注释已经说的比较详细了，用的方法比较传统，这个<strong>线速度</strong>保存着是为了在结束布娃娃状态的时候在特定时候需要继续使用</p>
+<h5 id="结束布娃娃状态"><a href="#结束布娃娃状态" class="headerlink" title="结束布娃娃状态"></a>结束布娃娃状态</h5><p><img src="https://i.loli.net/2020/10/30/eVtYHkbiJg38AhQ.png" alt="image-20201030111753682"></p>
+<p>需要稍微注意的是这里有一个方法<code>GetGetUpAnimation</code>来得到具体的起身蒙太奇动画，考虑到的主要就是动作叠加问题，其实动画序列来自于同一个，只是动画通知内容不一样</p>
+<p><img src="https://i.loli.net/2020/10/30/KMrmGi8ba541VUh.png" alt="image-20201030112204582"></p>
+<p>动画通知调用了接口设置角色的状态为<code>GettingUp</code></p>
+<hr>
+<p>到这里，整个布娃娃和起身逻辑基本上完成了，但是实现的时候还会发现一个问题，就是起身以后会异常抖动</p>
+<p>原因是这套系统需要配合站立/下蹲的过度切换，如果不参用这个套路或者<strong>把起身动画里的下蹲权重=1的曲线<code>BasePose_CLF</code>删掉或设置为0</strong>都可以让角色直接成为站立状态，不需要下蹲姿势的过度，不过这个效果稍微差劲一点，看下图对比</p>
+<p><img src="https://i.loli.net/2020/10/30/JpYtPrWhNVEjwb2.gif" alt="录制_2020_10_30_11_28_27_728"></p>
+<p><img src="https://i.loli.net/2020/10/30/KZQO1R8egDhTXPH.gif" alt="录制_2020_10_30_11_29_12_605"></p>
+<h5 id="站立-下蹲切换"><a href="#站立-下蹲切换" class="headerlink" title="站立/下蹲切换"></a>站立/下蹲切换</h5><p><img src="https://i.loli.net/2020/10/30/1IVeWwyZxJpT2K3.png" alt="image-20201030113156852"></p>
+<p>下蹲在<code>Baselayer</code>层内也有类似站姿的2个状态机，实现内容也大同小异不过多讲述了</p>
+<p><code>Cycles</code>内6方向混合，<code>States</code>内停止/移动切换，转身</p>
+<p>重点看一下<code>MainGrounded</code>状态机内的姿势切换状态机</p>
+<p><img src="https://i.loli.net/2020/10/30/EsPUB8oyIfOwcR6.png" alt="image-20201030113355979"></p>
+<p>拿一张脑图来说明一下</p>
+<p><img src="https://i.loli.net/2020/10/30/meMcgWJy7s6UlH3.png" alt="image-20201030115438341"></p>
+<p>两个过渡状态机添加了通知<code>StopTransition</code></p>
+<p>另外，目前阶段的切换站姿会导致视角抖动，因为UE4本身<code>Crouch</code>的瞬间会把胶囊体的大小缩放为<code>CrouchHalfHeight</code>的高度，解决方法是把相机独立出去，即不挂载在角色身上，后续分析</p>
+]]></content>
+      <categories>
+        <category>animation</category>
+      </categories>
   </entry>
   <entry>
     <title>AdvancedLocomotionSystemV4分析(五):镜头</title>
@@ -1370,239 +1370,6 @@
       </tags>
   </entry>
   <entry>
-    <title>GameplayAbilitySystem入门与实战(四):GameplayAbility(一)</title>
-    <url>/2020/12/22/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%9B%9B)_GameplayAbility/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在第一篇<a href="https://supervj.top/2020/12/19/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E4%B8%80)_%E5%88%9D%E5%A7%8B%E5%8C%96/">初始化</a>的时候简单讲解了技能的添加和使用, 但是没有对技能<code>GameplayAbility</code>(<code>GA</code>)做详细介绍,本片开始对<code>GA</code>中的主要功能注意剖析</p>
-<h2 id="注册-移除技能"><a href="#注册-移除技能" class="headerlink" title="注册/移除技能"></a>注册/移除技能</h2><p>之前我们通过配置的方式自动注册起始技能, 那么我们肯定需要动态的增加或者删除技能, 为了方便使用, 封装蓝图库</p>
-<a id="more"></a>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">RPC_Ser_AddAbility</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass, int32 level = <span class="number">1</span>)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">RPC_Ser_RemoveAbilityByClass</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">RPC_Ser_RemoveAbilityByName</span><span class="params">(<span class="keyword">const</span> FString&amp; name)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//以下3个非RPC事件</span></span><br><span class="line">	UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">AddNewAbility</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass, int32 level = <span class="number">1</span>)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">RemoveAbilityByClass</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">RemoveAbilityByName</span><span class="params">(<span class="keyword">const</span> FString&amp; name)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">USRAbilitySystemComponent::AddNewAbility</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass, int32 level)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (AbilitySpecMap.Num()&gt;<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">for</span> (TPair&lt;FString, FGameplayAbilitySpec*&gt; p : AbilitySpecMap)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (p.Value-&gt;Ability-&gt;GetClass() == AbilityClass)</span><br><span class="line">			&#123;</span><br><span class="line">				UE_LOG(SRLog, Warning, TEXT(<span class="string">&quot;USRAbilitySystemComponent::AddNewAbility Failed!! Has Repeat Ability&quot;</span>));</span><br><span class="line">				<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	FGameplayAbilitySpec spec = FGameplayAbilitySpec(AbilityClass, level, <span class="keyword">static_cast</span>&lt;int32&gt;(AbilityClass.GetDefaultObject()-&gt;InputID), GetOwnerActor());</span><br><span class="line">	GiveAbility(spec);</span><br><span class="line">	AbilitySpecMap.Add(AbilityClass.GetDefaultObject()-&gt;AbilityName, <span class="keyword">this</span>-&gt;FindAbilitySpecFromClass(AbilityClass));</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">USRAbilitySystemComponent::RemoveAbilityByClass</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	FGameplayAbilitySpec* spec = FindAbilitySpecFromClass(AbilityClass);</span><br><span class="line">	<span class="keyword">if</span> (spec)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">this</span>-&gt;ClearAbility(spec-&gt;Handle);</span><br><span class="line">		<span class="keyword">for</span> (TPair&lt;FString, FGameplayAbilitySpec*&gt; p : AbilitySpecMap)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (p.Value-&gt;Ability-&gt;GetClass() == AbilityClass)</span><br><span class="line">			&#123;</span><br><span class="line">				AbilitySpecMap.Remove(p.Key);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	UE_LOG(SRLog, Warning, TEXT(<span class="string">&quot;USRAbilitySystemComponent::RemoveAbilityByClass Failed!! Do not has this ability&quot;</span>));</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这个<code>Name</code>版本是我们在<code>GA</code>类中自定义的, 通过<code>TMap&lt;FString, FGameplayAbilitySpec*&gt; AbilitySpecMap</code>保存在我们<code>ASC</code>中</p>
-<p><img src="https://img.supervj.top//img/image-20201226141212117.png" alt="image-20201226141212117"></p>
-<h2 id="触发技能"><a href="#触发技能" class="headerlink" title="触发技能"></a>触发技能</h2><p>如果是已经用之前按键绑定的技能, 那么按键就会直接触发技能</p>
-<p>还有其他几个方法来手动触发技能</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;Abilities&quot;</span>)</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TryActivateAbilitiesByTag</span><span class="params">(<span class="keyword">const</span> FGameplayTagContainer&amp; GameplayTagContainer, <span class="keyword">bool</span> bAllowRemoteActivation = <span class="literal">true</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;Abilities&quot;</span>)</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TryActivateAbilityByClass</span><span class="params">(TSubclassOf&lt;UGameplayAbility&gt; InAbilityToActivate, <span class="keyword">bool</span> bAllowRemoteActivation = <span class="literal">true</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TryActivateAbility</span><span class="params">(FGameplayAbilitySpecHandle AbilityToActivate, <span class="keyword">bool</span> bAllowRemoteActivation = <span class="literal">true</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TriggerAbilityFromGameplayEvent</span><span class="params">(FGameplayAbilitySpecHandle AbilityToTrigger, FGameplayAbilityActorInfo* ActorInfo, FGameplayTag Tag, <span class="keyword">const</span> FGameplayEventData* Payload, UAbilitySystemComponent&amp; Component)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">FGameplayAbilitySpecHandle <span class="title">GiveAbilityAndActivateOnce</span><span class="params">(<span class="keyword">const</span> FGameplayAbilitySpec&amp; AbilitySpec)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>到蓝图中就是如下</p>
-<p><img src="https://img.supervj.top//img/image-20201218084759424.png" alt="image-20201218084759424"></p>
-<p>激活技能的不同方法决定<code>GA</code>中的函数调用,  一般都是执行到<code>ActiveAbility</code>, </p>
-<p>如果通过事件的方式触发技能, 即上述中的<code>TriggerAbilityFromGameplayEvent</code>或者蓝图中的<code>SendGameplayEventToActor</code>,那么可以提供一个<code>Payload</code>参数作为扩展参数,这个非常有用</p>
-<p>那么在<code>GA</code>中可以重写函数<code>ActivateAbilityFromEvent</code>,前提是不要重写默认的<code>ActivateAbility</code>函数;</p>
-<p>通过事件触发的方式还会与后续的<code>tag</code>有关系, 这个后续再讲</p>
-<p><img src="https://img.supervj.top//img/image-20201203145317457.png" alt="image-20201203145317457"></p>
-<blockquote>
-<p> 技能逻辑没有固定规则, 完全可以自己脑洞, 不过千万不要忘记在技能完成以后调用<code>EndAbility</code>来结束技能,否则技能一直结束不了而类似一个被动技能一直存在</p>
-</blockquote>
-<h3 id="被动技能"><a href="#被动技能" class="headerlink" title="被动技能"></a>被动技能</h3><p>被动技能如果是默认就存在(触发),可以在<code>GA</code>中的<code>OnAvatarSet</code>事件中最判断处理,如果有必要就直接调用<code>TryActivateAbility</code>(我们之前已经申明了一个布尔变量<code>bAutoActive</code>), 然后不要调用<code>EndAbility</code>就可以了</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UVGGameplayAbility::OnAvatarSet</span><span class="params">(<span class="keyword">const</span> FGameplayAbilityActorInfo* ActorInfo, <span class="keyword">const</span> FGameplayAbilitySpec&amp; Spec)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	Super::OnAvatarSet(ActorInfo, Spec);</span><br><span class="line">	<span class="keyword">if</span> (bAutoActivate)<span class="comment">//bool变量交给蓝图配置</span></span><br><span class="line">	&#123;</span><br><span class="line">		ActorInfo-&gt;AbilitySystemComponent-&gt;TryActivateAbility(Spec.Handle, <span class="literal">false</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<h2 id="关闭-中断技能"><a href="#关闭-中断技能" class="headerlink" title="关闭/中断技能"></a>关闭/中断技能</h2><p>目前在<code>ASC</code>中有如下几个方法关闭技能,都未暴露给蓝图;</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAbility</span><span class="params">(UGameplayAbility* Ability)</span></span>;	</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAbilityHandle</span><span class="params">(<span class="keyword">const</span> FGameplayAbilitySpecHandle&amp; AbilityHandle)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAbilities</span><span class="params">(<span class="keyword">const</span> FGameplayTagContainer* WithTags=<span class="literal">nullptr</span>, <span class="keyword">const</span> FGameplayTagContainer* WithoutTags=<span class="literal">nullptr</span>, UGameplayAbility* Ignore=<span class="literal">nullptr</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAllAbilities</span><span class="params">(UGameplayAbility* Ignore=<span class="literal">nullptr</span>)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>在蓝图中只能在<code>GA</code>中自己调用<code>CancelAbility</code>关闭技能</p>
-<p>不过我们可以自己封装蓝图函数库,如下</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*稍微注意一点,这里的FGameplayTagContainer参数我们使用引用而不是AbilityComponent::CancelAbilities函数中的指针,顺便来个AutoCreateRef都是方便蓝图使用*/</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UFlib_GAS::CancelAbilityWithTag</span><span class="params">(UAbilitySystemComponent* AbilityComponent, <span class="keyword">const</span> FGameplayTagContainer&amp; WithTags, <span class="keyword">const</span> FGameplayTagContainer&amp; WithoutTags, UGameplayAbility* Ignore)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!AbilityComponent)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	AbilityComponent-&gt;CancelAbilities(&amp;WithTags, &amp;WithoutTags, Ignore);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UFlib_GAS::CancelAllAbilities</span><span class="params">(UAbilitySystemComponent* AbilityComponent, UGameplayAbility* Ignore <span class="comment">/*= nullptr*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!AbilityComponent)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	AbilityComponent-&gt;CancelAllAbilities(Ignore);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//************************************</span></span><br></pre></td></tr></table></figure>
-
-<p><img src="https://img.supervj.top//img/image-20201203164413337.png" alt="image-20201203164413337"></p>
-<blockquote>
-<p><code>GASDocumentation</code> 项目文档说 <code>CancelAllAbilities</code>有时候无法正常生效,但是我这边实测可以正常关闭技能</p>
-</blockquote>
-<h2 id="获取激活的技能"><a href="#获取激活的技能" class="headerlink" title="获取激活的技能"></a>获取激活的技能</h2><p>可以通过方法<code>    void GetActivatableGameplayAbilitySpecsByAllMatchingTags(const FGameplayTagContainer&amp; GameplayTagContainer, TArray &lt; struct FGameplayAbilitySpec* &gt;&amp; MatchingGameplayAbilities, bool bOnlyAbilitiesThatSatisfyTagRequirements = true) const;</code>根据<code>tag</code>获取正在运行的技能</p>
-<p>照样可以封装一个蓝图函数库</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">UFUNCTION(BlueprintCallable, BlueprintPure, Category = <span class="string">&quot;VGAS | FunctionLib&quot;</span>, meta = (AutoCreateRefTerm = <span class="string">&quot;GameplayTagContainer, WithTags&quot;</span>))</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">GetActivatableGameplayAbilitySpecsByAllMatchingTags</span><span class="params">(UAbilitySystemComponent* AbilityComponent, <span class="keyword">const</span> FGameplayTagContainer&amp; GameplayTagContainer, TArray &lt; struct FGameplayAbilitySpec &gt;&amp; MatchingGameplayAbilities, <span class="keyword">bool</span> bOnlyAbilitiesThatSatisfyTagRequirements)</span></span>;</span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UFlib_VGAS::GetActivatableGameplayAbilitySpecsByAllMatchingTags</span><span class="params">(UAbilitySystemComponent* AbilityComponent, <span class="keyword">const</span> FGameplayTagContainer&amp; GameplayTagContainer, TArray &lt; struct FGameplayAbilitySpec &gt;&amp; MatchingGameplayAbilities, <span class="keyword">bool</span> bOnlyAbilitiesThatSatisfyTagRequirements)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!AbilityComponent)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	TArray &lt;FGameplayAbilitySpec* &gt; returnAbilities;</span><br><span class="line"></span><br><span class="line">	AbilityComponent-&gt;GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTagContainer, returnAbilities, bOnlyAbilitiesThatSatisfyTagRequirements);</span><br><span class="line">	<span class="keyword">for</span> (FGameplayAbilitySpec* i : returnAbilities)</span><br><span class="line">	&#123;</span><br><span class="line">		MatchingGameplayAbilities.Add(*i);</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>这里还是因为蓝图的原因,传参不能按照原版本传参,需要一个临时变量<code>returnAbilities</code>小小的加工一下</p>
-</blockquote>
-<p><img src="https://img.supervj.top//img/image-20201203173016089.png" alt="image-20201203173016089"></p>
-<a name = "实例化模式">
-
-<h2 id="实例化模式"><a href="#实例化模式" class="headerlink" title="实例化模式"></a>实例化模式</h2><p>技能的实例化模式分为3种,见下表</p>
-<table>
-<thead>
-<tr>
-<th><code>Instancing Policy</code></th>
-<th>Description</th>
-<th>Example of when to use</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Instanced Per Actor</td>
-<td>每个<code>ASC</code>只会生成一个实例,每次触发<code>GA</code>时服用实例对象</td>
-<td>这个是最常用的方式</td>
-</tr>
-<tr>
-<td>Instanced Per Execution</td>
-<td>每次<code>GA</code>激活都会产生一个实例</td>
-<td>这个方式不太常用,但是可以每个技能都独立作用</td>
-</tr>
-<tr>
-<td>Non-Instanced</td>
-<td><code>GA</code>自己默认Obj来维护自身,不会生成实例</td>
-<td>这是三种方法中性能最好的，但是在使用的时候是最受限制的。<code>非实例化</code>的<code>GameplayAbilities</code>不能存储状态，这意味着没有动态变量，也没有绑定到<code>AbilityTask</code>委托。在MOBA或RTS中，最适合使用它们的是那些经常使用的简单技能，比如仆从基本攻击或者角色的<code>Jump</code></td>
-</tr>
-</tbody></table>
-<h2 id="网络方案"><a href="#网络方案" class="headerlink" title="网络方案"></a>网络方案</h2><p><img src="https://img.supervj.top//img/image-20201204152923024.png" alt="image-20201204152923024"></p>
-<table>
-<thead>
-<tr>
-<th><code>Net Execution Policy</code></th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>Local Only</code></td>
-<td>只运行在本地客户端,这个比较适合在只表现本地效果的技能,单人游戏中需要使用<code>Server Only</code></td>
-</tr>
-<tr>
-<td><code>Local Predicted</code></td>
-<td>先本地运行, 服务端会校准本地客户端错误的内容</td>
-</tr>
-<tr>
-<td><code>Server Only</code></td>
-<td>只在服务端运行, 本地技能适合运行在服务端,单人游戏也适合用此</td>
-</tr>
-<tr>
-<td><code>Server Initiated</code></td>
-<td>服务端先运行然后再运行在客户端,不常用</td>
-</tr>
-</tbody></table>
-<h2 id="标签"><a href="#标签" class="headerlink" title="标签"></a>标签</h2><p><code>GA</code>的标签非常重要而且使用,包含如下标签</p>
-<table>
-<thead>
-<tr>
-<th><code>GameplayTag Container</code></th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>Ability Tags</code></td>
-<td>当前技能拥有的标签, 也是通过<code>tag</code>来激活技能的凭证</td>
-</tr>
-<tr>
-<td><code>Cancel Abilities with Tag</code></td>
-<td>当前技能会关闭的拥有此类<code>tag</code>的正在运行技能</td>
-</tr>
-<tr>
-<td><code>Block Abilities with Tag</code></td>
-<td>运行技能的会阻挡拥有此类<code>tag</code>的技能(并不会返回失败)</td>
-</tr>
-<tr>
-<td><code>Activation Owned Tags</code></td>
-<td>此技能会激活的<code>tag</code></td>
-</tr>
-<tr>
-<td><code>Activation Required Tags</code></td>
-<td>激活技能所需要包含的<code>tag</code></td>
-</tr>
-<tr>
-<td><code>Activation Blocked Tags</code></td>
-<td>当拥有此类<code>tag</code>的技能正在运行时,该技能会被阻挡(并不会返回失败)</td>
-</tr>
-<tr>
-<td><code>Source Required Tags</code></td>
-<td>此标签包括如下共4个标签内,都是通过<code>ByEvent</code>的方式作用才有效; 此标签在输入的时候必须包含才能运行</td>
-</tr>
-<tr>
-<td><code>Source Blocked Tags</code></td>
-<td>同理会被阻挡的标签</td>
-</tr>
-<tr>
-<td><code>Target Required Tags</code></td>
-<td>同理目标必须包含的<code>tag</code></td>
-</tr>
-<tr>
-<td><code>Target Blocked Tags</code></td>
-<td>同理目标如果包含会被阻挡的<code>tag</code></td>
-</tr>
-</tbody></table>
-<p><img src="https://img.supervj.top//img/image-20201204170040609.png" alt="image-20201204170040609"></p>
-<h2 id="Gameplay-Ability-Spec"><a href="#Gameplay-Ability-Spec" class="headerlink" title="Gameplay Ability Spec"></a>Gameplay Ability Spec</h2><p><code>Gameplay Ability Spec</code>在<code>GA</code>正确激活后会创建, 内部提供了诸多<code>GA</code>中的数据如 <code>class</code>,<code>level</code>,<code>input bindings</code>等</p>
-<p>如果<code>GA</code>在服务端创建, 会同步到客户端</p>
-<p><code>Gameplay Ability Spec</code>创建实例规则请参考<a href="#%E5%AE%9E%E4%BE%8B%E5%8C%96%E6%A8%A1%E5%BC%8F">实例化模式 ↑</a></p>
-<h2 id="GA的传递数据"><a href="#GA的传递数据" class="headerlink" title="GA的传递数据"></a>GA的传递数据</h2><p><code>GA</code>传递外部数据有如下几种方式</p>
-<table>
-<thead>
-<tr>
-<th>Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Activate <code>GameplayAbility</code> by Event</td>
-<td>通过此方法激活技能会有一个<code>Payload</code>参数, 可以用来传递诸多参数;如两个<code>UObject</code>参数更加方便扩展自定义数据</td>
-</tr>
-<tr>
-<td>Use <code>WaitGameplayEvent</code> <code>AbilityTask</code></td>
-<td>用这个方法可以监听其他<code>tag</code>技能的状态,以此类得到<code>payload</code>数据</td>
-</tr>
-<tr>
-<td>Use <code>TargetData</code></td>
-<td>用结构体 <code>TargetData</code> 传递数据是一个办法,具体以后补充</td>
-</tr>
-<tr>
-<td>Store Data on the <code>OwnerActor</code> or <code>AvatarActor</code></td>
-<td>把数据存到<code>GA</code>的<code>OwnerActor</code>或者角色中,但是你需要确保网络同步</td>
-</tr>
-</tbody></table>
-<p><img src="https://img.supervj.top//img/image-20201204171513695.png" alt="image-20201204171513695"></p>
-<h2 id="技能消耗-冷却"><a href="#技能消耗-冷却" class="headerlink" title="技能消耗/冷却"></a>技能消耗/冷却</h2><p>技能的消耗和冷却通过<code>GameplayEffect</code>实现, 详情可以查看<a href="https://supervj.top/2020/12/23/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AD)_GameplayEffect1/">GameplayEffect篇</a></p>
-<h2 id="技能升级"><a href="#技能升级" class="headerlink" title="技能升级"></a>技能升级</h2><table>
-<thead>
-<tr>
-<th>Level Up Method</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td>Ungrant and Regrant at the New Level</td>
-<td>移除<code>GA</code>,重新注册一个等级不一样的<code>GA</code>,此方式会终止<code>GA</code></td>
-</tr>
-<tr>
-<td>Increase the <code>GameplayAbilitySpec&#39;s</code> Level</td>
-<td>对<code>spec</code>中的<code>level</code>进行升级处理,这种方式不会终止<code>GA</code></td>
-</tr>
-</tbody></table>
-<p>蓝图中无法得到<code>GA</code>中的<code>Level</code>变量, 所以无论是对<code>GA</code>的<code>Level</code>进行处理还是<code>GE</code>都需要在cpp中</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">USRAbilitySystemComponent::UpgradeAbilityByName</span><span class="params">(<span class="keyword">const</span> FString&amp; name, int32 upLevel)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (AbilitySpecMap.Contains(name))</span><br><span class="line">	&#123;</span><br><span class="line">		FGameplayAbilitySpec* spec = *AbilitySpecMap.Find(name);</span><br><span class="line">		spec-&gt;Level += upLevel;</span><br><span class="line">		<span class="keyword">this</span>-&gt;MarkAbilitySpecDirty(*spec);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>因为添加的时候已经存放了<code>TMap&lt;FString, FGameplayAbilitySpec*&gt; AbilitySpecMap</code>, 直接对其进行操作即可, 按照<code>GAS</code>注释说明需要调用<code>MarkAbilitySpecDirty()</code></p>
-<h2 id="网络规则"><a href="#网络规则" class="headerlink" title="网络规则"></a>网络规则</h2><table>
-<thead>
-<tr>
-<th><code>NetSecurityPolicy</code></th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody><tr>
-<td><code>ClientOrServer</code></td>
-<td>无要求,客户端和服务器都可以自由触发</td>
-</tr>
-<tr>
-<td><code>ServerOnlyExecution</code></td>
-<td>客户端请求执行将被服务器忽略。客户端仍然可以请求服务器取消或终止此功能。</td>
-</tr>
-<tr>
-<td><code>ServerOnlyTermination</code></td>
-<td>客户端可以请求执行, 但是不能请求终止或者取消</td>
-</tr>
-<tr>
-<td><code>ServerOnly</code></td>
-<td>只有服务端有权执行,客户端无法执行任何操作</td>
-</tr>
-</tbody></table>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>GAS</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>使用Hexo+GithubPages部署个人静态博客</title>
     <url>/2020/12/04/Hexo+GitHub%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E9%9D%99%E6%80%81%E5%8D%9A%E5%AE%A2/</url>
     <content><![CDATA[<blockquote>
@@ -1935,6 +1702,239 @@
       </tags>
   </entry>
   <entry>
+    <title>GameplayAbilitySystem入门与实战(四):GameplayAbility(一)</title>
+    <url>/2020/12/22/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%9B%9B)_GameplayAbility/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在第一篇<a href="https://supervj.top/2020/12/19/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E4%B8%80)_%E5%88%9D%E5%A7%8B%E5%8C%96/">初始化</a>的时候简单讲解了技能的添加和使用, 但是没有对技能<code>GameplayAbility</code>(<code>GA</code>)做详细介绍,本片开始对<code>GA</code>中的主要功能注意剖析</p>
+<h2 id="注册-移除技能"><a href="#注册-移除技能" class="headerlink" title="注册/移除技能"></a>注册/移除技能</h2><p>之前我们通过配置的方式自动注册起始技能, 那么我们肯定需要动态的增加或者删除技能, 为了方便使用, 封装蓝图库</p>
+<a id="more"></a>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">RPC_Ser_AddAbility</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass, int32 level = <span class="number">1</span>)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">RPC_Ser_RemoveAbilityByClass</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Server, Reliable, WithValidation, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">void</span> <span class="title">RPC_Ser_RemoveAbilityByName</span><span class="params">(<span class="keyword">const</span> FString&amp; name)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//以下3个非RPC事件</span></span><br><span class="line">	UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">AddNewAbility</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass, int32 level = <span class="number">1</span>)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">RemoveAbilityByClass</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass)</span></span>;</span><br><span class="line">	UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;SR|ASC&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">bool</span> <span class="title">RemoveAbilityByName</span><span class="params">(<span class="keyword">const</span> FString&amp; name)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">USRAbilitySystemComponent::AddNewAbility</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass, int32 level)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (AbilitySpecMap.Num()&gt;<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">for</span> (TPair&lt;FString, FGameplayAbilitySpec*&gt; p : AbilitySpecMap)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (p.Value-&gt;Ability-&gt;GetClass() == AbilityClass)</span><br><span class="line">			&#123;</span><br><span class="line">				UE_LOG(SRLog, Warning, TEXT(<span class="string">&quot;USRAbilitySystemComponent::AddNewAbility Failed!! Has Repeat Ability&quot;</span>));</span><br><span class="line">				<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	FGameplayAbilitySpec spec = FGameplayAbilitySpec(AbilityClass, level, <span class="keyword">static_cast</span>&lt;int32&gt;(AbilityClass.GetDefaultObject()-&gt;InputID), GetOwnerActor());</span><br><span class="line">	GiveAbility(spec);</span><br><span class="line">	AbilitySpecMap.Add(AbilityClass.GetDefaultObject()-&gt;AbilityName, <span class="keyword">this</span>-&gt;FindAbilitySpecFromClass(AbilityClass));</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">USRAbilitySystemComponent::RemoveAbilityByClass</span><span class="params">(TSubclassOf&lt;USRGameplayAbilityBase&gt; AbilityClass)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	FGameplayAbilitySpec* spec = FindAbilitySpecFromClass(AbilityClass);</span><br><span class="line">	<span class="keyword">if</span> (spec)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">this</span>-&gt;ClearAbility(spec-&gt;Handle);</span><br><span class="line">		<span class="keyword">for</span> (TPair&lt;FString, FGameplayAbilitySpec*&gt; p : AbilitySpecMap)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">if</span> (p.Value-&gt;Ability-&gt;GetClass() == AbilityClass)</span><br><span class="line">			&#123;</span><br><span class="line">				AbilitySpecMap.Remove(p.Key);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	UE_LOG(SRLog, Warning, TEXT(<span class="string">&quot;USRAbilitySystemComponent::RemoveAbilityByClass Failed!! Do not has this ability&quot;</span>));</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个<code>Name</code>版本是我们在<code>GA</code>类中自定义的, 通过<code>TMap&lt;FString, FGameplayAbilitySpec*&gt; AbilitySpecMap</code>保存在我们<code>ASC</code>中</p>
+<p><img src="https://img.supervj.top//img/image-20201226141212117.png" alt="image-20201226141212117"></p>
+<h2 id="触发技能"><a href="#触发技能" class="headerlink" title="触发技能"></a>触发技能</h2><p>如果是已经用之前按键绑定的技能, 那么按键就会直接触发技能</p>
+<p>还有其他几个方法来手动触发技能</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;Abilities&quot;</span>)</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TryActivateAbilitiesByTag</span><span class="params">(<span class="keyword">const</span> FGameplayTagContainer&amp; GameplayTagContainer, <span class="keyword">bool</span> bAllowRemoteActivation = <span class="literal">true</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;Abilities&quot;</span>)</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TryActivateAbilityByClass</span><span class="params">(TSubclassOf&lt;UGameplayAbility&gt; InAbilityToActivate, <span class="keyword">bool</span> bAllowRemoteActivation = <span class="literal">true</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TryActivateAbility</span><span class="params">(FGameplayAbilitySpecHandle AbilityToActivate, <span class="keyword">bool</span> bAllowRemoteActivation = <span class="literal">true</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">TriggerAbilityFromGameplayEvent</span><span class="params">(FGameplayAbilitySpecHandle AbilityToTrigger, FGameplayAbilityActorInfo* ActorInfo, FGameplayTag Tag, <span class="keyword">const</span> FGameplayEventData* Payload, UAbilitySystemComponent&amp; Component)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function">FGameplayAbilitySpecHandle <span class="title">GiveAbilityAndActivateOnce</span><span class="params">(<span class="keyword">const</span> FGameplayAbilitySpec&amp; AbilitySpec)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>到蓝图中就是如下</p>
+<p><img src="https://img.supervj.top//img/image-20201218084759424.png" alt="image-20201218084759424"></p>
+<p>激活技能的不同方法决定<code>GA</code>中的函数调用,  一般都是执行到<code>ActiveAbility</code>, </p>
+<p>如果通过事件的方式触发技能, 即上述中的<code>TriggerAbilityFromGameplayEvent</code>或者蓝图中的<code>SendGameplayEventToActor</code>,那么可以提供一个<code>Payload</code>参数作为扩展参数,这个非常有用</p>
+<p>那么在<code>GA</code>中可以重写函数<code>ActivateAbilityFromEvent</code>,前提是不要重写默认的<code>ActivateAbility</code>函数;</p>
+<p>通过事件触发的方式还会与后续的<code>tag</code>有关系, 这个后续再讲</p>
+<p><img src="https://img.supervj.top//img/image-20201203145317457.png" alt="image-20201203145317457"></p>
+<blockquote>
+<p> 技能逻辑没有固定规则, 完全可以自己脑洞, 不过千万不要忘记在技能完成以后调用<code>EndAbility</code>来结束技能,否则技能一直结束不了而类似一个被动技能一直存在</p>
+</blockquote>
+<h3 id="被动技能"><a href="#被动技能" class="headerlink" title="被动技能"></a>被动技能</h3><p>被动技能如果是默认就存在(触发),可以在<code>GA</code>中的<code>OnAvatarSet</code>事件中最判断处理,如果有必要就直接调用<code>TryActivateAbility</code>(我们之前已经申明了一个布尔变量<code>bAutoActive</code>), 然后不要调用<code>EndAbility</code>就可以了</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UVGGameplayAbility::OnAvatarSet</span><span class="params">(<span class="keyword">const</span> FGameplayAbilityActorInfo* ActorInfo, <span class="keyword">const</span> FGameplayAbilitySpec&amp; Spec)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	Super::OnAvatarSet(ActorInfo, Spec);</span><br><span class="line">	<span class="keyword">if</span> (bAutoActivate)<span class="comment">//bool变量交给蓝图配置</span></span><br><span class="line">	&#123;</span><br><span class="line">		ActorInfo-&gt;AbilitySystemComponent-&gt;TryActivateAbility(Spec.Handle, <span class="literal">false</span>);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="关闭-中断技能"><a href="#关闭-中断技能" class="headerlink" title="关闭/中断技能"></a>关闭/中断技能</h2><p>目前在<code>ASC</code>中有如下几个方法关闭技能,都未暴露给蓝图;</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAbility</span><span class="params">(UGameplayAbility* Ability)</span></span>;	</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAbilityHandle</span><span class="params">(<span class="keyword">const</span> FGameplayAbilitySpecHandle&amp; AbilityHandle)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAbilities</span><span class="params">(<span class="keyword">const</span> FGameplayTagContainer* WithTags=<span class="literal">nullptr</span>, <span class="keyword">const</span> FGameplayTagContainer* WithoutTags=<span class="literal">nullptr</span>, UGameplayAbility* Ignore=<span class="literal">nullptr</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">CancelAllAbilities</span><span class="params">(UGameplayAbility* Ignore=<span class="literal">nullptr</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>在蓝图中只能在<code>GA</code>中自己调用<code>CancelAbility</code>关闭技能</p>
+<p>不过我们可以自己封装蓝图函数库,如下</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*稍微注意一点,这里的FGameplayTagContainer参数我们使用引用而不是AbilityComponent::CancelAbilities函数中的指针,顺便来个AutoCreateRef都是方便蓝图使用*/</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UFlib_GAS::CancelAbilityWithTag</span><span class="params">(UAbilitySystemComponent* AbilityComponent, <span class="keyword">const</span> FGameplayTagContainer&amp; WithTags, <span class="keyword">const</span> FGameplayTagContainer&amp; WithoutTags, UGameplayAbility* Ignore)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!AbilityComponent)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	AbilityComponent-&gt;CancelAbilities(&amp;WithTags, &amp;WithoutTags, Ignore);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UFlib_GAS::CancelAllAbilities</span><span class="params">(UAbilitySystemComponent* AbilityComponent, UGameplayAbility* Ignore <span class="comment">/*= nullptr*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (!AbilityComponent)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	AbilityComponent-&gt;CancelAllAbilities(Ignore);</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//************************************</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.supervj.top//img/image-20201203164413337.png" alt="image-20201203164413337"></p>
+<blockquote>
+<p><code>GASDocumentation</code> 项目文档说 <code>CancelAllAbilities</code>有时候无法正常生效,但是我这边实测可以正常关闭技能</p>
+</blockquote>
+<h2 id="获取激活的技能"><a href="#获取激活的技能" class="headerlink" title="获取激活的技能"></a>获取激活的技能</h2><p>可以通过方法<code>    void GetActivatableGameplayAbilitySpecsByAllMatchingTags(const FGameplayTagContainer&amp; GameplayTagContainer, TArray &lt; struct FGameplayAbilitySpec* &gt;&amp; MatchingGameplayAbilities, bool bOnlyAbilitiesThatSatisfyTagRequirements = true) const;</code>根据<code>tag</code>获取正在运行的技能</p>
+<p>照样可以封装一个蓝图函数库</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">UFUNCTION(BlueprintCallable, BlueprintPure, Category = <span class="string">&quot;VGAS | FunctionLib&quot;</span>, meta = (AutoCreateRefTerm = <span class="string">&quot;GameplayTagContainer, WithTags&quot;</span>))</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">GetActivatableGameplayAbilitySpecsByAllMatchingTags</span><span class="params">(UAbilitySystemComponent* AbilityComponent, <span class="keyword">const</span> FGameplayTagContainer&amp; GameplayTagContainer, TArray &lt; struct FGameplayAbilitySpec &gt;&amp; MatchingGameplayAbilities, <span class="keyword">bool</span> bOnlyAbilitiesThatSatisfyTagRequirements)</span></span>;</span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">UFlib_VGAS::GetActivatableGameplayAbilitySpecsByAllMatchingTags</span><span class="params">(UAbilitySystemComponent* AbilityComponent, <span class="keyword">const</span> FGameplayTagContainer&amp; GameplayTagContainer, TArray &lt; struct FGameplayAbilitySpec &gt;&amp; MatchingGameplayAbilities, <span class="keyword">bool</span> bOnlyAbilitiesThatSatisfyTagRequirements)</span> </span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (!AbilityComponent)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">return</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	TArray &lt;FGameplayAbilitySpec* &gt; returnAbilities;</span><br><span class="line"></span><br><span class="line">	AbilityComponent-&gt;GetActivatableGameplayAbilitySpecsByAllMatchingTags(GameplayTagContainer, returnAbilities, bOnlyAbilitiesThatSatisfyTagRequirements);</span><br><span class="line">	<span class="keyword">for</span> (FGameplayAbilitySpec* i : returnAbilities)</span><br><span class="line">	&#123;</span><br><span class="line">		MatchingGameplayAbilities.Add(*i);</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>这里还是因为蓝图的原因,传参不能按照原版本传参,需要一个临时变量<code>returnAbilities</code>小小的加工一下</p>
+</blockquote>
+<p><img src="https://img.supervj.top//img/image-20201203173016089.png" alt="image-20201203173016089"></p>
+<a name = "实例化模式">
+
+<h2 id="实例化模式"><a href="#实例化模式" class="headerlink" title="实例化模式"></a>实例化模式</h2><p>技能的实例化模式分为3种,见下表</p>
+<table>
+<thead>
+<tr>
+<th><code>Instancing Policy</code></th>
+<th>Description</th>
+<th>Example of when to use</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Instanced Per Actor</td>
+<td>每个<code>ASC</code>只会生成一个实例,每次触发<code>GA</code>时服用实例对象</td>
+<td>这个是最常用的方式</td>
+</tr>
+<tr>
+<td>Instanced Per Execution</td>
+<td>每次<code>GA</code>激活都会产生一个实例</td>
+<td>这个方式不太常用,但是可以每个技能都独立作用</td>
+</tr>
+<tr>
+<td>Non-Instanced</td>
+<td><code>GA</code>自己默认Obj来维护自身,不会生成实例</td>
+<td>这是三种方法中性能最好的，但是在使用的时候是最受限制的。<code>非实例化</code>的<code>GameplayAbilities</code>不能存储状态，这意味着没有动态变量，也没有绑定到<code>AbilityTask</code>委托。在MOBA或RTS中，最适合使用它们的是那些经常使用的简单技能，比如仆从基本攻击或者角色的<code>Jump</code></td>
+</tr>
+</tbody></table>
+<h2 id="网络方案"><a href="#网络方案" class="headerlink" title="网络方案"></a>网络方案</h2><p><img src="https://img.supervj.top//img/image-20201204152923024.png" alt="image-20201204152923024"></p>
+<table>
+<thead>
+<tr>
+<th><code>Net Execution Policy</code></th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Local Only</code></td>
+<td>只运行在本地客户端,这个比较适合在只表现本地效果的技能,单人游戏中需要使用<code>Server Only</code></td>
+</tr>
+<tr>
+<td><code>Local Predicted</code></td>
+<td>先本地运行, 服务端会校准本地客户端错误的内容</td>
+</tr>
+<tr>
+<td><code>Server Only</code></td>
+<td>只在服务端运行, 本地技能适合运行在服务端,单人游戏也适合用此</td>
+</tr>
+<tr>
+<td><code>Server Initiated</code></td>
+<td>服务端先运行然后再运行在客户端,不常用</td>
+</tr>
+</tbody></table>
+<h2 id="标签"><a href="#标签" class="headerlink" title="标签"></a>标签</h2><p><code>GA</code>的标签非常重要而且使用,包含如下标签</p>
+<table>
+<thead>
+<tr>
+<th><code>GameplayTag Container</code></th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>Ability Tags</code></td>
+<td>当前技能拥有的标签, 也是通过<code>tag</code>来激活技能的凭证</td>
+</tr>
+<tr>
+<td><code>Cancel Abilities with Tag</code></td>
+<td>当前技能会关闭的拥有此类<code>tag</code>的正在运行技能</td>
+</tr>
+<tr>
+<td><code>Block Abilities with Tag</code></td>
+<td>运行技能的会阻挡拥有此类<code>tag</code>的技能(并不会返回失败)</td>
+</tr>
+<tr>
+<td><code>Activation Owned Tags</code></td>
+<td>此技能会激活的<code>tag</code></td>
+</tr>
+<tr>
+<td><code>Activation Required Tags</code></td>
+<td>激活技能所需要包含的<code>tag</code></td>
+</tr>
+<tr>
+<td><code>Activation Blocked Tags</code></td>
+<td>当拥有此类<code>tag</code>的技能正在运行时,该技能会被阻挡(并不会返回失败)</td>
+</tr>
+<tr>
+<td><code>Source Required Tags</code></td>
+<td>此标签包括如下共4个标签内,都是通过<code>ByEvent</code>的方式作用才有效; 此标签在输入的时候必须包含才能运行</td>
+</tr>
+<tr>
+<td><code>Source Blocked Tags</code></td>
+<td>同理会被阻挡的标签</td>
+</tr>
+<tr>
+<td><code>Target Required Tags</code></td>
+<td>同理目标必须包含的<code>tag</code></td>
+</tr>
+<tr>
+<td><code>Target Blocked Tags</code></td>
+<td>同理目标如果包含会被阻挡的<code>tag</code></td>
+</tr>
+</tbody></table>
+<p><img src="https://img.supervj.top//img/image-20201204170040609.png" alt="image-20201204170040609"></p>
+<h2 id="Gameplay-Ability-Spec"><a href="#Gameplay-Ability-Spec" class="headerlink" title="Gameplay Ability Spec"></a>Gameplay Ability Spec</h2><p><code>Gameplay Ability Spec</code>在<code>GA</code>正确激活后会创建, 内部提供了诸多<code>GA</code>中的数据如 <code>class</code>,<code>level</code>,<code>input bindings</code>等</p>
+<p>如果<code>GA</code>在服务端创建, 会同步到客户端</p>
+<p><code>Gameplay Ability Spec</code>创建实例规则请参考<a href="#%E5%AE%9E%E4%BE%8B%E5%8C%96%E6%A8%A1%E5%BC%8F">实例化模式 ↑</a></p>
+<h2 id="GA的传递数据"><a href="#GA的传递数据" class="headerlink" title="GA的传递数据"></a>GA的传递数据</h2><p><code>GA</code>传递外部数据有如下几种方式</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Activate <code>GameplayAbility</code> by Event</td>
+<td>通过此方法激活技能会有一个<code>Payload</code>参数, 可以用来传递诸多参数;如两个<code>UObject</code>参数更加方便扩展自定义数据</td>
+</tr>
+<tr>
+<td>Use <code>WaitGameplayEvent</code> <code>AbilityTask</code></td>
+<td>用这个方法可以监听其他<code>tag</code>技能的状态,以此类得到<code>payload</code>数据</td>
+</tr>
+<tr>
+<td>Use <code>TargetData</code></td>
+<td>用结构体 <code>TargetData</code> 传递数据是一个办法,具体以后补充</td>
+</tr>
+<tr>
+<td>Store Data on the <code>OwnerActor</code> or <code>AvatarActor</code></td>
+<td>把数据存到<code>GA</code>的<code>OwnerActor</code>或者角色中,但是你需要确保网络同步</td>
+</tr>
+</tbody></table>
+<p><img src="https://img.supervj.top//img/image-20201204171513695.png" alt="image-20201204171513695"></p>
+<h2 id="技能消耗-冷却"><a href="#技能消耗-冷却" class="headerlink" title="技能消耗/冷却"></a>技能消耗/冷却</h2><p>技能的消耗和冷却通过<code>GameplayEffect</code>实现, 详情可以查看<a href="https://supervj.top/2020/12/23/GameplayAbilitySystem%E5%88%86%E6%9E%90(%E5%85%AD)_GameplayEffect1/">GameplayEffect篇</a></p>
+<h2 id="技能升级"><a href="#技能升级" class="headerlink" title="技能升级"></a>技能升级</h2><table>
+<thead>
+<tr>
+<th>Level Up Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>Ungrant and Regrant at the New Level</td>
+<td>移除<code>GA</code>,重新注册一个等级不一样的<code>GA</code>,此方式会终止<code>GA</code></td>
+</tr>
+<tr>
+<td>Increase the <code>GameplayAbilitySpec&#39;s</code> Level</td>
+<td>对<code>spec</code>中的<code>level</code>进行升级处理,这种方式不会终止<code>GA</code></td>
+</tr>
+</tbody></table>
+<p>蓝图中无法得到<code>GA</code>中的<code>Level</code>变量, 所以无论是对<code>GA</code>的<code>Level</code>进行处理还是<code>GE</code>都需要在cpp中</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">USRAbilitySystemComponent::UpgradeAbilityByName</span><span class="params">(<span class="keyword">const</span> FString&amp; name, int32 upLevel)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (AbilitySpecMap.Contains(name))</span><br><span class="line">	&#123;</span><br><span class="line">		FGameplayAbilitySpec* spec = *AbilitySpecMap.Find(name);</span><br><span class="line">		spec-&gt;Level += upLevel;</span><br><span class="line">		<span class="keyword">this</span>-&gt;MarkAbilitySpecDirty(*spec);</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>因为添加的时候已经存放了<code>TMap&lt;FString, FGameplayAbilitySpec*&gt; AbilitySpecMap</code>, 直接对其进行操作即可, 按照<code>GAS</code>注释说明需要调用<code>MarkAbilitySpecDirty()</code></p>
+<h2 id="网络规则"><a href="#网络规则" class="headerlink" title="网络规则"></a>网络规则</h2><table>
+<thead>
+<tr>
+<th><code>NetSecurityPolicy</code></th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>ClientOrServer</code></td>
+<td>无要求,客户端和服务器都可以自由触发</td>
+</tr>
+<tr>
+<td><code>ServerOnlyExecution</code></td>
+<td>客户端请求执行将被服务器忽略。客户端仍然可以请求服务器取消或终止此功能。</td>
+</tr>
+<tr>
+<td><code>ServerOnlyTermination</code></td>
+<td>客户端可以请求执行, 但是不能请求终止或者取消</td>
+</tr>
+<tr>
+<td><code>ServerOnly</code></td>
+<td>只有服务端有权执行,客户端无法执行任何操作</td>
+</tr>
+</tbody></table>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>GAS</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Markdown(Typora)数学公式</title>
     <url>/2020/06/23/Mardown%E6%95%B0%E5%AD%A6%E5%85%AC%E5%BC%8F/</url>
     <content><![CDATA[<blockquote>
@@ -2035,6 +2035,52 @@
       </tags>
   </entry>
   <entry>
+    <title>Picgo+GitHub搭建免费图床</title>
+    <url>/2020/05/13/Picgo+GitHub%E6%90%AD%E5%BB%BA%E5%85%8D%E8%B4%B9%E5%9B%BE%E5%BA%8A/</url>
+    <content><![CDATA[<blockquote>
+<p>本文介绍如何用Picgo+GitHub搭建免费的图床</p>
+<p>可用于个人Markdown文档的图片外链</p>
+<p>Github图床优点：免费，安全；缺点：网络不稳定，偶尔上传失败</p>
+</blockquote>
+<h3 id="关于Picgo"><a href="#关于Picgo" class="headerlink" title="关于Picgo"></a>关于Picgo</h3><p>这是一款图片上传的工具，目前支持<code>七牛图床</code>，<code>腾讯云</code>，<code>阿里oss</code>，<code>GitHub</code>等图床，未来将支持更多图床。</p>
+<p>所以解决问题的思路就是，将本地的文件，或者剪切板上面的截图发送图床，然后生成在线图片的链接，这样就可以随时随地使用图片外链了</p>
+<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ul>
+<li><p>git和github使用请参考本人另一篇文章<a href="%5Bhttps://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/%5D(https://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/)">《Git使用指北》</a></p>
+</li>
+<li><p><a href="https://github.com/Molunerfinn/PicGo/releases">下载picgo软件</a></p>
+</li>
+</ul>
+<h3 id="GitHub流程"><a href="#GitHub流程" class="headerlink" title="GitHub流程"></a>GitHub流程</h3><ol>
+<li><p>新建一个<code>Repository</code>，建议命名成<code>img</code>之类的方便记忆</p>
+</li>
+<li><p>生成一个Token用于操作GitHub repository，流程如下</p>
+<blockquote>
+<p>Settings-&gt;Developer settings-&gt;Personnal access tokens-&gt;Generate new token</p>
+</blockquote>
+<p> 注：创建成功后，会生成一串token，这串token之后不会再显示，所以第一次看到的时候，就要好好保存</p>
+</li>
+</ol>
+<h3 id="配置Picgo"><a href="#配置Picgo" class="headerlink" title="配置Picgo"></a>配置Picgo</h3><p><img src="https://img.supervj.top/imgpicgo_github_3.jpg"></p>
+<ul>
+<li>仓库名：即你<code>github</code>仓库的名称</li>
+<li>设定分支：对应仓库的分支，默认是<code>master</code></li>
+<li>设定Token：之前保存的<code>Token</code></li>
+<li>指定存储路径：保存到仓库的路径</li>
+<li>设定自定义域名：见如下</li>
+</ul>
+<h5 id="自定义域名"><a href="#自定义域名" class="headerlink" title="自定义域名"></a>自定义域名</h5><p>默认不指定域名，这样生成的是<code>github</code>地址，部分情况会被墙掉，对于图片访问不是特别友善</p>
+<p>有自己域名的同学强烈建议使用自定义域名</p>
+]]></content>
+      <categories>
+        <category>blog</category>
+      </categories>
+      <tags>
+        <tag>GitHub</tag>
+        <tag>博客</tag>
+        <tag>图床</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>Paper2D第三方工具TexturerPacker</title>
     <url>/2021/01/08/Paper2D%E7%AC%AC%E4%B8%89%E6%96%B9%E5%B7%A5%E5%85%B7TexturerPacker/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>关于Paper2D使用第三方工具<code>TexturerPacker</code>的简单使用方法记录</p>
@@ -2079,52 +2125,6 @@
       <tags>
         <tag>Paper2D</tag>
         <tag>TexturerPacker</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Picgo+GitHub搭建免费图床</title>
-    <url>/2020/05/13/Picgo+GitHub%E6%90%AD%E5%BB%BA%E5%85%8D%E8%B4%B9%E5%9B%BE%E5%BA%8A/</url>
-    <content><![CDATA[<blockquote>
-<p>本文介绍如何用Picgo+GitHub搭建免费的图床</p>
-<p>可用于个人Markdown文档的图片外链</p>
-<p>Github图床优点：免费，安全；缺点：网络不稳定，偶尔上传失败</p>
-</blockquote>
-<h3 id="关于Picgo"><a href="#关于Picgo" class="headerlink" title="关于Picgo"></a>关于Picgo</h3><p>这是一款图片上传的工具，目前支持<code>七牛图床</code>，<code>腾讯云</code>，<code>阿里oss</code>，<code>GitHub</code>等图床，未来将支持更多图床。</p>
-<p>所以解决问题的思路就是，将本地的文件，或者剪切板上面的截图发送图床，然后生成在线图片的链接，这样就可以随时随地使用图片外链了</p>
-<h3 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h3><ul>
-<li><p>git和github使用请参考本人另一篇文章<a href="%5Bhttps://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/%5D(https://supervj.top/2020/05/12/%E9%85%8D%E7%BD%AE%E5%92%8C%E4%BD%BF%E7%94%A8Git/)">《Git使用指北》</a></p>
-</li>
-<li><p><a href="https://github.com/Molunerfinn/PicGo/releases">下载picgo软件</a></p>
-</li>
-</ul>
-<h3 id="GitHub流程"><a href="#GitHub流程" class="headerlink" title="GitHub流程"></a>GitHub流程</h3><ol>
-<li><p>新建一个<code>Repository</code>，建议命名成<code>img</code>之类的方便记忆</p>
-</li>
-<li><p>生成一个Token用于操作GitHub repository，流程如下</p>
-<blockquote>
-<p>Settings-&gt;Developer settings-&gt;Personnal access tokens-&gt;Generate new token</p>
-</blockquote>
-<p> 注：创建成功后，会生成一串token，这串token之后不会再显示，所以第一次看到的时候，就要好好保存</p>
-</li>
-</ol>
-<h3 id="配置Picgo"><a href="#配置Picgo" class="headerlink" title="配置Picgo"></a>配置Picgo</h3><p><img src="https://img.supervj.top/imgpicgo_github_3.jpg"></p>
-<ul>
-<li>仓库名：即你<code>github</code>仓库的名称</li>
-<li>设定分支：对应仓库的分支，默认是<code>master</code></li>
-<li>设定Token：之前保存的<code>Token</code></li>
-<li>指定存储路径：保存到仓库的路径</li>
-<li>设定自定义域名：见如下</li>
-</ul>
-<h5 id="自定义域名"><a href="#自定义域名" class="headerlink" title="自定义域名"></a>自定义域名</h5><p>默认不指定域名，这样生成的是<code>github</code>地址，部分情况会被墙掉，对于图片访问不是特别友善</p>
-<p>有自己域名的同学强烈建议使用自定义域名</p>
-]]></content>
-      <categories>
-        <category>blog</category>
-      </categories>
-      <tags>
-        <tag>GitHub</tag>
-        <tag>博客</tag>
-        <tag>图床</tag>
       </tags>
   </entry>
   <entry>
@@ -2665,50 +2665,6 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </tags>
   </entry>
   <entry>
-    <title>UE4压缩和解压缩工具</title>
-    <url>/2021/03/26/UE4%E5%8E%8B%E7%BC%A9%E5%B7%A5%E5%85%B7/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>UE4编辑器和运行时使用解压缩和压缩功能, 一个简单的蓝图库, 源代码来自GitHub的<a href="https://github.com/getnamo/ZipUtility-ue4">ZipUtility Plugin</a></p>
-<p>对其做了稍微修改, 修复了部分因为版本更新的报错信息(大量头文件包含问题)</p>
-<p><a href="https://github.com/VJien/ZipUtility-UE4-Extra"> ZipUtility-UE4-Extra</a></p>
-<p>本文简单介绍这个插件的使用方式</p>
-<p><img src="https://img.supervj.top//img/UE4Editor_Eenx6GKDoT.png" alt="UE4Editor_Eenx6GKDoT"></p>
-<a id="more"></a>
-
-
-
-
-
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><ul>
-<li>下载/克隆</li>
-<li>放到目录 <code>项目/Plugins/</code>内</li>
-<li>刷新项目</li>
-</ul>
-<blockquote>
-<p>检查VS是否安装了最新的<code>ATL</code>和<code>MFC</code>组件,否则会提示<code>atlbase.h</code>找不到</p>
-</blockquote>
-<blockquote>
-<p> 如果已经安装了还是报错, 检查<code>ZipUtility.Build.cs</code>文件</p>
-</blockquote>
-<p>检查如下字段,默认是vs2017的, 我这里改成了2019</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> VsDirectory</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find VS installation directory from registry</span></span><br><span class="line">            <span class="built_in">string</span> regPath = (<span class="built_in">string</span>)Registry.GetValue(<span class="string">@&quot;HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7\&quot;</span>, <span class="string">&quot;15.0&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(regPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility: Found VS path in registry: &quot;</span> + regPath);</span><br><span class="line">                <span class="keyword">return</span> regPath;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// If failed - using the most common install path</span></span><br><span class="line">                <span class="built_in">string</span> vsDefaultBasePath = <span class="string">@&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019&quot;</span>;</span><br><span class="line">                <span class="built_in">string</span> vsVersion = Directory.GetDirectories(vsDefaultBasePath)[<span class="number">0</span>];</span><br><span class="line">                <span class="built_in">string</span> vsPath = Path.Combine(vsDefaultBasePath, vsVersion);</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Warning: Using default VS path: &quot;</span> + vsPath);</span><br><span class="line">                <span class="keyword">return</span> vsPath;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ATLPath</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find ATL path similar to:</span></span><br><span class="line">            <span class="comment">// C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.14.26428/atlmfc</span></span><br><span class="line">            <span class="built_in">string</span> atlPath = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> vsDir = VsDirectory;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(vsDir))</span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="built_in">string</span> msvcPath = Path.Combine(vsDir, <span class="string">@&quot;VC\Tools\MSVC\&quot;</span>);</span><br><span class="line">                    <span class="built_in">string</span> msvcVersion = Directory.GetDirectories(msvcPath)[<span class="number">0</span>];</span><br><span class="line">                    atlPath = Path.Combine(msvcPath, msvcVersion, <span class="string">&quot;atlmfc&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            catch (Exception ex)</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: can&#x27;t find VS path: &quot;</span> + ex.ToString());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!Directory.Exists(atlPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: Couldn&#x27;t find an ATLPath, fix it in ZipUtility.Build.cs&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> atlPath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>比如我这边的路径是<code>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc</code>,需要与上述csharp指定的atl路径匹配,否则在VS编译会报警告和错误</p>
-<blockquote>
-<p>尝试在 <code>Property-&gt;VC++ Directories-&gt;Include Directories</code>中加入类似<code>Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include</code>的路径</p>
-</blockquote>
-<p><img src="https://img.supervj.top//img/UE4Editor_md5TmgDXhY.png" alt="UE4Editor_md5TmgDXhY"></p>
-<p><img src="https://img.supervj.top//img/image-20210326134323995.png" alt="image-20210326134323995"></p>
-<p>每个方法都需要提供一个<code>UObject</code>类对象, 该对象如果挂上接口就可以获取回调事件</p>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>解压缩</tag>
-        <tag>第三方工具</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>UE4子系统</title>
     <url>/2020/08/03/UE4%E5%AD%90%E7%B3%BB%E7%BB%9F/</url>
     <content><![CDATA[<blockquote>
@@ -2771,30 +2727,6 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </tags>
   </entry>
   <entry>
-    <title>UE4 4.25离线文档</title>
-    <url>/2020/08/28/UE4%E7%A6%BB%E7%BA%BF%E6%96%87%E6%A1%A3/</url>
-    <content><![CDATA[<blockquote>
-<p>UE4 4.25离线文档，基于Dash文档源，使用Zeal查阅</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/advVR/image-20200828133618221.png" alt="image-20200828133618221"></p>
-<p><img src="https://img.supervj.top/img/advVR/image-20200828133843396.png" alt="image-20200828133843396"></p>
-<p><a href="https://shueducn-my.sharepoint.com/:u:/g/personal/rugbyuu_shu_edu_cn/EfJIQPZ_l-NOvi8yxHQvGkcBNDLnHBVcuhz2i7SMigJ9kQ?e=ZZFCmq">Zeal下载</a></p>
-<p><a href="https://shueducn-my.sharepoint.com/:u:/g/personal/rugbyuu_shu_edu_cn/Eeis5FkxAVRFjqvj7LBf0vEBJJ2pKpMaKPFsP47PxKl5XA?e=YiQl5e">4.25文档下载</a></p>
-<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><p>直接将压缩版解压到<code>Zeal\docsets\</code>路径内，没有文件夹请自行新建</p>
-<p>然后按照下图设置docsets路径</p>
-<p><img src="https://img.supervj.top/img/advVR/image-20200828134552604.png" alt="image-20200828134552604"></p>
-<h3 id="下载其他文档"><a href="#下载其他文档" class="headerlink" title="下载其他文档"></a>下载其他文档</h3><p>参考如下图方式下载，因为都是国外链接，所以请酌情使用交通工具✈</p>
-<p><img src="https://img.supervj.top/img/advVR/image-20200828155324943.png" alt="image-20200828155324943"></p>
-]]></content>
-      <categories>
-        <category>other</category>
-      </categories>
-      <tags>
-        <tag>Zeal</tag>
-        <tag>API</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>UE4对windows文件的操作</title>
     <url>/2021/01/07/UE4%E6%93%8D%E4%BD%9Cwindows%E6%96%87%E4%BB%B6/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>此文简单记录UE4对windows文件的处理</p>
@@ -2821,6 +2753,30 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
         <tag>Windows</tag>
         <tag>文件</tag>
         <tag>json</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>UE4 4.25离线文档</title>
+    <url>/2020/08/28/UE4%E7%A6%BB%E7%BA%BF%E6%96%87%E6%A1%A3/</url>
+    <content><![CDATA[<blockquote>
+<p>UE4 4.25离线文档，基于Dash文档源，使用Zeal查阅</p>
+</blockquote>
+<p><img src="https://img.supervj.top/img/advVR/image-20200828133618221.png" alt="image-20200828133618221"></p>
+<p><img src="https://img.supervj.top/img/advVR/image-20200828133843396.png" alt="image-20200828133843396"></p>
+<p><a href="https://shueducn-my.sharepoint.com/:u:/g/personal/rugbyuu_shu_edu_cn/EfJIQPZ_l-NOvi8yxHQvGkcBNDLnHBVcuhz2i7SMigJ9kQ?e=ZZFCmq">Zeal下载</a></p>
+<p><a href="https://shueducn-my.sharepoint.com/:u:/g/personal/rugbyuu_shu_edu_cn/Eeis5FkxAVRFjqvj7LBf0vEBJJ2pKpMaKPFsP47PxKl5XA?e=YiQl5e">4.25文档下载</a></p>
+<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><p>直接将压缩版解压到<code>Zeal\docsets\</code>路径内，没有文件夹请自行新建</p>
+<p>然后按照下图设置docsets路径</p>
+<p><img src="https://img.supervj.top/img/advVR/image-20200828134552604.png" alt="image-20200828134552604"></p>
+<h3 id="下载其他文档"><a href="#下载其他文档" class="headerlink" title="下载其他文档"></a>下载其他文档</h3><p>参考如下图方式下载，因为都是国外链接，所以请酌情使用交通工具✈</p>
+<p><img src="https://img.supervj.top/img/advVR/image-20200828155324943.png" alt="image-20200828155324943"></p>
+]]></content>
+      <categories>
+        <category>other</category>
+      </categories>
+      <tags>
+        <tag>Zeal</tag>
+        <tag>API</tag>
       </tags>
   </entry>
   <entry>
@@ -3312,6 +3268,50 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>obj</tag>
         <tag>模型</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>UE4压缩和解压缩工具</title>
+    <url>/2021/03/26/UE4%E5%8E%8B%E7%BC%A9%E5%B7%A5%E5%85%B7/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>UE4编辑器和运行时使用解压缩和压缩功能, 一个简单的蓝图库, 源代码来自GitHub的<a href="https://github.com/getnamo/ZipUtility-ue4">ZipUtility Plugin</a></p>
+<p>对其做了稍微修改, 修复了部分因为版本更新的报错信息(大量头文件包含问题)</p>
+<p><a href="https://github.com/VJien/ZipUtility-UE4-Extra"> ZipUtility-UE4-Extra</a></p>
+<p>本文简单介绍这个插件的使用方式</p>
+<p><img src="https://img.supervj.top//img/UE4Editor_Eenx6GKDoT.png" alt="UE4Editor_Eenx6GKDoT"></p>
+<a id="more"></a>
+
+
+
+
+
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><ul>
+<li>下载/克隆</li>
+<li>放到目录 <code>项目/Plugins/</code>内</li>
+<li>刷新项目</li>
+</ul>
+<blockquote>
+<p>检查VS是否安装了最新的<code>ATL</code>和<code>MFC</code>组件,否则会提示<code>atlbase.h</code>找不到</p>
+</blockquote>
+<blockquote>
+<p> 如果已经安装了还是报错, 检查<code>ZipUtility.Build.cs</code>文件</p>
+</blockquote>
+<p>检查如下字段,默认是vs2017的, 我这里改成了2019</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> VsDirectory</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find VS installation directory from registry</span></span><br><span class="line">            <span class="built_in">string</span> regPath = (<span class="built_in">string</span>)Registry.GetValue(<span class="string">@&quot;HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7\&quot;</span>, <span class="string">&quot;15.0&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(regPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility: Found VS path in registry: &quot;</span> + regPath);</span><br><span class="line">                <span class="keyword">return</span> regPath;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// If failed - using the most common install path</span></span><br><span class="line">                <span class="built_in">string</span> vsDefaultBasePath = <span class="string">@&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019&quot;</span>;</span><br><span class="line">                <span class="built_in">string</span> vsVersion = Directory.GetDirectories(vsDefaultBasePath)[<span class="number">0</span>];</span><br><span class="line">                <span class="built_in">string</span> vsPath = Path.Combine(vsDefaultBasePath, vsVersion);</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Warning: Using default VS path: &quot;</span> + vsPath);</span><br><span class="line">                <span class="keyword">return</span> vsPath;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ATLPath</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find ATL path similar to:</span></span><br><span class="line">            <span class="comment">// C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.14.26428/atlmfc</span></span><br><span class="line">            <span class="built_in">string</span> atlPath = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> vsDir = VsDirectory;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(vsDir))</span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="built_in">string</span> msvcPath = Path.Combine(vsDir, <span class="string">@&quot;VC\Tools\MSVC\&quot;</span>);</span><br><span class="line">                    <span class="built_in">string</span> msvcVersion = Directory.GetDirectories(msvcPath)[<span class="number">0</span>];</span><br><span class="line">                    atlPath = Path.Combine(msvcPath, msvcVersion, <span class="string">&quot;atlmfc&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            catch (Exception ex)</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: can&#x27;t find VS path: &quot;</span> + ex.ToString());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!Directory.Exists(atlPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: Couldn&#x27;t find an ATLPath, fix it in ZipUtility.Build.cs&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> atlPath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>比如我这边的路径是<code>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc</code>,需要与上述csharp指定的atl路径匹配,否则在VS编译会报警告和错误</p>
+<blockquote>
+<p>尝试在 <code>Property-&gt;VC++ Directories-&gt;Include Directories</code>中加入类似<code>Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include</code>的路径</p>
+</blockquote>
+<p><img src="https://img.supervj.top//img/UE4Editor_md5TmgDXhY.png" alt="UE4Editor_md5TmgDXhY"></p>
+<p><img src="https://img.supervj.top//img/image-20210326134323995.png" alt="image-20210326134323995"></p>
+<p>每个方法都需要提供一个<code>UObject</code>类对象, 该对象如果挂上接口就可以获取回调事件</p>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>解压缩</tag>
+        <tag>第三方工具</tag>
       </tags>
   </entry>
   <entry>
@@ -4465,6 +4465,35 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
+    <title>插件:批量重命名</title>
+    <url>/2020/07/19/%E6%89%B9%E9%87%8F%E9%87%8D%E5%91%BD%E5%90%8D/</url>
+    <content><![CDATA[<blockquote>
+<p>由于自己平时在项目开发中经常遇到大批量的资源需要重命名，特别是美术资源如贴图、动画这些</p>
+<p>而UE自带的批量操作又没有发现有重命名方法</p>
+<p>所以就制作了这个简单的批量重命名的小插件</p>
+</blockquote>
+<p><a href="https://github.com/VJien/BatchRename">Github下载链接</a></p>
+<ul>
+<li>动图演示</li>
+</ul>
+<p><img src="https://img.supervj.top/img/other/Rename.gif" alt="Rename"></p>
+<h5 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h5><ul>
+<li>Prefix前缀</li>
+<li>Name:修改后的名称</li>
+<li>StartIndex:在多选的情况下会自动生成序号，此选项为起始序号</li>
+<li>Suffix:后缀</li>
+<li>点击Rename按键就执行重命名</li>
+</ul>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>插件</tag>
+        <tag>重命名</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>用GitLab搭建本地代码仓库</title>
     <url>/2020/08/18/%E7%94%A8GitLab%E6%90%AD%E5%BB%BA%E6%9C%AC%E5%9C%B0%E4%BB%93%E5%BA%93/</url>
     <content><![CDATA[<blockquote>
@@ -4639,35 +4668,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>Git</tag>
         <tag>GitLab</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>插件:批量重命名</title>
-    <url>/2020/07/19/%E6%89%B9%E9%87%8F%E9%87%8D%E5%91%BD%E5%90%8D/</url>
-    <content><![CDATA[<blockquote>
-<p>由于自己平时在项目开发中经常遇到大批量的资源需要重命名，特别是美术资源如贴图、动画这些</p>
-<p>而UE自带的批量操作又没有发现有重命名方法</p>
-<p>所以就制作了这个简单的批量重命名的小插件</p>
-</blockquote>
-<p><a href="https://github.com/VJien/BatchRename">Github下载链接</a></p>
-<ul>
-<li>动图演示</li>
-</ul>
-<p><img src="https://img.supervj.top/img/other/Rename.gif" alt="Rename"></p>
-<h5 id="说明"><a href="#说明" class="headerlink" title="说明"></a>说明</h5><ul>
-<li>Prefix前缀</li>
-<li>Name:修改后的名称</li>
-<li>StartIndex:在多选的情况下会自动生成序号，此选项为起始序号</li>
-<li>Suffix:后缀</li>
-<li>点击Rename按键就执行重命名</li>
-</ul>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>插件</tag>
-        <tag>重命名</tag>
       </tags>
   </entry>
   <entry>
@@ -7409,6 +7409,173 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
+    <title>DX学习笔记（三）：渲染流水线</title>
+    <url>/2020/06/24/LearnDX12_RenderPipline/</url>
+    <content><![CDATA[<h2 id="渲染流水线"><a href="#渲染流水线" class="headerlink" title="渲染流水线"></a>渲染流水线</h2><p>平行线最终会相交于<code>消失点</code>，又称为<code>灭点</code></p>
+<p><code>物体重叠</code>：即不同命的物体能够遮挡住其后侧物体的局部</p>
+<p>3D实体对象是通过<code>三角形网格</code>来近似表示的</p>
+<h3 id="颜色"><a href="#颜色" class="headerlink" title="颜色"></a>颜色</h3><p>分量式乘法:<code>(r,g,b)*(a,b,c)=(ra,gb,bc)</code></p>
+<h5 id="128位颜色"><a href="#128位颜色" class="headerlink" title="128位颜色"></a>128位颜色</h5><p>每个分量用浮点表示，即4D向量 (r,g,b,a)</p>
+<p><strong><em>0&lt;=r,g,b,a&lt;=1</em></strong></p>
+<p><code>DirectXMath</code>库对分量式乘法的支持</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">XMVECTOR XM_CAKKCIBV <span class="title">XMColorModulate</span> <span class="params">(FXMVECTOR C1,FXMVECTOR C2)</span></span>;<span class="comment">//返回C1*C2</span></span><br></pre></td></tr></table></figure>
+
+<h5 id="32位颜色"><a href="#32位颜色" class="headerlink" title="32位颜色"></a>32位颜色</h5><p>每个分量仅分配1个字节，因此每个占用8字节的颜色分量就分别描述256种不同的颜色强度</p>
+<p>即0代表无强度，256代表最大强度</p>
+<p><code>DirectXMath</code>库<code>(include&lt;DirectXPackedVector.h&gt;)</code>在<code>DirectX::PackedVector</code>命名空间提供了相应函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> DirectX</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">namespace</span> PackedVector</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">XMCOLOR</span></span></span><br><span class="line"><span class="class">        &#123;</span></span><br><span class="line">            <span class="class"><span class="keyword">union</span></span></span><br><span class="line"><span class="class">            &#123;</span></span><br><span class="line">                <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">                &#123;</span></span><br><span class="line">                    <span class="keyword">uint8_t</span> b;  <span class="comment">// Blue:    0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> g;  <span class="comment">// Green:   0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> r;  <span class="comment">// Red:     0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> a;  <span class="comment">// Alpha:   0/255 to 255/255</span></span><br><span class="line">                    </span><br><span class="line">                &#125;;<span class="keyword">uint32_t</span> c;</span><br><span class="line">                XMCOLOR() = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">    			XMCOLOR(<span class="keyword">const</span> XMCOLOR&amp;) = <span class="keyword">default</span>;</span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> XMCOLOR&amp;) = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">                XMCOLOR(XMCOLOR&amp;&amp;) = <span class="keyword">default</span>;</span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>=(XMCOLOR&amp;&amp;) = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">                <span class="function">XM_CONSTEXPR <span class="title">XMCOLOR</span><span class="params">(<span class="keyword">uint32_t</span> Color)</span> : <span class="title">c</span><span class="params">(Color)</span> </span>&#123;&#125;</span><br><span class="line">                XMCOLOR(<span class="keyword">float</span> _r, <span class="keyword">float</span> _g, <span class="keyword">float</span> _b, <span class="keyword">float</span> _a);</span><br><span class="line">                <span class="function"><span class="keyword">explicit</span> <span class="title">XMCOLOR</span><span class="params">(_In_reads_(<span class="number">4</span>) <span class="keyword">const</span> <span class="keyword">float</span> *pArray)</span></span>;</span><br><span class="line"></span><br><span class="line">                <span class="function"><span class="keyword">operator</span> <span class="title">uint32_t</span> <span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> c; &#125;</span><br><span class="line"></span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>= (<span class="keyword">const</span> <span class="keyword">uint32_t</span> Color) &#123; c = Color; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>通过将<code>[0,255]</code>映射到<code>[0,1]</code>即可完成32位到128位的转换</p>
+<p>转换函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMLoadColor</span><span class="params">( <span class="keyword">const</span> XMCOLOR* pSource)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> XM_CALLCONV <span class="title">XMStoreColor</span><span class="params">( XMCOLOR* pDestination, FXMVECTOR V )</span></span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="渲染流水线概述"><a href="#渲染流水线概述" class="headerlink" title="渲染流水线概述"></a>渲染流水线概述</h3><p>渲染流水线(rendering pipeline)是以摄像机位观察视角而生成的2D图像的一系列完整步骤</p>
+<p>​     </p>
+<p><img src="https://img.supervj.top/xuanran.png"></p>
+<h3 id="输入装配阶段"><a href="#输入装配阶段" class="headerlink" title="输入装配阶段"></a>输入装配阶段</h3><p>输入装配阶段：从显存中读取集合数据(顶点和索引，vertex and index)</p>
+<p>再装配为几何图元（几何基元），如三角形和线条</p>
+<ul>
+<li>顶点缓冲区：将顶点与渲染流水线绑定的特殊结构体</li>
+</ul>
+<h5 id="图元拓扑-primitive-topology"><a href="#图元拓扑-primitive-topology" class="headerlink" title="图元拓扑(primitive topology)"></a>图元拓扑(primitive topology)</h5><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> STDMETHODCALLTYPE <span class="title">IASetPrimitiveTopology</span><span class="params">( </span></span></span><br><span class="line"><span class="function"><span class="params">            _In_  D3D12_PRIMITIVE_TOPOLOGY PrimitiveTopology)</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> </span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">D3D_PRIMITIVE_TOPOLOGY</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_UNDEFINED	= <span class="number">0</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_POINTLIST	= <span class="number">1</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINELIST	= <span class="number">2</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP	= <span class="number">3</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= <span class="number">4</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= <span class="number">5</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= <span class="number">10</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= <span class="number">11</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= <span class="number">12</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= <span class="number">13</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST	= <span class="number">33</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST	= <span class="number">34</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST	= <span class="number">35</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST	= <span class="number">36</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST	= <span class="number">37</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST	= <span class="number">38</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST	= <span class="number">39</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST	= <span class="number">40</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST	= <span class="number">41</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST	= <span class="number">42</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST	= <span class="number">43</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST	= <span class="number">44</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST	= <span class="number">45</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST	= <span class="number">46</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST	= <span class="number">47</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST	= <span class="number">48</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST	= <span class="number">49</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST	= <span class="number">50</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST	= <span class="number">51</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST	= <span class="number">52</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST	= <span class="number">53</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST	= <span class="number">54</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST	= <span class="number">55</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST	= <span class="number">56</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST	= <span class="number">57</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST	= <span class="number">58</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST	= <span class="number">59</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST	= <span class="number">60</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST	= <span class="number">61</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST	= <span class="number">62</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST	= <span class="number">63</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST	= <span class="number">64</span>,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED	= D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_POINTLIST	= D3D_PRIMITIVE_TOPOLOGY_POINTLIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINELIST	= D3D_PRIMITIVE_TOPOLOGY_LINELIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED	= D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_POINTLIST	= D3D_PRIMITIVE_TOPOLOGY_POINTLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINELIST	= D3D_PRIMITIVE_TOPOLOGY_LINELIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST</span><br><span class="line">    &#125; 	D3D_PRIMITIVE_TOPOLOGY;</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//通过线列表来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);</span><br><span class="line"><span class="comment">//通过三角形列表来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);</span><br><span class="line"><span class="comment">//通过三角形带来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>点列表 <code>D3D_PRIMITIVE_TOPOLOGY_POINTLIST</code></li>
+<li>线条带 <code>D3D_PRIMITIVE_TOPOLOGY_LINESTRIP</code></li>
+<li>线列表 <code>D3D_PRIMITIVE_TOPOLOGY_LINELIST</code></li>
+<li>三角形带 <code>D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP</code></li>
+</ul>
+<p><img src="https://img.supervj.top/img/tuyuantuopu_1.jpg"></p>
+<ul>
+<li>剔除(culling)问题：奇数与偶数三角形的绕序(环绕顺序)即装配图元的顶点顺序是不同的</li>
+</ul>
+<p>CPU会对偶数三角形的<code>前两个顶点</code>顺序进行调换已达到有奇数三角形绕序相同</p>
+<blockquote>
+<p>正确的应该是后<strong>两个顶点</strong>顺序调换，而OpenGL中才是前两个顶点调换</p>
+</blockquote>
+<ul>
+<li>三角形列表</li>
+</ul>
+<p><code>D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST</code></p>
+<p>三角形列表与三角形带的区别是，三角形列表的三角形可以彼此分离，所以每n*3个顶点组成n个三角形</p>
+<ul>
+<li>具有邻接数据的图元拓扑</li>
+</ul>
+<p>对于有邻接数据的三角形列表，每个三角形都有3个与之相邻的<code>邻接三角形</code></p>
+<p>借助<code>顶点缓冲区</code>和<code>索引缓冲区</code>将它们随主三角形一并提交至渲染流水线</p>
+<p>并且要把拓扑类型指定为<code>D3D12_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ</code>让渲染流水线知道如何以顶点缓冲区的顶点来构建主三角形和其邻接三角形；</p>
+<p>邻接图元的顶点只作为集合着色器的输入数据，并不会被绘制</p>
+<p><img src="https://img.supervj.top/img/DX/tuyuantuopu_2.jpg"></p>
+<h5 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h5><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Vertex quad[<span class="number">6</span>]=&#123;</span><br><span class="line">    v0,v1,v2,<span class="comment">//三角形0</span></span><br><span class="line">    v0,v2,v3 <span class="comment">//三角形1</span></span><br><span class="line">&#125;；</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><strong>绕序</strong>：为三角形指定顶点顺序</li>
+</ul>
+<p>用<code>顶点列表</code>和<code>索引列表</code>组合起来构成三角形</p>
+<p>如</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Vertex v[<span class="number">9</span>]=&#123;v0,v1,v2,v3,v4,v5,v6,v7,v8&#125;;</span><br><span class="line">UINT indexList[<span class="number">24</span>]=&#123;</span><br><span class="line">    <span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">2</span>,<span class="number">3</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">3</span>,<span class="number">4</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">4</span>,<span class="number">5</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">5</span>,<span class="number">6</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">6</span>,<span class="number">7</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">7</span>,<span class="number">8</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">8</span>,<span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="顶点着色阶段"><a href="#顶点着色阶段" class="headerlink" title="顶点着色阶段"></a>顶点着色阶段</h3><ul>
+<li>世界变换：将局部坐标系内的坐标转换到世界坐标系</li>
+<li>世界矩阵：上述变换的矩阵</li>
+</ul>
+<p>$$<br>W=SRT<br>$$</p>
+<ul>
+<li>观察空间:相机的局部坐标系，亦称视觉空间、摄像机空间等</li>
+<li>取景变换：世界空间至观察空间的变换；此变换的矩阵叫做<code>观察矩阵</code></li>
+</ul>
+<p>观察矩阵函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">inline</span> XMMATRIX XM_CALLCONV XMMatrixLookAtLH</span><br><span class="line">(</span><br><span class="line">    FXMVECTOR EyePosition, </span><br><span class="line">    FXMVECTOR FocusPosition, </span><br><span class="line">    FXMVECTOR UpDirection</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">XMVECTOR eyePos=XMVectorSet(<span class="number">100</span>,<span class="number">100</span>,<span class="number">100</span>,<span class="number">1</span>);</span><br><span class="line">XMVECTOR target=XMVectorZero();</span><br><span class="line">XMVECTOR up=XMVectorSet(<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>);</span><br><span class="line">XMMATRIX V=XMMatrixLookAtLH(eyePos,target,up);<span class="comment">//返回观察矩阵</span></span><br><span class="line">XMVECTOR v2=XMVector3TransformCoord(target,V);</span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;v2;<span class="comment">//输出得到(0,0,173.2),即在观察空间的坐标</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>顶点的投影线：顶点到观察点的连线</li>
+<li>透视投影变换：3D顶点<strong>v</strong>变换至其投影线与3D投影平面的交点<strong>v<sup>、</sup></strong></li>
+</ul>
+<blockquote>
+<p>近平面(近裁剪面)<code>n</code>,远平面<code>f</code>，垂直视场角<code>α</code>，纵横比<code>r</code>，4个参数定义了以原点作为投影的中心，以<code>Z</code>轴进行观察的平截头体</p>
+</blockquote>
+<p>纵横比<br>$$<br>r=w/h<br>$$<br>w:投影窗口的宽度</p>
+<p>h:投影窗口的高度</p>
+<blockquote>
+<p>如果后台缓冲区与投影窗口纵横比不一致，在映射的过程中会产生非均匀缩放（不等比例缩放），导致图像拉伸</p>
+</blockquote>
+<ul>
+<li><p>NDC：规格化设备坐标(Normalized Device Coordinates)</p>
+</li>
+<li><p>透视除法（齐次除法）：顶点与投影矩阵相乘以后，对每个坐标除以<code>w=z</code></p>
+</li>
+<li><p>归一化深度值：通过函数 <code>g(z)</code>把<code>z</code>坐标从<code>[n,f]</code>映射到区间<code>[0,1]</code></p>
+</li>
+</ul>
+<p>$$<br>g(z)=A+ {B \over z}<br>$$</p>
+<ul>
+<li>透视投影矩阵</li>
+</ul>
+<p>$$<br>P=\begin{bmatrix}1\over rtan({\alpha \over 2}) &amp; 0 &amp; 0 &amp; 0\<br>0 &amp; 1\over{tan({\alpha\over 2})} &amp; 0 &amp; 0 \<br>0 &amp; 0 &amp; f\over {f-n} &amp; 1 \<br>0 &amp; &amp; 0 &amp; -nf\over{f-n} &amp; 0<br>\end{bmatrix}<br>$$</p>
+<blockquote>
+<p>在顶点乘以投影矩阵后，集合体会处于所谓的<code>齐次裁剪空间</code>或者<code>投影空间</code></p>
+<p>完成<strong>透视除法</strong>以后，便是**规格化设备坐标(NDC)**了</p>
+</blockquote>
+<ul>
+<li>XMMatrixPerspectiveFovLH</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">inline</span> XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovLH</span><br><span class="line">(</span><br><span class="line">    <span class="keyword">float</span> FovAngleY, <span class="comment">//用弧度值表示的垂直视场角</span></span><br><span class="line">    <span class="keyword">float</span> AspectRatio, <span class="comment">//纵横比：宽度/高度</span></span><br><span class="line">    <span class="keyword">float</span> NearZ, <span class="comment">//近平面距离</span></span><br><span class="line">    <span class="keyword">float</span> FarZ<span class="comment">//到远平面距离</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>示例</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">XMMATRIX M2=XMMatrixPerspectiveFovLH(<span class="number">0.25f</span>*XM_PI,<span class="number">1092</span>/<span class="number">1080</span>,<span class="number">1.0</span>,<span class="number">1000</span>);</span><br><span class="line">	<span class="built_in">cout</span>&lt;&lt;M2;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>2.41421 0       0       0<br>0       2.41421 0       0<br>0       0       1.001   1<br>0       0       -1.001  0</p>
+</blockquote>
+<h3 id="曲面细分阶段"><a href="#曲面细分阶段" class="headerlink" title="曲面细分阶段"></a>曲面细分阶段</h3><p>利用镶嵌化处理技术对网格中的三角形进行细分，以此来增加物体表面上的三角形数量。</p>
+<p>再将这些新增的三角形偏移到适当的位置，使网格表现出更加细腻的细节</p>
+<ul>
+<li>曲面细分的优点</li>
+</ul>
+<ol>
+<li>实现LOD</li>
+<li>在内存中只维护<strong>低模</strong>，在有需求时动态增添三角形，从而节省资源</li>
+<li>处理动画和物理时使用低模，渲染时使用处理过的高模</li>
+</ol>
+<h3 id="几何着色器阶段"><a href="#几何着色器阶段" class="headerlink" title="几何着色器阶段"></a>几何着色器阶段</h3><p>几何着色器阶段接受输入是完整的图元</p>
+<p>与顶点着色器相比，几何着色器可以创建或者修改几何体</p>
+<p>比如，将一个点或者一条线扩展为一个四边形</p>
+<h3 id="裁剪"><a href="#裁剪" class="headerlink" title="裁剪"></a>裁剪</h3><p>对视锥体之外的物体进行裁剪</p>
+<blockquote>
+<p>苏泽兰-霍奇曼裁剪算法</p>
+</blockquote>
+<h3 id="光栅化阶段"><a href="#光栅化阶段" class="headerlink" title="光栅化阶段"></a>光栅化阶段</h3><p>光栅化阶段(RS,栅格化)：投影主屏幕上的3D三角形计算出对应的像素颜色</p>
+<ul>
+<li>视口变换：裁剪完成后，硬件通过透视除法将物体从齐次空间变换为规格化设备坐标（NDC）。此后顶点<code>x、y</code>坐标会以像素单位表示</li>
+<li>背面剔除：将背面朝向的三角形从渲染流水线中除去</li>
+<li>透视矫正插值：为得到2D空间的顶点的插值属性，对3D空间的三角形属性进行线性插值，即利用三角形属性计算出内部像素的属性</li>
+<li>像素着色器阶段(pixel shader)：针对每个像素片段进行处理，根据顶点的差值属性作为输入来计算像素颜色，亦可实现如逐像素光照(per-pixel lighting)、反射以及阴影等复杂效果</li>
+<li>输入合并阶段：上述阶段生成的像素片段送至渲染流水线的输出合并阶段(OM)。丢弃部分像素(如未通过深度测试等)，剩下的写入后台缓冲区，执行混合(blend)操作（透明效果也混合实现的）</li>
+</ul>
+]]></content>
+      <categories>
+        <category>graphics</category>
+      </categories>
+      <tags>
+        <tag>DirectX</tag>
+        <tag>学习笔记</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>DX学习笔记（一）：数学基础</title>
     <url>/2020/06/23/LearnDX12_Math/</url>
     <content><![CDATA[<h2 id="向量代数"><a href="#向量代数" class="headerlink" title="向量代数"></a>向量代数</h2><h3 id="向量"><a href="#向量" class="headerlink" title="向量"></a>向量</h3><p>DirectX3D采用的左手坐标系</p>
@@ -7783,175 +7950,8 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>DirectX</tag>
+        <tag>学习笔记</tag>
         <tag>C++</tag>
-        <tag>学习笔记</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>DX学习笔记（三）：渲染流水线</title>
-    <url>/2020/06/24/LearnDX12_RenderPipline/</url>
-    <content><![CDATA[<h2 id="渲染流水线"><a href="#渲染流水线" class="headerlink" title="渲染流水线"></a>渲染流水线</h2><p>平行线最终会相交于<code>消失点</code>，又称为<code>灭点</code></p>
-<p><code>物体重叠</code>：即不同命的物体能够遮挡住其后侧物体的局部</p>
-<p>3D实体对象是通过<code>三角形网格</code>来近似表示的</p>
-<h3 id="颜色"><a href="#颜色" class="headerlink" title="颜色"></a>颜色</h3><p>分量式乘法:<code>(r,g,b)*(a,b,c)=(ra,gb,bc)</code></p>
-<h5 id="128位颜色"><a href="#128位颜色" class="headerlink" title="128位颜色"></a>128位颜色</h5><p>每个分量用浮点表示，即4D向量 (r,g,b,a)</p>
-<p><strong><em>0&lt;=r,g,b,a&lt;=1</em></strong></p>
-<p><code>DirectXMath</code>库对分量式乘法的支持</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">XMVECTOR XM_CAKKCIBV <span class="title">XMColorModulate</span> <span class="params">(FXMVECTOR C1,FXMVECTOR C2)</span></span>;<span class="comment">//返回C1*C2</span></span><br></pre></td></tr></table></figure>
-
-<h5 id="32位颜色"><a href="#32位颜色" class="headerlink" title="32位颜色"></a>32位颜色</h5><p>每个分量仅分配1个字节，因此每个占用8字节的颜色分量就分别描述256种不同的颜色强度</p>
-<p>即0代表无强度，256代表最大强度</p>
-<p><code>DirectXMath</code>库<code>(include&lt;DirectXPackedVector.h&gt;)</code>在<code>DirectX::PackedVector</code>命名空间提供了相应函数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">namespace</span> DirectX</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">namespace</span> PackedVector</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="class"><span class="keyword">struct</span> <span class="title">XMCOLOR</span></span></span><br><span class="line"><span class="class">        &#123;</span></span><br><span class="line">            <span class="class"><span class="keyword">union</span></span></span><br><span class="line"><span class="class">            &#123;</span></span><br><span class="line">                <span class="class"><span class="keyword">struct</span></span></span><br><span class="line"><span class="class">                &#123;</span></span><br><span class="line">                    <span class="keyword">uint8_t</span> b;  <span class="comment">// Blue:    0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> g;  <span class="comment">// Green:   0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> r;  <span class="comment">// Red:     0/255 to 255/255</span></span><br><span class="line">            		<span class="keyword">uint8_t</span> a;  <span class="comment">// Alpha:   0/255 to 255/255</span></span><br><span class="line">                    </span><br><span class="line">                &#125;;<span class="keyword">uint32_t</span> c;</span><br><span class="line">                XMCOLOR() = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">    			XMCOLOR(<span class="keyword">const</span> XMCOLOR&amp;) = <span class="keyword">default</span>;</span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>=(<span class="keyword">const</span> XMCOLOR&amp;) = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">                XMCOLOR(XMCOLOR&amp;&amp;) = <span class="keyword">default</span>;</span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>=(XMCOLOR&amp;&amp;) = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">                <span class="function">XM_CONSTEXPR <span class="title">XMCOLOR</span><span class="params">(<span class="keyword">uint32_t</span> Color)</span> : <span class="title">c</span><span class="params">(Color)</span> </span>&#123;&#125;</span><br><span class="line">                XMCOLOR(<span class="keyword">float</span> _r, <span class="keyword">float</span> _g, <span class="keyword">float</span> _b, <span class="keyword">float</span> _a);</span><br><span class="line">                <span class="function"><span class="keyword">explicit</span> <span class="title">XMCOLOR</span><span class="params">(_In_reads_(<span class="number">4</span>) <span class="keyword">const</span> <span class="keyword">float</span> *pArray)</span></span>;</span><br><span class="line"></span><br><span class="line">                <span class="function"><span class="keyword">operator</span> <span class="title">uint32_t</span> <span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> c; &#125;</span><br><span class="line"></span><br><span class="line">                XMCOLOR&amp; <span class="keyword">operator</span>= (<span class="keyword">const</span> <span class="keyword">uint32_t</span> Color) &#123; c = Color; <span class="keyword">return</span> *<span class="keyword">this</span>; &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>通过将<code>[0,255]</code>映射到<code>[0,1]</code>即可完成32位到128位的转换</p>
-<p>转换函数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">XMVECTOR XM_CALLCONV <span class="title">XMLoadColor</span><span class="params">( <span class="keyword">const</span> XMCOLOR* pSource)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> XM_CALLCONV <span class="title">XMStoreColor</span><span class="params">( XMCOLOR* pDestination, FXMVECTOR V )</span></span>;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="渲染流水线概述"><a href="#渲染流水线概述" class="headerlink" title="渲染流水线概述"></a>渲染流水线概述</h3><p>渲染流水线(rendering pipeline)是以摄像机位观察视角而生成的2D图像的一系列完整步骤</p>
-<p>​     </p>
-<p><img src="https://img.supervj.top/xuanran.png"></p>
-<h3 id="输入装配阶段"><a href="#输入装配阶段" class="headerlink" title="输入装配阶段"></a>输入装配阶段</h3><p>输入装配阶段：从显存中读取集合数据(顶点和索引，vertex and index)</p>
-<p>再装配为几何图元（几何基元），如三角形和线条</p>
-<ul>
-<li>顶点缓冲区：将顶点与渲染流水线绑定的特殊结构体</li>
-</ul>
-<h5 id="图元拓扑-primitive-topology"><a href="#图元拓扑-primitive-topology" class="headerlink" title="图元拓扑(primitive topology)"></a>图元拓扑(primitive topology)</h5><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> STDMETHODCALLTYPE <span class="title">IASetPrimitiveTopology</span><span class="params">( </span></span></span><br><span class="line"><span class="function"><span class="params">            _In_  D3D12_PRIMITIVE_TOPOLOGY PrimitiveTopology)</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">typedef</span> </span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="title">D3D_PRIMITIVE_TOPOLOGY</span></span></span><br><span class="line"><span class="class">    &#123;</span></span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_UNDEFINED	= <span class="number">0</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_POINTLIST	= <span class="number">1</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINELIST	= <span class="number">2</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP	= <span class="number">3</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= <span class="number">4</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= <span class="number">5</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= <span class="number">10</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= <span class="number">11</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= <span class="number">12</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= <span class="number">13</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST	= <span class="number">33</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST	= <span class="number">34</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST	= <span class="number">35</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST	= <span class="number">36</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST	= <span class="number">37</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST	= <span class="number">38</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST	= <span class="number">39</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST	= <span class="number">40</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST	= <span class="number">41</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST	= <span class="number">42</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST	= <span class="number">43</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST	= <span class="number">44</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST	= <span class="number">45</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST	= <span class="number">46</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST	= <span class="number">47</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST	= <span class="number">48</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST	= <span class="number">49</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST	= <span class="number">50</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST	= <span class="number">51</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST	= <span class="number">52</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST	= <span class="number">53</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST	= <span class="number">54</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST	= <span class="number">55</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST	= <span class="number">56</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST	= <span class="number">57</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST	= <span class="number">58</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST	= <span class="number">59</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST	= <span class="number">60</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST	= <span class="number">61</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST	= <span class="number">62</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST	= <span class="number">63</span>,</span><br><span class="line">        D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST	= <span class="number">64</span>,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_UNDEFINED	= D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_POINTLIST	= D3D_PRIMITIVE_TOPOLOGY_POINTLIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINELIST	= D3D_PRIMITIVE_TOPOLOGY_LINELIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,</span><br><span class="line">        D3D10_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED	= D3D_PRIMITIVE_TOPOLOGY_UNDEFINED,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_POINTLIST	= D3D_PRIMITIVE_TOPOLOGY_POINTLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINELIST	= D3D_PRIMITIVE_TOPOLOGY_LINELIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ	= D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST,</span><br><span class="line">        D3D11_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST	= D3D_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST</span><br><span class="line">    &#125; 	D3D_PRIMITIVE_TOPOLOGY;</span><br></pre></td></tr></table></figure>
-
-<p>示例</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//通过线列表来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_LINELIST);</span><br><span class="line"><span class="comment">//通过三角形列表来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);</span><br><span class="line"><span class="comment">//通过三角形带来绘制对象</span></span><br><span class="line">mCommandList-&gt;IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>点列表 <code>D3D_PRIMITIVE_TOPOLOGY_POINTLIST</code></li>
-<li>线条带 <code>D3D_PRIMITIVE_TOPOLOGY_LINESTRIP</code></li>
-<li>线列表 <code>D3D_PRIMITIVE_TOPOLOGY_LINELIST</code></li>
-<li>三角形带 <code>D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP</code></li>
-</ul>
-<p><img src="https://img.supervj.top/img/tuyuantuopu_1.jpg"></p>
-<ul>
-<li>剔除(culling)问题：奇数与偶数三角形的绕序(环绕顺序)即装配图元的顶点顺序是不同的</li>
-</ul>
-<p>CPU会对偶数三角形的<code>前两个顶点</code>顺序进行调换已达到有奇数三角形绕序相同</p>
-<blockquote>
-<p>正确的应该是后<strong>两个顶点</strong>顺序调换，而OpenGL中才是前两个顶点调换</p>
-</blockquote>
-<ul>
-<li>三角形列表</li>
-</ul>
-<p><code>D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST</code></p>
-<p>三角形列表与三角形带的区别是，三角形列表的三角形可以彼此分离，所以每n*3个顶点组成n个三角形</p>
-<ul>
-<li>具有邻接数据的图元拓扑</li>
-</ul>
-<p>对于有邻接数据的三角形列表，每个三角形都有3个与之相邻的<code>邻接三角形</code></p>
-<p>借助<code>顶点缓冲区</code>和<code>索引缓冲区</code>将它们随主三角形一并提交至渲染流水线</p>
-<p>并且要把拓扑类型指定为<code>D3D12_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ</code>让渲染流水线知道如何以顶点缓冲区的顶点来构建主三角形和其邻接三角形；</p>
-<p>邻接图元的顶点只作为集合着色器的输入数据，并不会被绘制</p>
-<p><img src="https://img.supervj.top/img/DX/tuyuantuopu_2.jpg"></p>
-<h5 id="索引"><a href="#索引" class="headerlink" title="索引"></a>索引</h5><figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Vertex quad[<span class="number">6</span>]=&#123;</span><br><span class="line">    v0,v1,v2,<span class="comment">//三角形0</span></span><br><span class="line">    v0,v2,v3 <span class="comment">//三角形1</span></span><br><span class="line">&#125;；</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><strong>绕序</strong>：为三角形指定顶点顺序</li>
-</ul>
-<p>用<code>顶点列表</code>和<code>索引列表</code>组合起来构成三角形</p>
-<p>如</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">Vertex v[<span class="number">9</span>]=&#123;v0,v1,v2,v3,v4,v5,v6,v7,v8&#125;;</span><br><span class="line">UINT indexList[<span class="number">24</span>]=&#123;</span><br><span class="line">    <span class="number">0</span>,<span class="number">1</span>,<span class="number">2</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">2</span>,<span class="number">3</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">3</span>,<span class="number">4</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">4</span>,<span class="number">5</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">5</span>,<span class="number">6</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">6</span>,<span class="number">7</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">7</span>,<span class="number">8</span>,</span><br><span class="line">    <span class="number">0</span>,<span class="number">8</span>,<span class="number">1</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<h3 id="顶点着色阶段"><a href="#顶点着色阶段" class="headerlink" title="顶点着色阶段"></a>顶点着色阶段</h3><ul>
-<li>世界变换：将局部坐标系内的坐标转换到世界坐标系</li>
-<li>世界矩阵：上述变换的矩阵</li>
-</ul>
-<p>$$<br>W=SRT<br>$$</p>
-<ul>
-<li>观察空间:相机的局部坐标系，亦称视觉空间、摄像机空间等</li>
-<li>取景变换：世界空间至观察空间的变换；此变换的矩阵叫做<code>观察矩阵</code></li>
-</ul>
-<p>观察矩阵函数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">inline</span> XMMATRIX XM_CALLCONV XMMatrixLookAtLH</span><br><span class="line">(</span><br><span class="line">    FXMVECTOR EyePosition, </span><br><span class="line">    FXMVECTOR FocusPosition, </span><br><span class="line">    FXMVECTOR UpDirection</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<p>示例</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">XMVECTOR eyePos=XMVectorSet(<span class="number">100</span>,<span class="number">100</span>,<span class="number">100</span>,<span class="number">1</span>);</span><br><span class="line">XMVECTOR target=XMVectorZero();</span><br><span class="line">XMVECTOR up=XMVectorSet(<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>,<span class="number">0</span>);</span><br><span class="line">XMMATRIX V=XMMatrixLookAtLH(eyePos,target,up);<span class="comment">//返回观察矩阵</span></span><br><span class="line">XMVECTOR v2=XMVector3TransformCoord(target,V);</span><br><span class="line"><span class="built_in">cout</span>&lt;&lt;v2;<span class="comment">//输出得到(0,0,173.2),即在观察空间的坐标</span></span><br></pre></td></tr></table></figure>
-
-<ul>
-<li>顶点的投影线：顶点到观察点的连线</li>
-<li>透视投影变换：3D顶点<strong>v</strong>变换至其投影线与3D投影平面的交点<strong>v<sup>、</sup></strong></li>
-</ul>
-<blockquote>
-<p>近平面(近裁剪面)<code>n</code>,远平面<code>f</code>，垂直视场角<code>α</code>，纵横比<code>r</code>，4个参数定义了以原点作为投影的中心，以<code>Z</code>轴进行观察的平截头体</p>
-</blockquote>
-<p>纵横比<br>$$<br>r=w/h<br>$$<br>w:投影窗口的宽度</p>
-<p>h:投影窗口的高度</p>
-<blockquote>
-<p>如果后台缓冲区与投影窗口纵横比不一致，在映射的过程中会产生非均匀缩放（不等比例缩放），导致图像拉伸</p>
-</blockquote>
-<ul>
-<li><p>NDC：规格化设备坐标(Normalized Device Coordinates)</p>
-</li>
-<li><p>透视除法（齐次除法）：顶点与投影矩阵相乘以后，对每个坐标除以<code>w=z</code></p>
-</li>
-<li><p>归一化深度值：通过函数 <code>g(z)</code>把<code>z</code>坐标从<code>[n,f]</code>映射到区间<code>[0,1]</code></p>
-</li>
-</ul>
-<p>$$<br>g(z)=A+ {B \over z}<br>$$</p>
-<ul>
-<li>透视投影矩阵</li>
-</ul>
-<p>$$<br>P=\begin{bmatrix}1\over rtan({\alpha \over 2}) &amp; 0 &amp; 0 &amp; 0\<br>0 &amp; 1\over{tan({\alpha\over 2})} &amp; 0 &amp; 0 \<br>0 &amp; 0 &amp; f\over {f-n} &amp; 1 \<br>0 &amp; &amp; 0 &amp; -nf\over{f-n} &amp; 0<br>\end{bmatrix}<br>$$</p>
-<blockquote>
-<p>在顶点乘以投影矩阵后，集合体会处于所谓的<code>齐次裁剪空间</code>或者<code>投影空间</code></p>
-<p>完成<strong>透视除法</strong>以后，便是**规格化设备坐标(NDC)**了</p>
-</blockquote>
-<ul>
-<li>XMMatrixPerspectiveFovLH</li>
-</ul>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">inline</span> XMMATRIX XM_CALLCONV XMMatrixPerspectiveFovLH</span><br><span class="line">(</span><br><span class="line">    <span class="keyword">float</span> FovAngleY, <span class="comment">//用弧度值表示的垂直视场角</span></span><br><span class="line">    <span class="keyword">float</span> AspectRatio, <span class="comment">//纵横比：宽度/高度</span></span><br><span class="line">    <span class="keyword">float</span> NearZ, <span class="comment">//近平面距离</span></span><br><span class="line">    <span class="keyword">float</span> FarZ<span class="comment">//到远平面距离</span></span><br><span class="line">)</span><br></pre></td></tr></table></figure>
-
-<p>示例</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">XMMATRIX M2=XMMatrixPerspectiveFovLH(<span class="number">0.25f</span>*XM_PI,<span class="number">1092</span>/<span class="number">1080</span>,<span class="number">1.0</span>,<span class="number">1000</span>);</span><br><span class="line">	<span class="built_in">cout</span>&lt;&lt;M2;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>2.41421 0       0       0<br>0       2.41421 0       0<br>0       0       1.001   1<br>0       0       -1.001  0</p>
-</blockquote>
-<h3 id="曲面细分阶段"><a href="#曲面细分阶段" class="headerlink" title="曲面细分阶段"></a>曲面细分阶段</h3><p>利用镶嵌化处理技术对网格中的三角形进行细分，以此来增加物体表面上的三角形数量。</p>
-<p>再将这些新增的三角形偏移到适当的位置，使网格表现出更加细腻的细节</p>
-<ul>
-<li>曲面细分的优点</li>
-</ul>
-<ol>
-<li>实现LOD</li>
-<li>在内存中只维护<strong>低模</strong>，在有需求时动态增添三角形，从而节省资源</li>
-<li>处理动画和物理时使用低模，渲染时使用处理过的高模</li>
-</ol>
-<h3 id="几何着色器阶段"><a href="#几何着色器阶段" class="headerlink" title="几何着色器阶段"></a>几何着色器阶段</h3><p>几何着色器阶段接受输入是完整的图元</p>
-<p>与顶点着色器相比，几何着色器可以创建或者修改几何体</p>
-<p>比如，将一个点或者一条线扩展为一个四边形</p>
-<h3 id="裁剪"><a href="#裁剪" class="headerlink" title="裁剪"></a>裁剪</h3><p>对视锥体之外的物体进行裁剪</p>
-<blockquote>
-<p>苏泽兰-霍奇曼裁剪算法</p>
-</blockquote>
-<h3 id="光栅化阶段"><a href="#光栅化阶段" class="headerlink" title="光栅化阶段"></a>光栅化阶段</h3><p>光栅化阶段(RS,栅格化)：投影主屏幕上的3D三角形计算出对应的像素颜色</p>
-<ul>
-<li>视口变换：裁剪完成后，硬件通过透视除法将物体从齐次空间变换为规格化设备坐标（NDC）。此后顶点<code>x、y</code>坐标会以像素单位表示</li>
-<li>背面剔除：将背面朝向的三角形从渲染流水线中除去</li>
-<li>透视矫正插值：为得到2D空间的顶点的插值属性，对3D空间的三角形属性进行线性插值，即利用三角形属性计算出内部像素的属性</li>
-<li>像素着色器阶段(pixel shader)：针对每个像素片段进行处理，根据顶点的差值属性作为输入来计算像素颜色，亦可实现如逐像素光照(per-pixel lighting)、反射以及阴影等复杂效果</li>
-<li>输入合并阶段：上述阶段生成的像素片段送至渲染流水线的输出合并阶段(OM)。丢弃部分像素(如未通过深度测试等)，剩下的写入后台缓冲区，执行混合(blend)操作（透明效果也混合实现的）</li>
-</ul>
-]]></content>
-      <categories>
-        <category>graphics</category>
-      </categories>
-      <tags>
-        <tag>DirectX</tag>
-        <tag>学习笔记</tag>
       </tags>
   </entry>
   <entry>
@@ -9460,8 +9460,8 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>DirectX</tag>
-        <tag>C++</tag>
         <tag>学习笔记</tag>
+        <tag>C++</tag>
       </tags>
   </entry>
   <entry>
@@ -9870,8 +9870,8 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>DirectX</tag>
-        <tag>C++</tag>
         <tag>学习笔记</tag>
+        <tag>C++</tag>
       </tags>
   </entry>
   <entry>
@@ -10088,8 +10088,8 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>DirectX</tag>
-        <tag>C++</tag>
         <tag>学习笔记</tag>
+        <tag>C++</tag>
       </tags>
   </entry>
 </search>
