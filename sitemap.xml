@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://supervj.top/2021/08/13/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E8%87%AA%E5%AE%9A%E4%B9%89PlaceActors/</loc>
+    
+    <lastmod>2021-08-13</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://supervj.top/2021/08/12/%E5%BC%95%E6%93%8E%E5%90%AF%E5%8A%A8/</loc>
     
     <lastmod>2021-08-13</lastmod>
@@ -1193,6 +1200,13 @@
     <priority>0.6</priority>
   </url>
   
+  <url>
+    <loc>http://supervj.top/tags/PlacementActors/</loc>
+    <lastmod>2021-08-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
 
   
   <url>
@@ -1281,6 +1295,13 @@
   
   <url>
     <loc>http://supervj.top/categories/Engine/</loc>
+    <lastmod>2021-08-13</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>http://supervj.top/categories/Editor/</loc>
     <lastmod>2021-08-13</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.6</priority>
