@@ -10030,7 +10030,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
 <p>详情可以参考文件<code>CoreDelegates.h</code></p>
 ]]></content>
       <categories>
-        <category>Engine</category>
+        <category>engine</category>
       </categories>
   </entry>
   <entry>
@@ -10086,7 +10086,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
 <p><img src="https://img.supervj.top//img/image-20210813111004071.png" alt="image-20210813111004071"></p>
 ]]></content>
       <categories>
-        <category>Editor</category>
+        <category>editor</category>
       </categories>
       <tags>
         <tag>PlacementActors</tag>
