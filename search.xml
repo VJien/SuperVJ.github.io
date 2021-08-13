@@ -215,73 +215,6 @@
       </categories>
   </entry>
   <entry>
-    <title>AdvancedLocomotionSystemV4分析(五):镜头</title>
-    <url>/2020/10/31/AdvancedLocomotionSystem%E5%88%86%E6%9E%905_%E9%95%9C%E5%A4%B4/</url>
-    <content><![CDATA[<p><img src="https://i.loli.net/2020/10/31/oGuy1Ex9ajNzfQg.gif" alt="录制_2020_10_31_14_52_47_579~2"></p>
-<blockquote>
-<p>上一篇留下了一个镜头抖动问题，实际上ALS项目是通过自定义<code>CameraManager</code>实现的，本篇就此来展开一下</p>
-</blockquote>
-<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
-<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
-<p><a href="https://supervj.top/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/">AdvancedLocomotionSystemV4分析(三):动作叠加</a></p>
-<p><a href="https://supervj.top/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/">AdvancedLocomotionSystemV4分析(四):布娃娃和起身</a></p>
-<a id="more"></a>
-
-
-
-<p>先大概简述一下<code>ALS</code>镜头控制的方法</p>
-<ul>
-<li>自定义<code>CameraManager</code>代替默认第三人称模板的<code>SpringArm</code>+<code>Camera</code>的方式</li>
-<li>重写<code>BlueprintUpdateCamera</code></li>
-<li><code>CameraManager</code>挂载骨骼模型相机，创建动画蓝图，用曲线来控制相机位置信息</li>
-</ul>
-<h3 id="动画蓝图"><a href="#动画蓝图" class="headerlink" title="动画蓝图"></a>动画蓝图</h3><p><code>ALS</code>巧妙的用动画蓝图来辅助相机位置的控制和切换，如何做到的？我们先来看一下这是个什么动画蓝图</p>
-<p><img src="https://i.loli.net/2020/10/31/vQ1OTbzS7JmA435.png" alt="image-20201031141203030"></p>
-<p>随便打开一个角落</p>
-<p><img src="https://i.loli.net/2020/10/31/qZLflKyOBEITbDg.png" alt="image-20201031141249269"></p>
-<p>所以说，动画蓝图没动画(lll￢ω￢)</p>
-<p>完全是用动画蓝图的状态机来自然过渡各类曲线数据，所以显而易见的可以知道在其他地方会 用到这些曲线</p>
-<blockquote>
-<p>ps.相机的骨骼模型你完全可以用一个球代替，曲线都是手动加的，不用到三维软件加</p>
-</blockquote>
-<h3 id="CameraManager"><a href="#CameraManager" class="headerlink" title="CameraManager"></a>CameraManager</h3><p><img src="https://i.loli.net/2020/10/31/GOxWNeguVfl2Ehb.png" alt="image-20201031141505810"></p>
-<p>先一个初始化方法把必要的参数给拿到，可以到<code>PlayerController</code>内初始化，毕竟<code>CamaraManager</code>本身就是配置在<code>PlayerController</code>内</p>
-<p><img src="https://i.loli.net/2020/10/31/2KXOuLNdSFeUjpD.png" alt="image-20201031141559486"></p>
-<p>然后重写<code>BlueprintUpdateCamera</code>方法，随意给一个判断，不满足就走默认的方式</p>
-<p><img src="https://i.loli.net/2020/10/31/HZkM9N5LtmFYa3P.png" alt="image-20201031141650530"></p>
-<p>在<code>CustomCameraBehavior</code>内有很多计算，我们逐一分析</p>
-<p><img src="https://i.loli.net/2020/10/31/ykfTUYdMzprCI3D.png" alt="image-20201031141736699"></p>
-<p>从角色内去获取必要的参数，<code>PivotTarget</code>是观察的目标点，<code>1PTarget</code>为第一人称的位置，第一人称会讲相机放到固定插槽位置，这里是眼睛的位置</p>
-<p><img src="https://i.loli.net/2020/10/31/Gh4ui29epCf6oPO.png" alt="image-20201031142246941"></p>
-<p>当前旋转向控制器旋转插值过去，速度由曲线<code>RotationLagSpeed</code>变量控制</p>
-<p><img src="https://i.loli.net/2020/10/31/LjN2QKumEPFlTVI.png" alt="image-20201031142342258"></p>
-<p><code>SmoothPivotTarget</code>其实是当前的相机变换信息，插值向第一条的目标点</p>
-<p>关于<code>CalclateAxisIndependentLag</code>内部是经过插值计算把<code>CurrentLocation</code>向<code>TargetLocation</code>插值过渡</p>
-<p>内部有一点不容易理解，如下图</p>
-<p><img src="https://i.loli.net/2020/10/31/QMlYCAxi5cj32So.png" alt="image-20201031143027445"></p>
-<p>位置先反向旋转最后又给转回来，如果觉得很难理解，其实可以不加这部操作，区别不大</p>
-<p><img src="https://i.loli.net/2020/10/31/TIdpo7camu8DkyC.png" alt="image-20201031143300660"></p>
-<p>然后再加上曲线<code>PivotOffset_*</code>的偏移后存为变量<code>PivotLocation</code>，简单粗暴</p>
-<p><img src="https://i.loli.net/2020/10/31/yQrHnYlhoMUAB3G.png" alt="image-20201031143348227"></p>
-<p>然后加上相机偏移曲线<code>CameraOffset_*</code>存为变量<code>TargetCameraLocation</code></p>
-<blockquote>
-<p>关于<code>CameraOffset</code>与<code>PivotOffset</code>的区别</p>
-<p>前者是相机的位置，后者是目标点的位置，其实换到大家熟悉的<code>SpringArm</code>来说，前者就是<code>SocketOffset</code>，后者就是<code>TargetOffset</code>，不熟悉的可以自己去试一试</p>
-</blockquote>
-<p><img src="https://i.loli.net/2020/10/31/BwZD4tEi36c7Ydp.png" alt="image-20201031143540131"></p>
-<p>第三人称下的射线检测，其实就是做了一个类似<code>SpringArm</code>的<code>DoTestCollision</code>的作用</p>
-<p><img src="https://i.loli.net/2020/10/31/E9gxYbDcpBuATKl.png" alt="image-20201031143628977"></p>
-<p>最后就是根据曲线返回第一人称还是第三人称的数据</p>
-]]></content>
-      <categories>
-        <category>animation</category>
-      </categories>
-      <tags>
-        <tag>animation</tag>
-        <tag>镜头</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>AssetManager的使用</title>
     <url>/2020/12/29/AssetManager/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><code>AssetManager(下面简称AM)</code>是一个全局单例类，用于管理各种<code>primary assets</code>和<code>asset bundles</code>。</p>
@@ -391,6 +324,73 @@
       <tags>
         <tag>模块分析</tag>
         <tag>资源</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>AdvancedLocomotionSystemV4分析(五):镜头</title>
+    <url>/2020/10/31/AdvancedLocomotionSystem%E5%88%86%E6%9E%905_%E9%95%9C%E5%A4%B4/</url>
+    <content><![CDATA[<p><img src="https://i.loli.net/2020/10/31/oGuy1Ex9ajNzfQg.gif" alt="录制_2020_10_31_14_52_47_579~2"></p>
+<blockquote>
+<p>上一篇留下了一个镜头抖动问题，实际上ALS项目是通过自定义<code>CameraManager</code>实现的，本篇就此来展开一下</p>
+</blockquote>
+<p><a href="https://supervj.top/2020/10/26/AdvancedLocomotionSystem%E5%88%86%E6%9E%901_%E5%9F%BA%E7%A1%80%E7%A7%BB%E5%8A%A8%E5%92%8C%E8%84%9A%E6%AD%A5IK/">AdvancedLocomotionSysemV4分析(一):移动和脚步IK</a></p>
+<p><a href="https://supervj.top/2020/10/27/AdvancedLocomotionSystem%E5%88%86%E6%9E%902_%E6%94%80%E7%88%AC%E7%B3%BB%E7%BB%9F/">AdvancedLocomotionSystem分析(二):攀爬系统</a></p>
+<p><a href="https://supervj.top/2020/10/28/AdvancedLocomotionSystem%E5%88%86%E6%9E%903_%E5%8A%A8%E4%BD%9C%E5%8F%A0%E5%8A%A0/">AdvancedLocomotionSystemV4分析(三):动作叠加</a></p>
+<p><a href="https://supervj.top/2020/10/29/AdvancedLocomotionSystem%E5%88%86%E6%9E%904_%E5%B8%83%E5%A8%83%E5%A8%83%E5%92%8C%E8%B5%B7%E8%BA%AB/">AdvancedLocomotionSystemV4分析(四):布娃娃和起身</a></p>
+<a id="more"></a>
+
+
+
+<p>先大概简述一下<code>ALS</code>镜头控制的方法</p>
+<ul>
+<li>自定义<code>CameraManager</code>代替默认第三人称模板的<code>SpringArm</code>+<code>Camera</code>的方式</li>
+<li>重写<code>BlueprintUpdateCamera</code></li>
+<li><code>CameraManager</code>挂载骨骼模型相机，创建动画蓝图，用曲线来控制相机位置信息</li>
+</ul>
+<h3 id="动画蓝图"><a href="#动画蓝图" class="headerlink" title="动画蓝图"></a>动画蓝图</h3><p><code>ALS</code>巧妙的用动画蓝图来辅助相机位置的控制和切换，如何做到的？我们先来看一下这是个什么动画蓝图</p>
+<p><img src="https://i.loli.net/2020/10/31/vQ1OTbzS7JmA435.png" alt="image-20201031141203030"></p>
+<p>随便打开一个角落</p>
+<p><img src="https://i.loli.net/2020/10/31/qZLflKyOBEITbDg.png" alt="image-20201031141249269"></p>
+<p>所以说，动画蓝图没动画(lll￢ω￢)</p>
+<p>完全是用动画蓝图的状态机来自然过渡各类曲线数据，所以显而易见的可以知道在其他地方会 用到这些曲线</p>
+<blockquote>
+<p>ps.相机的骨骼模型你完全可以用一个球代替，曲线都是手动加的，不用到三维软件加</p>
+</blockquote>
+<h3 id="CameraManager"><a href="#CameraManager" class="headerlink" title="CameraManager"></a>CameraManager</h3><p><img src="https://i.loli.net/2020/10/31/GOxWNeguVfl2Ehb.png" alt="image-20201031141505810"></p>
+<p>先一个初始化方法把必要的参数给拿到，可以到<code>PlayerController</code>内初始化，毕竟<code>CamaraManager</code>本身就是配置在<code>PlayerController</code>内</p>
+<p><img src="https://i.loli.net/2020/10/31/2KXOuLNdSFeUjpD.png" alt="image-20201031141559486"></p>
+<p>然后重写<code>BlueprintUpdateCamera</code>方法，随意给一个判断，不满足就走默认的方式</p>
+<p><img src="https://i.loli.net/2020/10/31/HZkM9N5LtmFYa3P.png" alt="image-20201031141650530"></p>
+<p>在<code>CustomCameraBehavior</code>内有很多计算，我们逐一分析</p>
+<p><img src="https://i.loli.net/2020/10/31/ykfTUYdMzprCI3D.png" alt="image-20201031141736699"></p>
+<p>从角色内去获取必要的参数，<code>PivotTarget</code>是观察的目标点，<code>1PTarget</code>为第一人称的位置，第一人称会讲相机放到固定插槽位置，这里是眼睛的位置</p>
+<p><img src="https://i.loli.net/2020/10/31/Gh4ui29epCf6oPO.png" alt="image-20201031142246941"></p>
+<p>当前旋转向控制器旋转插值过去，速度由曲线<code>RotationLagSpeed</code>变量控制</p>
+<p><img src="https://i.loli.net/2020/10/31/LjN2QKumEPFlTVI.png" alt="image-20201031142342258"></p>
+<p><code>SmoothPivotTarget</code>其实是当前的相机变换信息，插值向第一条的目标点</p>
+<p>关于<code>CalclateAxisIndependentLag</code>内部是经过插值计算把<code>CurrentLocation</code>向<code>TargetLocation</code>插值过渡</p>
+<p>内部有一点不容易理解，如下图</p>
+<p><img src="https://i.loli.net/2020/10/31/QMlYCAxi5cj32So.png" alt="image-20201031143027445"></p>
+<p>位置先反向旋转最后又给转回来，如果觉得很难理解，其实可以不加这部操作，区别不大</p>
+<p><img src="https://i.loli.net/2020/10/31/TIdpo7camu8DkyC.png" alt="image-20201031143300660"></p>
+<p>然后再加上曲线<code>PivotOffset_*</code>的偏移后存为变量<code>PivotLocation</code>，简单粗暴</p>
+<p><img src="https://i.loli.net/2020/10/31/yQrHnYlhoMUAB3G.png" alt="image-20201031143348227"></p>
+<p>然后加上相机偏移曲线<code>CameraOffset_*</code>存为变量<code>TargetCameraLocation</code></p>
+<blockquote>
+<p>关于<code>CameraOffset</code>与<code>PivotOffset</code>的区别</p>
+<p>前者是相机的位置，后者是目标点的位置，其实换到大家熟悉的<code>SpringArm</code>来说，前者就是<code>SocketOffset</code>，后者就是<code>TargetOffset</code>，不熟悉的可以自己去试一试</p>
+</blockquote>
+<p><img src="https://i.loli.net/2020/10/31/BwZD4tEi36c7Ydp.png" alt="image-20201031143540131"></p>
+<p>第三人称下的射线检测，其实就是做了一个类似<code>SpringArm</code>的<code>DoTestCollision</code>的作用</p>
+<p><img src="https://i.loli.net/2020/10/31/E9gxYbDcpBuATKl.png" alt="image-20201031143628977"></p>
+<p>最后就是根据曲线返回第一人称还是第三人称的数据</p>
+]]></content>
+      <categories>
+        <category>animation</category>
+      </categories>
+      <tags>
+        <tag>animation</tag>
+        <tag>镜头</tag>
       </tags>
   </entry>
   <entry>
@@ -1986,6 +1986,53 @@
       </tags>
   </entry>
   <entry>
+    <title>Paper2D第三方工具TexturerPacker</title>
+    <url>/2021/01/08/Paper2D%E7%AC%AC%E4%B8%89%E6%96%B9%E5%B7%A5%E5%85%B7TexturerPacker/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>关于Paper2D使用第三方工具<code>TexturerPacker</code>的简单使用方法记录</p>
+<blockquote>
+<p>从遥远的2019年搬运而来</p>
+</blockquote>
+<a id="more"></a>
+
+<h2 id="第三方工具：TexturerPacker"><a href="#第三方工具：TexturerPacker" class="headerlink" title="第三方工具：TexturerPacker"></a>第三方工具：TexturerPacker</h2><ul>
+<li><a href="https://www.codeandweb.com/texturepacker/tutorials/how-to-create-sprite-sheets-with-unreal-paper2d">下载地址</a></li>
+</ul>
+<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><p>TexturePacker流程</p>
+<p><img src="https://img.supervj.top//img/thumbnail.png" alt="thumbnail"></p>
+<ul>
+<li><p>将序列帧图片直接拖入软件中，也可以只能选择外部文件夹，一个文件夹内的图片会被全部导入</p>
+</li>
+<li><p>设置框架为<strong>UnrealEngine-Paper-2d</strong>,需要用Pro版本,免费使用7天😓</p>
+</li>
+<li><p>设置右上角的<strong>数据文件</strong>（导出数据），主要目的是设置路劲和文件名</p>
+</li>
+<li><p><strong>多文件打包</strong>一般不用设置，除非同一个动作序列帧非常多</p>
+</li>
+<li><p>发布为<strong>paper2dsprites</strong> 文件,可导入UE4</p>
+<hr>
+</li>
+</ul>
+<h2 id="UE4的Paper2D导入流程"><a href="#UE4的Paper2D导入流程" class="headerlink" title="UE4的Paper2D导入流程"></a>UE4的Paper2D导入流程</h2><ul>
+<li>导入paper2dsprites数据（亦可以直接导入PNG或者其他图片格式），以下按照paper2dsprites流程</li>
+<li>导入以后生成3个文件，如下</li>
+</ul>
+<p><img src="https://img.supervj.top//img/thumbnail%20(1).png" alt="thumbnail (1)"></p>
+<ul>
+<li>Texutres文件内包含一张x*y小图的PNG图片，格式自动设置为2D格式图片，如下图<br><img src="https://img.supervj.top//img/image-20191213134651199.png" alt="image-20191213134651199"></li>
+<li>Frames文件内自动生成UE4的**sprite-20191213134528934.png)<img src="https://img.supervj.top//img/image-20191213134528934.png" alt="image-20191213134528934"></li>
+<li><strong>FlipBook</strong>就是完整的一个序列动画文件，包含了对应的所有<strong>sprite</strong><br><img src="https://img.supervj.top//img/image-20191213135749674.png" alt="image-20191213135749674"></li>
+<li>**paper2dsprites **文件记录数据，以及用于重导入的操作</li>
+</ul>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>Paper2D</tag>
+        <tag>TexturerPacker</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>动态RootMotion控制</title>
     <url>/2021/05/28/MotionWarping/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>根骨骼运动（RootMotion）的位移都是固定的， 但是我们在实际运用中经常想动态的控制角色的位置和旋转，比如挥砍动作在怪物跟前了就应该停止位移，翻墙动作与障碍物的距离适配等</p>
@@ -2032,53 +2079,6 @@
       <tags>
         <tag>动画</tag>
         <tag>RootMotion</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>Paper2D第三方工具TexturerPacker</title>
-    <url>/2021/01/08/Paper2D%E7%AC%AC%E4%B8%89%E6%96%B9%E5%B7%A5%E5%85%B7TexturerPacker/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>关于Paper2D使用第三方工具<code>TexturerPacker</code>的简单使用方法记录</p>
-<blockquote>
-<p>从遥远的2019年搬运而来</p>
-</blockquote>
-<a id="more"></a>
-
-<h2 id="第三方工具：TexturerPacker"><a href="#第三方工具：TexturerPacker" class="headerlink" title="第三方工具：TexturerPacker"></a>第三方工具：TexturerPacker</h2><ul>
-<li><a href="https://www.codeandweb.com/texturepacker/tutorials/how-to-create-sprite-sheets-with-unreal-paper2d">下载地址</a></li>
-</ul>
-<h3 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h3><p>TexturePacker流程</p>
-<p><img src="https://img.supervj.top//img/thumbnail.png" alt="thumbnail"></p>
-<ul>
-<li><p>将序列帧图片直接拖入软件中，也可以只能选择外部文件夹，一个文件夹内的图片会被全部导入</p>
-</li>
-<li><p>设置框架为<strong>UnrealEngine-Paper-2d</strong>,需要用Pro版本,免费使用7天😓</p>
-</li>
-<li><p>设置右上角的<strong>数据文件</strong>（导出数据），主要目的是设置路劲和文件名</p>
-</li>
-<li><p><strong>多文件打包</strong>一般不用设置，除非同一个动作序列帧非常多</p>
-</li>
-<li><p>发布为<strong>paper2dsprites</strong> 文件,可导入UE4</p>
-<hr>
-</li>
-</ul>
-<h2 id="UE4的Paper2D导入流程"><a href="#UE4的Paper2D导入流程" class="headerlink" title="UE4的Paper2D导入流程"></a>UE4的Paper2D导入流程</h2><ul>
-<li>导入paper2dsprites数据（亦可以直接导入PNG或者其他图片格式），以下按照paper2dsprites流程</li>
-<li>导入以后生成3个文件，如下</li>
-</ul>
-<p><img src="https://img.supervj.top//img/thumbnail%20(1).png" alt="thumbnail (1)"></p>
-<ul>
-<li>Texutres文件内包含一张x*y小图的PNG图片，格式自动设置为2D格式图片，如下图<br><img src="https://img.supervj.top//img/image-20191213134651199.png" alt="image-20191213134651199"></li>
-<li>Frames文件内自动生成UE4的**sprite-20191213134528934.png)<img src="https://img.supervj.top//img/image-20191213134528934.png" alt="image-20191213134528934"></li>
-<li><strong>FlipBook</strong>就是完整的一个序列动画文件，包含了对应的所有<strong>sprite</strong><br><img src="https://img.supervj.top//img/image-20191213135749674.png" alt="image-20191213135749674"></li>
-<li>**paper2dsprites **文件记录数据，以及用于重导入的操作</li>
-</ul>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>Paper2D</tag>
-        <tag>TexturerPacker</tag>
       </tags>
   </entry>
   <entry>
@@ -2379,86 +2379,6 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </tags>
   </entry>
   <entry>
-    <title>UE4使用第三方静态库和动态库</title>
-    <url>/2021/01/09/UE4%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E9%9D%99%E6%80%81%E5%BA%93%E5%92%8C%E5%8A%A8%E6%80%81%E5%BA%93/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文介绍一下UE4使用第三方库的简单用法, 即<code>DLL</code>动态库和<code>Lib</code>静态库的使用</p>
-<p>我们用插件的形式封装起来, 便于以后移植到其他项目中去;</p>
-<p>所以在开始之前先新建一个空或者蓝图库插件</p>
-<a id="more"></a>
-
-<h2 id="导出动态-静态库"><a href="#导出动态-静态库" class="headerlink" title="导出动态/静态库"></a>导出动态/静态库</h2><p>新建控制台应用程序<code>ThirdPartyDLL</code></p>
-<p>然后创建一个同名头文件,写入一下内容</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DLL_EXPORT __declspec(dllexport)	<span class="comment">//shortens __declspec(dllexport) to DLL_EXPORT</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __cplusplus		<span class="comment">//if C++ is used convert it to C to prevent C++&#x27;s name mangling of method names</span></span></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">int</span> DLL_EXPORT <span class="title">GetMac</span><span class="params">(<span class="keyword">char</span> * mac)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __cplusplus</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-<p>因为要确保函数名称我们用C的方式编译即<code>extern &quot;C&quot;</code></p>
-<p>实现</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;string.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;ThirdPartyDLL.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;wincon.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Nb30.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> comment(lib,<span class="meta-string">&quot;netapi32.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span>  <span class="title">GetMac</span><span class="params">(<span class="keyword">char</span> * mac)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	NCB ncb;</span><br><span class="line">	<span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">ASTAT_</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		ADAPTER_STATUS   adapt;</span><br><span class="line">		NAME_BUFFER   NameBuff[<span class="number">30</span>];</span><br><span class="line">	&#125;ASTAT, *PASTAT;</span><br><span class="line"></span><br><span class="line">	ASTAT Adapter;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">LANA_ENUM</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		UCHAR   length;</span><br><span class="line">		UCHAR   lana[MAX_LANA];</span><br><span class="line">	&#125;LANA_ENUM;</span><br><span class="line"></span><br><span class="line">	LANA_ENUM lana_enum;</span><br><span class="line">	UCHAR uRetCode;</span><br><span class="line">	<span class="built_in">memset</span>(&amp;ncb, <span class="number">0</span>, <span class="keyword">sizeof</span>(ncb));</span><br><span class="line">	<span class="built_in">memset</span>(&amp;lana_enum, <span class="number">0</span>, <span class="keyword">sizeof</span>(lana_enum));</span><br><span class="line">	ncb.ncb_command = NCBENUM;</span><br><span class="line">	ncb.ncb_buffer = (<span class="keyword">unsigned</span> <span class="keyword">char</span> *)&amp;lana_enum;</span><br><span class="line">	ncb.ncb_length = <span class="keyword">sizeof</span>(LANA_ENUM);</span><br><span class="line">	uRetCode = Netbios(&amp;ncb);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (uRetCode != NRC_GOODRET)</span><br><span class="line">		<span class="keyword">return</span> uRetCode;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> lana = <span class="number">0</span>; lana &lt; lana_enum.length; lana++)</span><br><span class="line">	&#123;</span><br><span class="line">		ncb.ncb_command = NCBRESET;</span><br><span class="line">		ncb.ncb_lana_num = lana_enum.lana[lana];</span><br><span class="line">		uRetCode = Netbios(&amp;ncb);</span><br><span class="line">		<span class="keyword">if</span> (uRetCode == NRC_GOODRET)</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (uRetCode != NRC_GOODRET)</span><br><span class="line">		<span class="keyword">return</span> uRetCode;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">memset</span>(&amp;ncb, <span class="number">0</span>, <span class="keyword">sizeof</span>(ncb));</span><br><span class="line">	ncb.ncb_command = NCBASTAT;</span><br><span class="line">	ncb.ncb_lana_num = lana_enum.lana[<span class="number">0</span>];</span><br><span class="line">	<span class="built_in">strcpy</span>((<span class="keyword">char</span>*)ncb.ncb_callname, <span class="string">&quot;*&quot;</span>);</span><br><span class="line">	ncb.ncb_buffer = (<span class="keyword">unsigned</span> <span class="keyword">char</span> *)&amp;Adapter;</span><br><span class="line">	ncb.ncb_length = <span class="keyword">sizeof</span>(Adapter);</span><br><span class="line">	uRetCode = Netbios(&amp;ncb);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (uRetCode != NRC_GOODRET)</span><br><span class="line">		<span class="keyword">return</span> uRetCode;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">sprintf</span>(mac, <span class="string">&quot;%02X-%02X-%02X-%02X-%02X-%02X&quot;</span>,</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">0</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">1</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">2</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">3</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">4</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">5</span>]);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">char</span>   mac[<span class="number">200</span>];</span><br><span class="line">	GetMac(mac);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;The Mac Address is : %s   \n&quot;</span>, mac);</span><br><span class="line"></span><br><span class="line">	system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>上述内容目的是获取本地的<code>mac</code>地址, 不用理会具体实现方法, 我们主要是拿来当作第三方库使用, 毕竟UE4现在自己的API没有可以拿到<code>Mac</code>地址的;</p>
-<p>设置模式为 <code>Release</code>+<code>x64</code></p>
-<p>在vs中简单运行一下得到结果</p>
-<p><img src="https://img.supervj.top//img/image-20210111164720144.png" alt="image-20210111164720144"></p>
-<p>运行正常, 然后是导出我们所需要的动态库</p>
-<p>在项目属性里设置配置类型为DLL,如下</p>
-<p><img src="https://img.supervj.top//img/image-20210111164824509.png" alt="image-20210111164824509"></p>
-<p>生成以后就得到了我们需要的<code>DLL</code>文件</p>
-<hr>
-<p>静态库只需要在项目配置里修改成<code>Lib</code>,然后再生成一次即可</p>
-<h2 id="UE4封装函数库"><a href="#UE4封装函数库" class="headerlink" title="UE4封装函数库"></a>UE4封装函数库</h2><h3 id="静态方法"><a href="#静态方法" class="headerlink" title="静态方法"></a>静态方法</h3><p>先到插件目录下,在<code>source</code>同级目录下新建文件夹<code>ThirdParty</code>,然后分别创建子文件夹<code>DLL</code>,<code>Include</code>,<code>Lib</code>,如下</p>
-<p><img src="https://img.supervj.top//img/image-20210111165251214.png" alt="image-20210111165251214"></p>
-<p>分别放入的文件为<code>ThirdPartyDLL.dll</code>,<code>ThirdPartyDLL.h</code>,<code>ThirdPartyDLL.lib</code></p>
-<p>然后来到我们的插件模块,找到<code>*.build.cs</code>文件,添加必要路径</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//using System.IO; </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> ModulePath</span><br><span class="line">    &#123;</span><br><span class="line">        get &#123; <span class="keyword">return</span> ModuleDirectory; &#125;<span class="comment">//return </span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ThirdPartyPath</span><br><span class="line">    &#123;</span><br><span class="line">        get &#123; <span class="keyword">return</span> Path.GetFullPath(Path.Combine(ModulePath, <span class="string">&quot;../../ThirdParty/&quot;</span>)); &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, <span class="string">&quot;Include&quot;</span>));</span><br><span class="line">        PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, <span class="string">&quot;Lib&quot;</span>, <span class="string">&quot;ThirdPartyDLL.lib&quot;</span>));</span><br></pre></td></tr></table></figure>
-
-
-
-<p>这样我们就可以在自己的cpp中包含静态库的头文件了</p>
-<p>找到/创建蓝图函数库</p>
-<p>头文件下声明如下函数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, BlueprintPure ,Category = <span class="string">&quot;Flib|DllHelper&quot;</span>, meta = (DisplayName = <span class="string">&quot;GetMac&quot;</span>))</span><br><span class="line">		<span class="function"><span class="keyword">static</span> FString <span class="title">GetMacFromLib</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>然后实现</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;ThirdPartyDLL.h&quot;</span></span></span><br><span class="line"><span class="function">FString <span class="title">UFlib_DllHelper::GetMacFromLib</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span>   mac[<span class="number">200</span>];</span><br><span class="line">	GetMac(mac);</span><br><span class="line">	FString out = FString(mac);</span><br><span class="line">	<span class="keyword">return</span> out;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-
-
-<p>运行测试</p>
-<p><img src="https://img.supervj.top//img/image-20210111165817017.png" alt="image-20210111165817017"></p>
-<p><img src="https://img.supervj.top//img/image-20210111165829392.png" alt="image-20210111165829392"></p>
-<p>运行正常,打包以后也正常</p>
-<h3 id="动态方法"><a href="#动态方法" class="headerlink" title="动态方法"></a>动态方法</h3><p>动态获取<code>DLL</code>, 我们可以直接在函数库中使用</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, BlueprintPure, Category = <span class="string">&quot;Flib|DllHelper&quot;</span>, meta = (DisplayName = <span class="string">&quot;GetMacDLL&quot;</span>))</span><br><span class="line">		<span class="function"><span class="keyword">static</span> FString <span class="title">GetMacFromDLL</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*_getMac)</span><span class="params">(<span class="keyword">char</span> * mac)</span></span>;</span><br><span class="line">_getMac funcGetMac; <span class="comment">//函数指针</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> *v_dllHandle; <span class="comment">//DLL句柄</span></span><br><span class="line"></span><br><span class="line"><span class="function">FString <span class="title">UFlib_DllHelper::GetMacFromDLL</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//我们基于插件目录找到DLL文件</span></span><br><span class="line">	FString folder =<span class="string">&quot;DllImporter//ThirdParty//DLL&quot;</span>;</span><br><span class="line">	FString file = <span class="string">&quot;ThirdPartyDLL.dll&quot;</span>;</span><br><span class="line">	FString filePath = *FPaths::ProjectPluginsDir() + folder + <span class="string">&quot;/&quot;</span> + file;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (FPaths::FileExists(filePath))</span><br><span class="line">	&#123;</span><br><span class="line">		v_dllHandle = FPlatformProcess::GetDllHandle(*filePath);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (v_dllHandle != <span class="literal">nullptr</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			funcGetMac = <span class="literal">nullptr</span>;</span><br><span class="line">			FString procName = <span class="string">&quot;GetMac&quot;</span>;</span><br><span class="line">			funcGetMac = (_getMac)FPlatformProcess::GetDllExport(v_dllHandle, *procName);</span><br><span class="line">			<span class="keyword">if</span> (funcGetMac != <span class="literal">nullptr</span>)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">int</span> idx = <span class="number">0</span>;</span><br><span class="line">				<span class="keyword">char</span>   mac[<span class="number">200</span>];</span><br><span class="line">				idx = <span class="keyword">int</span>(funcGetMac(mac));</span><br><span class="line">				<span class="keyword">return</span> FString(mac);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> TEXT(<span class="string">&quot;&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://img.supervj.top//img/image-20210111171736080.png" alt="image-20210111171736080"></p>
-<blockquote>
-<p>但是如果只是这样的话, 编辑器模式下没有问题, 打包以后会找不到DLL文件</p>
-</blockquote>
-<p>解决方法是在<code>*.build.cs</code>内对动态库添加包含</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">PublicLibraryPaths.Add(Path.Combine(ThirdPartyPath, <span class="string">&quot;DLL&quot;</span>));</span><br><span class="line">RuntimeDependencies.Add(<span class="keyword">new</span> RuntimeDependency(Path.Combine(ThirdPartyPath, <span class="string">&quot;DLL&quot;</span>,<span class="string">&quot;ThirdPartyDLL.dll&quot;</span>)));</span><br></pre></td></tr></table></figure>
-
-<p>成功</p>
-<blockquote>
-<p>另外还有一种情况, DLL导出库是Lib的链接, 在编辑器下没有问题, 但是打包以后会提示招不到DLL</p>
-<p>但是DLL是在你所在模块插件的目录里, 你需要手动复制到项目Binaries里去,或者用如下的方式自动拷贝并添加动态依赖</p>
-</blockquote>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">string</span> BinariesDirectory = Path.Combine(ProjectDirectory, <span class="string">&quot;Binaries&quot;</span>, PlatformString);</span><br><span class="line">			<span class="built_in">string</span> SourceFile = Path.Combine(ThirdPartyPath, <span class="string">&quot;assimp/bin&quot;</span>, PlatformString, <span class="string">&quot;assimp-vc140-mt.dll&quot;</span>);</span><br><span class="line">			<span class="built_in">string</span> TargetFile = Path.Combine(BinariesDirectory, <span class="string">&quot;assimp-vc140-mt.dll&quot;</span>);</span><br><span class="line">			<span class="keyword">if</span> (!Directory.Exists(BinariesDirectory))</span><br><span class="line">            &#123;</span><br><span class="line">				Directory.CreateDirectory(BinariesDirectory);</span><br><span class="line">            &#125;</span><br><span class="line">			<span class="keyword">if</span>(File.Exists(SourceFile) &amp;&amp; !File.Exists(TargetFile))</span><br><span class="line">            &#123;</span><br><span class="line">				File.Copy(SourceFile, TargetFile, <span class="literal">false</span>);</span><br><span class="line">            &#125;</span><br><span class="line">			</span><br><span class="line">			RuntimeDependencies.Add(Path.Combine(BinariesDirectory, <span class="string">&quot;assimp-vc140-mt.dll&quot;</span>));</span><br></pre></td></tr></table></figure>
-
-<p><img src="https://img.supervj.top//img/image-20210324113946789.png" alt="image-20210324113946789"></p>
-<p>如上图打包以后就放到了正确的目录</p>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>插件</tag>
-        <tag>第三方库</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>UE4发布steam游戏流程</title>
     <url>/2020/05/09/UE4%E4%BD%BF%E7%94%A8Steam%E5%AD%90%E7%B3%BB%E7%BB%9F%E5%8F%91%E5%B8%83Steam%E5%8C%85/</url>
     <content><![CDATA[<blockquote>
@@ -2572,6 +2492,130 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </tags>
   </entry>
   <entry>
+    <title>UE4使用第三方静态库和动态库</title>
+    <url>/2021/01/09/UE4%E4%BD%BF%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E9%9D%99%E6%80%81%E5%BA%93%E5%92%8C%E5%8A%A8%E6%80%81%E5%BA%93/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文介绍一下UE4使用第三方库的简单用法, 即<code>DLL</code>动态库和<code>Lib</code>静态库的使用</p>
+<p>我们用插件的形式封装起来, 便于以后移植到其他项目中去;</p>
+<p>所以在开始之前先新建一个空或者蓝图库插件</p>
+<a id="more"></a>
+
+<h2 id="导出动态-静态库"><a href="#导出动态-静态库" class="headerlink" title="导出动态/静态库"></a>导出动态/静态库</h2><p>新建控制台应用程序<code>ThirdPartyDLL</code></p>
+<p>然后创建一个同名头文件,写入一下内容</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> DLL_EXPORT __declspec(dllexport)	<span class="comment">//shortens __declspec(dllexport) to DLL_EXPORT</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __cplusplus		<span class="comment">//if C++ is used convert it to C to prevent C++&#x27;s name mangling of method names</span></span></span><br><span class="line"><span class="keyword">extern</span> <span class="string">&quot;C&quot;</span></span><br><span class="line">&#123;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br><span class="line">	<span class="function"><span class="keyword">int</span> DLL_EXPORT <span class="title">GetMac</span><span class="params">(<span class="keyword">char</span> * mac)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">ifdef</span> __cplusplus</span></span><br><span class="line">&#125;</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>因为要确保函数名称我们用C的方式编译即<code>extern &quot;C&quot;</code></p>
+<p>实现</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> once</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;string.h&quot;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;ThirdPartyDLL.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;windows.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;wincon.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;time.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;Nb30.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">pragma</span> comment(lib,<span class="meta-string">&quot;netapi32.lib&quot;</span>)</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span>  <span class="title">GetMac</span><span class="params">(<span class="keyword">char</span> * mac)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	NCB ncb;</span><br><span class="line">	<span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">ASTAT_</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		ADAPTER_STATUS   adapt;</span><br><span class="line">		NAME_BUFFER   NameBuff[<span class="number">30</span>];</span><br><span class="line">	&#125;ASTAT, *PASTAT;</span><br><span class="line"></span><br><span class="line">	ASTAT Adapter;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> _<span class="title">LANA_ENUM</span></span></span><br><span class="line"><span class="class">	&#123;</span></span><br><span class="line">		UCHAR   length;</span><br><span class="line">		UCHAR   lana[MAX_LANA];</span><br><span class="line">	&#125;LANA_ENUM;</span><br><span class="line"></span><br><span class="line">	LANA_ENUM lana_enum;</span><br><span class="line">	UCHAR uRetCode;</span><br><span class="line">	<span class="built_in">memset</span>(&amp;ncb, <span class="number">0</span>, <span class="keyword">sizeof</span>(ncb));</span><br><span class="line">	<span class="built_in">memset</span>(&amp;lana_enum, <span class="number">0</span>, <span class="keyword">sizeof</span>(lana_enum));</span><br><span class="line">	ncb.ncb_command = NCBENUM;</span><br><span class="line">	ncb.ncb_buffer = (<span class="keyword">unsigned</span> <span class="keyword">char</span> *)&amp;lana_enum;</span><br><span class="line">	ncb.ncb_length = <span class="keyword">sizeof</span>(LANA_ENUM);</span><br><span class="line">	uRetCode = Netbios(&amp;ncb);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (uRetCode != NRC_GOODRET)</span><br><span class="line">		<span class="keyword">return</span> uRetCode;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> lana = <span class="number">0</span>; lana &lt; lana_enum.length; lana++)</span><br><span class="line">	&#123;</span><br><span class="line">		ncb.ncb_command = NCBRESET;</span><br><span class="line">		ncb.ncb_lana_num = lana_enum.lana[lana];</span><br><span class="line">		uRetCode = Netbios(&amp;ncb);</span><br><span class="line">		<span class="keyword">if</span> (uRetCode == NRC_GOODRET)</span><br><span class="line">			<span class="keyword">break</span>;</span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (uRetCode != NRC_GOODRET)</span><br><span class="line">		<span class="keyword">return</span> uRetCode;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">memset</span>(&amp;ncb, <span class="number">0</span>, <span class="keyword">sizeof</span>(ncb));</span><br><span class="line">	ncb.ncb_command = NCBASTAT;</span><br><span class="line">	ncb.ncb_lana_num = lana_enum.lana[<span class="number">0</span>];</span><br><span class="line">	<span class="built_in">strcpy</span>((<span class="keyword">char</span>*)ncb.ncb_callname, <span class="string">&quot;*&quot;</span>);</span><br><span class="line">	ncb.ncb_buffer = (<span class="keyword">unsigned</span> <span class="keyword">char</span> *)&amp;Adapter;</span><br><span class="line">	ncb.ncb_length = <span class="keyword">sizeof</span>(Adapter);</span><br><span class="line">	uRetCode = Netbios(&amp;ncb);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (uRetCode != NRC_GOODRET)</span><br><span class="line">		<span class="keyword">return</span> uRetCode;</span><br><span class="line"></span><br><span class="line">	<span class="built_in">sprintf</span>(mac, <span class="string">&quot;%02X-%02X-%02X-%02X-%02X-%02X&quot;</span>,</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">0</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">1</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">2</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">3</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">4</span>],</span><br><span class="line">		Adapter.adapt.adapter_address[<span class="number">5</span>]);</span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">char</span>   mac[<span class="number">200</span>];</span><br><span class="line">	GetMac(mac);</span><br><span class="line">	<span class="built_in">printf</span>(<span class="string">&quot;The Mac Address is : %s   \n&quot;</span>, mac);</span><br><span class="line"></span><br><span class="line">	system(<span class="string">&quot;pause&quot;</span>);</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">	<span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>上述内容目的是获取本地的<code>mac</code>地址, 不用理会具体实现方法, 我们主要是拿来当作第三方库使用, 毕竟UE4现在自己的API没有可以拿到<code>Mac</code>地址的;</p>
+<p>设置模式为 <code>Release</code>+<code>x64</code></p>
+<p>在vs中简单运行一下得到结果</p>
+<p><img src="https://img.supervj.top//img/image-20210111164720144.png" alt="image-20210111164720144"></p>
+<p>运行正常, 然后是导出我们所需要的动态库</p>
+<p>在项目属性里设置配置类型为DLL,如下</p>
+<p><img src="https://img.supervj.top//img/image-20210111164824509.png" alt="image-20210111164824509"></p>
+<p>生成以后就得到了我们需要的<code>DLL</code>文件</p>
+<hr>
+<p>静态库只需要在项目配置里修改成<code>Lib</code>,然后再生成一次即可</p>
+<h2 id="UE4封装函数库"><a href="#UE4封装函数库" class="headerlink" title="UE4封装函数库"></a>UE4封装函数库</h2><h3 id="静态方法"><a href="#静态方法" class="headerlink" title="静态方法"></a>静态方法</h3><p>先到插件目录下,在<code>source</code>同级目录下新建文件夹<code>ThirdParty</code>,然后分别创建子文件夹<code>DLL</code>,<code>Include</code>,<code>Lib</code>,如下</p>
+<p><img src="https://img.supervj.top//img/image-20210111165251214.png" alt="image-20210111165251214"></p>
+<p>分别放入的文件为<code>ThirdPartyDLL.dll</code>,<code>ThirdPartyDLL.h</code>,<code>ThirdPartyDLL.lib</code></p>
+<p>然后来到我们的插件模块,找到<code>*.build.cs</code>文件,添加必要路径</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//using System.IO; </span></span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> ModulePath</span><br><span class="line">    &#123;</span><br><span class="line">        get &#123; <span class="keyword">return</span> ModuleDirectory; &#125;<span class="comment">//return </span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ThirdPartyPath</span><br><span class="line">    &#123;</span><br><span class="line">        get &#123; <span class="keyword">return</span> Path.GetFullPath(Path.Combine(ModulePath, <span class="string">&quot;../../ThirdParty/&quot;</span>)); &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"> PublicIncludePaths.Add(Path.Combine(ThirdPartyPath, <span class="string">&quot;Include&quot;</span>));</span><br><span class="line">        PublicAdditionalLibraries.Add(Path.Combine(ThirdPartyPath, <span class="string">&quot;Lib&quot;</span>, <span class="string">&quot;ThirdPartyDLL.lib&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这样我们就可以在自己的cpp中包含静态库的头文件了</p>
+<p>找到/创建蓝图函数库</p>
+<p>头文件下声明如下函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, BlueprintPure ,Category = <span class="string">&quot;Flib|DllHelper&quot;</span>, meta = (DisplayName = <span class="string">&quot;GetMac&quot;</span>))</span><br><span class="line">		<span class="function"><span class="keyword">static</span> FString <span class="title">GetMacFromLib</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>然后实现</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&quot;ThirdPartyDLL.h&quot;</span></span></span><br><span class="line"><span class="function">FString <span class="title">UFlib_DllHelper::GetMacFromLib</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">char</span>   mac[<span class="number">200</span>];</span><br><span class="line">	GetMac(mac);</span><br><span class="line">	FString out = FString(mac);</span><br><span class="line">	<span class="keyword">return</span> out;</span><br><span class="line">	</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>运行测试</p>
+<p><img src="https://img.supervj.top//img/image-20210111165817017.png" alt="image-20210111165817017"></p>
+<p><img src="https://img.supervj.top//img/image-20210111165829392.png" alt="image-20210111165829392"></p>
+<p>运行正常,打包以后也正常</p>
+<h3 id="动态方法"><a href="#动态方法" class="headerlink" title="动态方法"></a>动态方法</h3><p>动态获取<code>DLL</code>, 我们可以直接在函数库中使用</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UFUNCTION(BlueprintCallable, BlueprintPure, Category = <span class="string">&quot;Flib|DllHelper&quot;</span>, meta = (DisplayName = <span class="string">&quot;GetMacDLL&quot;</span>))</span><br><span class="line">		<span class="function"><span class="keyword">static</span> FString <span class="title">GetMacFromDLL</span><span class="params">()</span></span>;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">typedef</span> <span class="title">int</span><span class="params">(*_getMac)</span><span class="params">(<span class="keyword">char</span> * mac)</span></span>;</span><br><span class="line">_getMac funcGetMac; <span class="comment">//函数指针</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">void</span> *v_dllHandle; <span class="comment">//DLL句柄</span></span><br><span class="line"></span><br><span class="line"><span class="function">FString <span class="title">UFlib_DllHelper::GetMacFromDLL</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//我们基于插件目录找到DLL文件</span></span><br><span class="line">	FString folder =<span class="string">&quot;DllImporter//ThirdParty//DLL&quot;</span>;</span><br><span class="line">	FString file = <span class="string">&quot;ThirdPartyDLL.dll&quot;</span>;</span><br><span class="line">	FString filePath = *FPaths::ProjectPluginsDir() + folder + <span class="string">&quot;/&quot;</span> + file;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (FPaths::FileExists(filePath))</span><br><span class="line">	&#123;</span><br><span class="line">		v_dllHandle = FPlatformProcess::GetDllHandle(*filePath);</span><br><span class="line"></span><br><span class="line">		<span class="keyword">if</span> (v_dllHandle != <span class="literal">nullptr</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			funcGetMac = <span class="literal">nullptr</span>;</span><br><span class="line">			FString procName = <span class="string">&quot;GetMac&quot;</span>;</span><br><span class="line">			funcGetMac = (_getMac)FPlatformProcess::GetDllExport(v_dllHandle, *procName);</span><br><span class="line">			<span class="keyword">if</span> (funcGetMac != <span class="literal">nullptr</span>)</span><br><span class="line">			&#123;</span><br><span class="line">				<span class="keyword">int</span> idx = <span class="number">0</span>;</span><br><span class="line">				<span class="keyword">char</span>   mac[<span class="number">200</span>];</span><br><span class="line">				idx = <span class="keyword">int</span>(funcGetMac(mac));</span><br><span class="line">				<span class="keyword">return</span> FString(mac);</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> TEXT(<span class="string">&quot;&quot;</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.supervj.top//img/image-20210111171736080.png" alt="image-20210111171736080"></p>
+<blockquote>
+<p>但是如果只是这样的话, 编辑器模式下没有问题, 打包以后会找不到DLL文件</p>
+</blockquote>
+<p>解决方法是在<code>*.build.cs</code>内对动态库添加包含</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">PublicLibraryPaths.Add(Path.Combine(ThirdPartyPath, <span class="string">&quot;DLL&quot;</span>));</span><br><span class="line">RuntimeDependencies.Add(<span class="keyword">new</span> RuntimeDependency(Path.Combine(ThirdPartyPath, <span class="string">&quot;DLL&quot;</span>,<span class="string">&quot;ThirdPartyDLL.dll&quot;</span>)));</span><br></pre></td></tr></table></figure>
+
+<p>成功</p>
+<blockquote>
+<p>另外还有一种情况, DLL导出库是Lib的链接, 在编辑器下没有问题, 但是打包以后会提示招不到DLL</p>
+<p>但是DLL是在你所在模块插件的目录里, 你需要手动复制到项目Binaries里去,或者用如下的方式自动拷贝并添加动态依赖</p>
+</blockquote>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="built_in">string</span> BinariesDirectory = Path.Combine(ProjectDirectory, <span class="string">&quot;Binaries&quot;</span>, PlatformString);</span><br><span class="line">			<span class="built_in">string</span> SourceFile = Path.Combine(ThirdPartyPath, <span class="string">&quot;assimp/bin&quot;</span>, PlatformString, <span class="string">&quot;assimp-vc140-mt.dll&quot;</span>);</span><br><span class="line">			<span class="built_in">string</span> TargetFile = Path.Combine(BinariesDirectory, <span class="string">&quot;assimp-vc140-mt.dll&quot;</span>);</span><br><span class="line">			<span class="keyword">if</span> (!Directory.Exists(BinariesDirectory))</span><br><span class="line">            &#123;</span><br><span class="line">				Directory.CreateDirectory(BinariesDirectory);</span><br><span class="line">            &#125;</span><br><span class="line">			<span class="keyword">if</span>(File.Exists(SourceFile) &amp;&amp; !File.Exists(TargetFile))</span><br><span class="line">            &#123;</span><br><span class="line">				File.Copy(SourceFile, TargetFile, <span class="literal">false</span>);</span><br><span class="line">            &#125;</span><br><span class="line">			</span><br><span class="line">			RuntimeDependencies.Add(Path.Combine(BinariesDirectory, <span class="string">&quot;assimp-vc140-mt.dll&quot;</span>));</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img.supervj.top//img/image-20210324113946789.png" alt="image-20210324113946789"></p>
+<p>如上图打包以后就放到了正确的目录</p>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>插件</tag>
+        <tag>第三方库</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>UE4压缩和解压缩工具</title>
+    <url>/2021/03/26/UE4%E5%8E%8B%E7%BC%A9%E5%B7%A5%E5%85%B7/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>UE4编辑器和运行时使用解压缩和压缩功能, 一个简单的蓝图库, 源代码来自GitHub的<a href="https://github.com/getnamo/ZipUtility-ue4">ZipUtility Plugin</a></p>
+<p>对其做了稍微修改, 修复了部分因为版本更新的报错信息(大量头文件包含问题)</p>
+<p><a href="https://github.com/VJien/ZipUtility-UE4-Extra"> ZipUtility-UE4-Extra</a></p>
+<p>本文简单介绍这个插件的使用方式</p>
+<p><img src="https://img.supervj.top//img/UE4Editor_Eenx6GKDoT.png" alt="UE4Editor_Eenx6GKDoT"></p>
+<a id="more"></a>
+
+
+
+
+
+<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><ul>
+<li>下载/克隆</li>
+<li>放到目录 <code>项目/Plugins/</code>内</li>
+<li>刷新项目</li>
+</ul>
+<blockquote>
+<p>检查VS是否安装了最新的<code>ATL</code>和<code>MFC</code>组件,否则会提示<code>atlbase.h</code>找不到</p>
+</blockquote>
+<blockquote>
+<p> 如果已经安装了还是报错, 检查<code>ZipUtility.Build.cs</code>文件</p>
+</blockquote>
+<p>检查如下字段,默认是vs2017的, 我这里改成了2019</p>
+<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> VsDirectory</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find VS installation directory from registry</span></span><br><span class="line">            <span class="built_in">string</span> regPath = (<span class="built_in">string</span>)Registry.GetValue(<span class="string">@&quot;HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7\&quot;</span>, <span class="string">&quot;15.0&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(regPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility: Found VS path in registry: &quot;</span> + regPath);</span><br><span class="line">                <span class="keyword">return</span> regPath;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// If failed - using the most common install path</span></span><br><span class="line">                <span class="built_in">string</span> vsDefaultBasePath = <span class="string">@&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019&quot;</span>;</span><br><span class="line">                <span class="built_in">string</span> vsVersion = Directory.GetDirectories(vsDefaultBasePath)[<span class="number">0</span>];</span><br><span class="line">                <span class="built_in">string</span> vsPath = Path.Combine(vsDefaultBasePath, vsVersion);</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Warning: Using default VS path: &quot;</span> + vsPath);</span><br><span class="line">                <span class="keyword">return</span> vsPath;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ATLPath</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find ATL path similar to:</span></span><br><span class="line">            <span class="comment">// C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.14.26428/atlmfc</span></span><br><span class="line">            <span class="built_in">string</span> atlPath = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> vsDir = VsDirectory;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(vsDir))</span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="built_in">string</span> msvcPath = Path.Combine(vsDir, <span class="string">@&quot;VC\Tools\MSVC\&quot;</span>);</span><br><span class="line">                    <span class="built_in">string</span> msvcVersion = Directory.GetDirectories(msvcPath)[<span class="number">0</span>];</span><br><span class="line">                    atlPath = Path.Combine(msvcPath, msvcVersion, <span class="string">&quot;atlmfc&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            catch (Exception ex)</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: can&#x27;t find VS path: &quot;</span> + ex.ToString());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!Directory.Exists(atlPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: Couldn&#x27;t find an ATLPath, fix it in ZipUtility.Build.cs&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> atlPath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>比如我这边的路径是<code>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc</code>,需要与上述csharp指定的atl路径匹配,否则在VS编译会报警告和错误</p>
+<blockquote>
+<p>尝试在 <code>Property-&gt;VC++ Directories-&gt;Include Directories</code>中加入类似<code>Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include</code>的路径</p>
+</blockquote>
+<p><img src="https://img.supervj.top//img/UE4Editor_md5TmgDXhY.png" alt="UE4Editor_md5TmgDXhY"></p>
+<p><img src="https://img.supervj.top//img/image-20210326134323995.png" alt="image-20210326134323995"></p>
+<p>每个方法都需要提供一个<code>UObject</code>类对象, 该对象如果挂上接口就可以获取回调事件</p>
+]]></content>
+      <categories>
+        <category>plugin</category>
+      </categories>
+      <tags>
+        <tag>解压缩</tag>
+        <tag>第三方工具</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>创建异步节点</title>
     <url>/2020/06/01/UE4%E5%88%9B%E5%BB%BA%E5%BC%82%E6%AD%A5%E8%8A%82%E7%82%B9/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://img.supervj.top/img/AIMoveTo/move_4.jpg"></p>
@@ -2662,50 +2706,6 @@ st->cd1(yes)->c1->c2->e</textarea><textarea id="flowchart-0-options" style="disp
       </categories>
       <tags>
         <tag>异步节点</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>UE4压缩和解压缩工具</title>
-    <url>/2021/03/26/UE4%E5%8E%8B%E7%BC%A9%E5%B7%A5%E5%85%B7/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>UE4编辑器和运行时使用解压缩和压缩功能, 一个简单的蓝图库, 源代码来自GitHub的<a href="https://github.com/getnamo/ZipUtility-ue4">ZipUtility Plugin</a></p>
-<p>对其做了稍微修改, 修复了部分因为版本更新的报错信息(大量头文件包含问题)</p>
-<p><a href="https://github.com/VJien/ZipUtility-UE4-Extra"> ZipUtility-UE4-Extra</a></p>
-<p>本文简单介绍这个插件的使用方式</p>
-<p><img src="https://img.supervj.top//img/UE4Editor_Eenx6GKDoT.png" alt="UE4Editor_Eenx6GKDoT"></p>
-<a id="more"></a>
-
-
-
-
-
-<h2 id="使用"><a href="#使用" class="headerlink" title="使用"></a>使用</h2><ul>
-<li>下载/克隆</li>
-<li>放到目录 <code>项目/Plugins/</code>内</li>
-<li>刷新项目</li>
-</ul>
-<blockquote>
-<p>检查VS是否安装了最新的<code>ATL</code>和<code>MFC</code>组件,否则会提示<code>atlbase.h</code>找不到</p>
-</blockquote>
-<blockquote>
-<p> 如果已经安装了还是报错, 检查<code>ZipUtility.Build.cs</code>文件</p>
-</blockquote>
-<p>检查如下字段,默认是vs2017的, 我这里改成了2019</p>
-<figure class="highlight csharp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="built_in">string</span> VsDirectory</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find VS installation directory from registry</span></span><br><span class="line">            <span class="built_in">string</span> regPath = (<span class="built_in">string</span>)Registry.GetValue(<span class="string">@&quot;HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node\Microsoft\VisualStudio\SxS\VS7\&quot;</span>, <span class="string">&quot;15.0&quot;</span>, <span class="string">&quot;&quot;</span>);</span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(regPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility: Found VS path in registry: &quot;</span> + regPath);</span><br><span class="line">                <span class="keyword">return</span> regPath;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">// If failed - using the most common install path</span></span><br><span class="line">                <span class="built_in">string</span> vsDefaultBasePath = <span class="string">@&quot;C:\Program Files (x86)\Microsoft Visual Studio\2019&quot;</span>;</span><br><span class="line">                <span class="built_in">string</span> vsVersion = Directory.GetDirectories(vsDefaultBasePath)[<span class="number">0</span>];</span><br><span class="line">                <span class="built_in">string</span> vsPath = Path.Combine(vsDefaultBasePath, vsVersion);</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Warning: Using default VS path: &quot;</span> + vsPath);</span><br><span class="line">                <span class="keyword">return</span> vsPath;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="built_in">string</span> ATLPath</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">get</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">// Trying to find ATL path similar to:</span></span><br><span class="line">            <span class="comment">// C:/Program Files (x86)/Microsoft Visual Studio/2019/Community/VC/Tools/MSVC/14.14.26428/atlmfc</span></span><br><span class="line">            <span class="built_in">string</span> atlPath = <span class="string">&quot;&quot;</span>;</span><br><span class="line">            <span class="keyword">try</span></span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">var</span> vsDir = VsDirectory;</span><br><span class="line">                <span class="keyword">if</span> (!<span class="built_in">string</span>.IsNullOrEmpty(vsDir))</span><br><span class="line">                &#123;</span><br><span class="line"></span><br><span class="line">                    <span class="built_in">string</span> msvcPath = Path.Combine(vsDir, <span class="string">@&quot;VC\Tools\MSVC\&quot;</span>);</span><br><span class="line">                    <span class="built_in">string</span> msvcVersion = Directory.GetDirectories(msvcPath)[<span class="number">0</span>];</span><br><span class="line">                    atlPath = Path.Combine(msvcPath, msvcVersion, <span class="string">&quot;atlmfc&quot;</span>);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            catch (Exception ex)</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: can&#x27;t find VS path: &quot;</span> + ex.ToString());</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!Directory.Exists(atlPath))</span><br><span class="line">            &#123;</span><br><span class="line">                Console.WriteLine(<span class="string">&quot;ZipUtility Error: Couldn&#x27;t find an ATLPath, fix it in ZipUtility.Build.cs&quot;</span>);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span> atlPath;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
-
-<p>比如我这边的路径是<code>C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc</code>,需要与上述csharp指定的atl路径匹配,否则在VS编译会报警告和错误</p>
-<blockquote>
-<p>尝试在 <code>Property-&gt;VC++ Directories-&gt;Include Directories</code>中加入类似<code>Microsoft Visual Studio\2019\Community\VC\Tools\MSVC\14.28.29910\atlmfc\include</code>的路径</p>
-</blockquote>
-<p><img src="https://img.supervj.top//img/UE4Editor_md5TmgDXhY.png" alt="UE4Editor_md5TmgDXhY"></p>
-<p><img src="https://img.supervj.top//img/image-20210326134323995.png" alt="image-20210326134323995"></p>
-<p>每个方法都需要提供一个<code>UObject</code>类对象, 该对象如果挂上接口就可以获取回调事件</p>
-]]></content>
-      <categories>
-        <category>plugin</category>
-      </categories>
-      <tags>
-        <tag>解压缩</tag>
-        <tag>第三方工具</tag>
       </tags>
   </entry>
   <entry>
@@ -3164,6 +3164,27 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
+    <title>ubuntu修改静态IP</title>
+    <url>/2020/08/20/ubuntu%E4%BF%AE%E6%94%B9IP/</url>
+    <content><![CDATA[<p>第一步我们需要将虚拟机的网络模式修改为<code>桥接模式</code>,并且勾选<code>复制物理网络连接状态</code>选项</p>
+<p>ubuntu在20.4版本以后修改IP的方法与之前的有了比较大的区别，在之前的版本是通过编辑<code>/etc/network/interfaces</code>文件去修改IP，在新版本以后修改的配置文件是</p>
+<p><code>/etc/netplan/01-cloud-init.yaml</code>,这个<code>01</code>可能每个人不相同，网上有些人是00，我这边是01</p>
+<p>所以，我们用用<code>sudo vim /etc/netplan/01-network-manager-all.yaml</code>打开，输入以下指令</p>
+<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Let NetworkManager manage all devices on this system</span><br><span class="line">network:</span><br><span class="line">  version: 2</span><br><span class="line">  renderer: NetworkManager</span><br><span class="line">  ethernets:</span><br><span class="line">    ens33:</span><br><span class="line">      dhcp4: false</span><br><span class="line">      addresses: [192.168.1.222&#x2F;24]&#x2F;&#x2F;ip地址，后面的24不需要改，更掩码有关系</span><br><span class="line">      nameservers:</span><br><span class="line">        addresses: [8.8.8.8,192.168.0.1]</span><br><span class="line">~                                        </span><br></pre></td></tr></table></figure>
+
+<p>上面的222是你自己设定的IP地址，前面需要参考你真是物理IP的情况</p>
+<p>然后输入<code>sudo netplan --debug apply</code>应用</p>
+<p>然后通过<code>ifconfig</code>查看IP</p>
+]]></content>
+      <categories>
+        <category>other</category>
+      </categories>
+      <tags>
+        <tag>Linux</tag>
+        <tag>ubuntu</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>obj及mtl文件数据</title>
     <url>/2021/06/18/obj%E6%96%87%E4%BB%B6%E6%95%B0%E6%8D%AE/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>obj文件是Alias|Wavefront公司开发的一种标准3D模型文件格式，适合用于3D软件模型之间的互导。</p>
@@ -3315,27 +3336,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
-    <title>ubuntu修改静态IP</title>
-    <url>/2020/08/20/ubuntu%E4%BF%AE%E6%94%B9IP/</url>
-    <content><![CDATA[<p>第一步我们需要将虚拟机的网络模式修改为<code>桥接模式</code>,并且勾选<code>复制物理网络连接状态</code>选项</p>
-<p>ubuntu在20.4版本以后修改IP的方法与之前的有了比较大的区别，在之前的版本是通过编辑<code>/etc/network/interfaces</code>文件去修改IP，在新版本以后修改的配置文件是</p>
-<p><code>/etc/netplan/01-cloud-init.yaml</code>,这个<code>01</code>可能每个人不相同，网上有些人是00，我这边是01</p>
-<p>所以，我们用用<code>sudo vim /etc/netplan/01-network-manager-all.yaml</code>打开，输入以下指令</p>
-<figure class="highlight plain"><table><tr><td class="code"><pre><span class="line"># Let NetworkManager manage all devices on this system</span><br><span class="line">network:</span><br><span class="line">  version: 2</span><br><span class="line">  renderer: NetworkManager</span><br><span class="line">  ethernets:</span><br><span class="line">    ens33:</span><br><span class="line">      dhcp4: false</span><br><span class="line">      addresses: [192.168.1.222&#x2F;24]&#x2F;&#x2F;ip地址，后面的24不需要改，更掩码有关系</span><br><span class="line">      nameservers:</span><br><span class="line">        addresses: [8.8.8.8,192.168.0.1]</span><br><span class="line">~                                        </span><br></pre></td></tr></table></figure>
-
-<p>上面的222是你自己设定的IP地址，前面需要参考你真是物理IP的情况</p>
-<p>然后输入<code>sudo netplan --debug apply</code>应用</p>
-<p>然后通过<code>ifconfig</code>查看IP</p>
-]]></content>
-      <categories>
-        <category>other</category>
-      </categories>
-      <tags>
-        <tag>Linux</tag>
-        <tag>ubuntu</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>VsCode配置MaxScript开发环境</title>
     <url>/2020/04/30/vscode%E9%85%8D%E7%BD%AEmax/</url>
     <content><![CDATA[<h3 id="开发环境配置流程"><a href="#开发环境配置流程" class="headerlink" title="开发环境配置流程"></a>开发环境配置流程</h3><h5 id="MXSPyCom"><a href="#MXSPyCom" class="headerlink" title="MXSPyCom"></a>MXSPyCom</h5><ol>
@@ -3415,34 +3415,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>破碎物体</tag>
         <tag>物理</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>关于EditorUtilityWiget用cpp来运行</title>
-    <url>/2021/01/09/%E5%85%B3%E4%BA%8EEditorUtilityWiget%E7%94%A8cpp%E6%9D%A5%E8%BF%90%E8%A1%8C/</url>
-    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>奇葩需求,  EditorUtilityWiget用cpp来运行</p>
-<a id="more"></a>
-
-
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//SelectObject = 任意编辑器UMG资源</span></span><br><span class="line"></span><br><span class="line">UWidgetBlueprint* Blueprint = Cast&lt;UWidgetBlueprint&gt;(SelectObject);</span><br><span class="line">		<span class="keyword">if</span> (Blueprint &amp;&amp; Blueprint-&gt;GeneratedClass-&gt;IsChildOf(UEditorUtilityWidget::StaticClass())) &#123;</span><br><span class="line">			<span class="keyword">const</span> UEditorUtilityWidget* CDO = Blueprint-&gt;GeneratedClass-&gt;GetDefaultObject&lt;UEditorUtilityWidget&gt;();</span><br><span class="line">			<span class="keyword">if</span> (CDO-&gt;ShouldAutoRunDefaultAction()) &#123;</span><br><span class="line">				UEditorUtilityWidget* Instance = NewObject&lt;UEditorUtilityWidget&gt;(GetTransientPackage(), Blueprint-&gt;GeneratedClass);</span><br><span class="line">				Instance-&gt;ExecuteDefaultAction();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				FName RegistrationName = FName(*(Blueprint-&gt;GetPathName() + TEXT(<span class="string">&quot;_ActiveTab&quot;</span>)));</span><br><span class="line">				FText DisplayName = FText::FromString(Blueprint-&gt;GetName());</span><br><span class="line">				FLevelEditorModule&amp; LevelEditorModule = FModuleManager::GetModuleChecked&lt;FLevelEditorModule&gt;(TEXT(<span class="string">&quot;LevelEditor&quot;</span>));</span><br><span class="line">				TSharedPtr&lt;FTabManager&gt; LevelEditorTabManager = LevelEditorModule.GetLevelEditorTabManager();</span><br><span class="line">				TSharedRef&lt;SDockTab&gt; NewDockTab = LevelEditorTabManager-&gt;InvokeTab(RegistrationName);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
-
-<p>这个方案有缺陷, 就是第一次还是需要在编辑器下右键运行一次才能用cpp来运行, 因为右键运行会调用到<code> UEditorUtilitySubsystem::SpawnAndRegisterTab()</code>, 在这个函数中会对<code>UMG</code>进行初始化, 而用上述方法是没法初始化的</p>
-<blockquote>
-<p>恶心的问题是, 此模块基本上都没有导出符号(即没法在自己的cpp中使用任何有关<code>UEditorUtilityWidget</code>的类),  没法自己初始化, 解决方法二选一</p>
-<ol>
-<li>手动右键先运行一次(不推荐)</li>
-<li>使用<code>AutoRunDefaultAction</code>, 然后在蓝图中自己运行自己的资源(这个资源还没法cast, 否则还能写个通用方法)</li>
-</ol>
-<p><img src="https://img.supervj.top//img/image-20210106162756815.png" alt="image-20210106162756815"></p>
-</blockquote>
-]]></content>
-      <categories>
-        <category>editor</category>
-      </categories>
-      <tags>
-        <tag>Slate</tag>
-        <tag>编辑器扩展</tag>
       </tags>
   </entry>
   <entry>
@@ -3539,6 +3511,34 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </categories>
       <tags>
         <tag>Slate</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>关于EditorUtilityWiget用cpp来运行</title>
+    <url>/2021/01/09/%E5%85%B3%E4%BA%8EEditorUtilityWiget%E7%94%A8cpp%E6%9D%A5%E8%BF%90%E8%A1%8C/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>奇葩需求,  EditorUtilityWiget用cpp来运行</p>
+<a id="more"></a>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//SelectObject = 任意编辑器UMG资源</span></span><br><span class="line"></span><br><span class="line">UWidgetBlueprint* Blueprint = Cast&lt;UWidgetBlueprint&gt;(SelectObject);</span><br><span class="line">		<span class="keyword">if</span> (Blueprint &amp;&amp; Blueprint-&gt;GeneratedClass-&gt;IsChildOf(UEditorUtilityWidget::StaticClass())) &#123;</span><br><span class="line">			<span class="keyword">const</span> UEditorUtilityWidget* CDO = Blueprint-&gt;GeneratedClass-&gt;GetDefaultObject&lt;UEditorUtilityWidget&gt;();</span><br><span class="line">			<span class="keyword">if</span> (CDO-&gt;ShouldAutoRunDefaultAction()) &#123;</span><br><span class="line">				UEditorUtilityWidget* Instance = NewObject&lt;UEditorUtilityWidget&gt;(GetTransientPackage(), Blueprint-&gt;GeneratedClass);</span><br><span class="line">				Instance-&gt;ExecuteDefaultAction();</span><br><span class="line">			&#125;</span><br><span class="line">			<span class="keyword">else</span> &#123;</span><br><span class="line">				FName RegistrationName = FName(*(Blueprint-&gt;GetPathName() + TEXT(<span class="string">&quot;_ActiveTab&quot;</span>)));</span><br><span class="line">				FText DisplayName = FText::FromString(Blueprint-&gt;GetName());</span><br><span class="line">				FLevelEditorModule&amp; LevelEditorModule = FModuleManager::GetModuleChecked&lt;FLevelEditorModule&gt;(TEXT(<span class="string">&quot;LevelEditor&quot;</span>));</span><br><span class="line">				TSharedPtr&lt;FTabManager&gt; LevelEditorTabManager = LevelEditorModule.GetLevelEditorTabManager();</span><br><span class="line">				TSharedRef&lt;SDockTab&gt; NewDockTab = LevelEditorTabManager-&gt;InvokeTab(RegistrationName);</span><br><span class="line">			&#125;</span><br><span class="line"></span><br><span class="line">		&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个方案有缺陷, 就是第一次还是需要在编辑器下右键运行一次才能用cpp来运行, 因为右键运行会调用到<code> UEditorUtilitySubsystem::SpawnAndRegisterTab()</code>, 在这个函数中会对<code>UMG</code>进行初始化, 而用上述方法是没法初始化的</p>
+<blockquote>
+<p>恶心的问题是, 此模块基本上都没有导出符号(即没法在自己的cpp中使用任何有关<code>UEditorUtilityWidget</code>的类),  没法自己初始化, 解决方法二选一</p>
+<ol>
+<li>手动右键先运行一次(不推荐)</li>
+<li>使用<code>AutoRunDefaultAction</code>, 然后在蓝图中自己运行自己的资源(这个资源还没法cast, 否则还能写个通用方法)</li>
+</ol>
+<p><img src="https://img.supervj.top//img/image-20210106162756815.png" alt="image-20210106162756815"></p>
+</blockquote>
+]]></content>
+      <categories>
+        <category>editor</category>
+      </categories>
+      <tags>
+        <tag>Slate</tag>
+        <tag>编辑器扩展</tag>
       </tags>
   </entry>
   <entry>
@@ -5364,60 +5364,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
-    <title>资源注册模块AssetRegistry分析</title>
-    <url>/2020/11/27/%E8%B5%84%E6%BA%90%E6%B3%A8%E5%86%8C%E6%A8%A1%E5%9D%97%E5%88%86%E6%9E%90/</url>
-    <content><![CDATA[<blockquote>
-<p>有的时候我们需要对当前工程下的特定资源进行一些操作,比如找到所有图片资源或者所有静态模型资源,然后把这些资源信息发到某个UI上进行操作等等</p>
-<p>本文对UE4资源注册模块<code>AssetRegistry</code>进行简单的分析</p>
-<p><em>目前蓝图已经封装了相应的库,可以非常方便的调用</em></p>
-</blockquote>
-<p><code>Asset Registry</code>模块负责处理引擎下的资源信息(收集/检索<code>*.uasset</code>),从这个模块中可以读取到所有资源信息(<code>FAssetData</code>)</p>
-<h3 id="FAssetData"><a href="#FAssetData" class="headerlink" title="FAssetData"></a>FAssetData</h3><p>主要参数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*Obj的具体路径,比如 /Game/ThirdPersonCPP/Blueprints/ThirdPersonCharacter.ThirdPersonCharacter*/</span></span><br><span class="line">	FName ObjectPath;</span><br><span class="line"><span class="comment">//比如/Game/ThirdPersonCPP/Blueprints/ThirdPersonCharacter</span></span><br><span class="line">	FName PackageName;</span><br><span class="line"><span class="comment">//比如: /Game/ThirdPersonCPP/Blueprints/</span></span><br><span class="line">	FName PackagePath;</span><br><span class="line"><span class="comment">//资源名称</span></span><br><span class="line">	FName AssetName;</span><br><span class="line"><span class="comment">//资源class的名称,如果是蓝图则是Blueprint</span></span><br><span class="line">	FName AssetClass;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">UProperty的名称和值的键值对</span></span><br><span class="line"><span class="comment">可以从此获取一些描述信息,比如蓝图资源的BlueprintType等</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">	FAssetDataTagMapSharedView TagsAndValues;</span><br><span class="line"><span class="comment">//ChunkID</span></span><br><span class="line">	TArray&lt;int32&gt; ChunkIDs;</span><br></pre></td></tr></table></figure>
-
-<blockquote>
-<p>在获取<code>Asset</code>的时候需要填充一个结构体参数<code>FARFilter</code>,里面的参数部分类似上述参数,之后再看</p>
-</blockquote>
-<h3 id="FARFilter"><a href="#FARFilter" class="headerlink" title="FARFilter"></a>FARFilter</h3><p>对资源进行检索的时候的过滤参数</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; PackageNames;</span><br><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; PackagePaths;</span><br><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; ObjectPaths;</span><br><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; ClassNames;</span><br><span class="line"><span class="comment">//白名单,蓝图不可见</span></span><br><span class="line">	TMultiMap&lt;FName, TOptional&lt;FString&gt;&gt; TagsAndValues;</span><br><span class="line"><span class="comment">//黑名单</span></span><br><span class="line">	RecursiveClassesExclusionSet;</span><br><span class="line"><span class="comment">//是否递归查找路径</span></span><br><span class="line">	<span class="keyword">bool</span> bRecursivePaths;</span><br><span class="line"><span class="comment">//是否递归查找类继承</span></span><br><span class="line">	<span class="keyword">bool</span> bRecursiveClasses;</span><br><span class="line"><span class="comment">//是否只查询磁盘上的资源</span></span><br><span class="line">	<span class="keyword">bool</span> bIncludeOnlyOnDiskAssets;</span><br><span class="line">	</span><br></pre></td></tr></table></figure>
-
-<p>比较需要注意的是<code>ClassNames</code>这个参数,这个类型并不是我们场景中对象的类型,打个比方,我们场景里的玩家一般是<code>ACharacter</code>,但是我们的资源其实就是<code>Blueprint</code>,所以在填充这个结构体的时候并不能用<code>*.::StaticClass()</code>来给与<code>Class</code>类型</p>
-<p>一般情况资源的创建类型就是用右键创建出来的名称或类似的名称,并且都是继承自<code>Object</code></p>
-<h3 id="FAssetRegistryState"><a href="#FAssetRegistryState" class="headerlink" title="FAssetRegistryState"></a>FAssetRegistryState</h3><p>储存了读取asset后的相关信息，用作磁盘内容的cache数据，用于描述asset registry当前的状态，可以由IAssetRegistry进行使用和维护。把这些数据单独组成一个FAssetRegistryState类，是为了减少耦合性，因为引擎中除asset registry外的其他模块 也需要用到这些数据。</p>
-<h3 id="主要方法"><a href="#主要方法" class="headerlink" title="主要方法"></a>主要方法</h3><p>我们可以通过<code>static TScriptInterface&lt;IAssetRegistry&gt; GetAssetRegistry();</code>获取单例</p>
-<p>蓝图亦可以</p>
-<p><img src="https://img.supervj.top//img/image-20201127165818065.png" alt="image-20201127165818065"></p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> UObject* <span class="title">GetAsset</span><span class="params">(<span class="keyword">const</span> FAssetData&amp; InAssetData)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>通过上述方法可以自定义的根据<code>FARFliter</code>参数来获取所需的资源数据</p>
-<p>如果不清楚每个参数的含义,可以反向的通过下面方法来查看</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> FAssetData <span class="title">CreateAssetData</span><span class="params">(<span class="keyword">const</span> UObject* InAsset, <span class="keyword">bool</span> bAllowBlueprintClass = <span class="literal">false</span>)</span></span>;</span><br></pre></td></tr></table></figure>
-
-<hr>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetAssetsByPackageName</span><span class="params">(FName PackageName, TArray&lt;FAssetData&gt;&amp; OutAssetData, <span class="keyword">bool</span> bIncludeOnlyOnDiskAssets = <span class="literal">false</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetAssetsByPath</span><span class="params">(FName PackagePath, TArray&lt;FAssetData&gt;&amp; OutAssetData, <span class="keyword">bool</span> bRecursive = <span class="literal">false</span>, <span class="keyword">bool</span> bIncludeOnlyOnDiskAssets = <span class="literal">false</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetAssetsByClass</span><span class="params">(FName ClassName, TArray&lt;FAssetData&gt;&amp; OutAssetData, <span class="keyword">bool</span> bSearchSubClasses = <span class="literal">false</span>)</span> <span class="keyword">const</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>上面三个方法根据不同方式来获取对应的资源</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">GetSubPaths</span><span class="params">(<span class="keyword">const</span> FString&amp; InBasePath, TArray&lt;FString&gt;&amp; OutPathList, <span class="keyword">bool</span> bInRecurse)</span> <span class="keyword">const</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>基于一个基础路径获取子路径,比较有用</p>
-<hr>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetReferencers</span><span class="params">(FName PackageName, TArray&lt;FName&gt;&amp; OutReferencers, EAssetRegistryDependencyType::Type InReferenceType = EAssetRegistryDependencyType::Packages)</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetDependencies</span><span class="params">(FName PackageName, TArray&lt;FName&gt;&amp; OutDependencies, EAssetRegistryDependencyType::Type InDependencyType = EAssetRegistryDependencyType::Packages)</span> <span class="keyword">const</span></span>;</span><br></pre></td></tr></table></figure>
-
-<p>获取引用和依赖关系,也很有用</p>
-<hr>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">SearchAllAssets</span><span class="params">(<span class="keyword">bool</span> bSynchronousSearch)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">ScanFilesSynchronous</span><span class="params">(<span class="keyword">const</span> TArray&lt;FString&gt;&amp; InFilePaths, <span class="keyword">bool</span> bForceRescan = <span class="literal">false</span>)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">ScanPathsSynchronous</span><span class="params">(<span class="keyword">const</span> TArray&lt;FString&gt;&amp; InPaths, <span class="keyword">bool</span> bForceRescan = <span class="literal">false</span>)</span></span>;</span><br><span class="line"><span class="comment">//等等</span></span><br></pre></td></tr></table></figure>
-
-<p>扫描/搜索文件,不需要返回值,因为扫描以后文件就保存在<code>FAssetRegistryState</code>内了</p>
-]]></content>
-      <categories>
-        <category>engine</category>
-      </categories>
-      <tags>
-        <tag>模块分析</tag>
-        <tag>资源</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>《Multiplayer RPG Template》说明文档</title>
     <url>/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3CH/</url>
     <content><![CDATA[<blockquote>
@@ -5541,6 +5487,60 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
+    <title>资源注册模块AssetRegistry分析</title>
+    <url>/2020/11/27/%E8%B5%84%E6%BA%90%E6%B3%A8%E5%86%8C%E6%A8%A1%E5%9D%97%E5%88%86%E6%9E%90/</url>
+    <content><![CDATA[<blockquote>
+<p>有的时候我们需要对当前工程下的特定资源进行一些操作,比如找到所有图片资源或者所有静态模型资源,然后把这些资源信息发到某个UI上进行操作等等</p>
+<p>本文对UE4资源注册模块<code>AssetRegistry</code>进行简单的分析</p>
+<p><em>目前蓝图已经封装了相应的库,可以非常方便的调用</em></p>
+</blockquote>
+<p><code>Asset Registry</code>模块负责处理引擎下的资源信息(收集/检索<code>*.uasset</code>),从这个模块中可以读取到所有资源信息(<code>FAssetData</code>)</p>
+<h3 id="FAssetData"><a href="#FAssetData" class="headerlink" title="FAssetData"></a>FAssetData</h3><p>主要参数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">/*Obj的具体路径,比如 /Game/ThirdPersonCPP/Blueprints/ThirdPersonCharacter.ThirdPersonCharacter*/</span></span><br><span class="line">	FName ObjectPath;</span><br><span class="line"><span class="comment">//比如/Game/ThirdPersonCPP/Blueprints/ThirdPersonCharacter</span></span><br><span class="line">	FName PackageName;</span><br><span class="line"><span class="comment">//比如: /Game/ThirdPersonCPP/Blueprints/</span></span><br><span class="line">	FName PackagePath;</span><br><span class="line"><span class="comment">//资源名称</span></span><br><span class="line">	FName AssetName;</span><br><span class="line"><span class="comment">//资源class的名称,如果是蓝图则是Blueprint</span></span><br><span class="line">	FName AssetClass;</span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">UProperty的名称和值的键值对</span></span><br><span class="line"><span class="comment">可以从此获取一些描述信息,比如蓝图资源的BlueprintType等</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line">	FAssetDataTagMapSharedView TagsAndValues;</span><br><span class="line"><span class="comment">//ChunkID</span></span><br><span class="line">	TArray&lt;int32&gt; ChunkIDs;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>在获取<code>Asset</code>的时候需要填充一个结构体参数<code>FARFilter</code>,里面的参数部分类似上述参数,之后再看</p>
+</blockquote>
+<h3 id="FARFilter"><a href="#FARFilter" class="headerlink" title="FARFilter"></a>FARFilter</h3><p>对资源进行检索的时候的过滤参数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; PackageNames;</span><br><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; PackagePaths;</span><br><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; ObjectPaths;</span><br><span class="line"><span class="comment">//参考FAssetData</span></span><br><span class="line">	TArray&lt;FName&gt; ClassNames;</span><br><span class="line"><span class="comment">//白名单,蓝图不可见</span></span><br><span class="line">	TMultiMap&lt;FName, TOptional&lt;FString&gt;&gt; TagsAndValues;</span><br><span class="line"><span class="comment">//黑名单</span></span><br><span class="line">	RecursiveClassesExclusionSet;</span><br><span class="line"><span class="comment">//是否递归查找路径</span></span><br><span class="line">	<span class="keyword">bool</span> bRecursivePaths;</span><br><span class="line"><span class="comment">//是否递归查找类继承</span></span><br><span class="line">	<span class="keyword">bool</span> bRecursiveClasses;</span><br><span class="line"><span class="comment">//是否只查询磁盘上的资源</span></span><br><span class="line">	<span class="keyword">bool</span> bIncludeOnlyOnDiskAssets;</span><br><span class="line">	</span><br></pre></td></tr></table></figure>
+
+<p>比较需要注意的是<code>ClassNames</code>这个参数,这个类型并不是我们场景中对象的类型,打个比方,我们场景里的玩家一般是<code>ACharacter</code>,但是我们的资源其实就是<code>Blueprint</code>,所以在填充这个结构体的时候并不能用<code>*.::StaticClass()</code>来给与<code>Class</code>类型</p>
+<p>一般情况资源的创建类型就是用右键创建出来的名称或类似的名称,并且都是继承自<code>Object</code></p>
+<h3 id="FAssetRegistryState"><a href="#FAssetRegistryState" class="headerlink" title="FAssetRegistryState"></a>FAssetRegistryState</h3><p>储存了读取asset后的相关信息，用作磁盘内容的cache数据，用于描述asset registry当前的状态，可以由IAssetRegistry进行使用和维护。把这些数据单独组成一个FAssetRegistryState类，是为了减少耦合性，因为引擎中除asset registry外的其他模块 也需要用到这些数据。</p>
+<h3 id="主要方法"><a href="#主要方法" class="headerlink" title="主要方法"></a>主要方法</h3><p>我们可以通过<code>static TScriptInterface&lt;IAssetRegistry&gt; GetAssetRegistry();</code>获取单例</p>
+<p>蓝图亦可以</p>
+<p><img src="https://img.supervj.top//img/image-20201127165818065.png" alt="image-20201127165818065"></p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> UObject* <span class="title">GetAsset</span><span class="params">(<span class="keyword">const</span> FAssetData&amp; InAssetData)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>通过上述方法可以自定义的根据<code>FARFliter</code>参数来获取所需的资源数据</p>
+<p>如果不清楚每个参数的含义,可以反向的通过下面方法来查看</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> FAssetData <span class="title">CreateAssetData</span><span class="params">(<span class="keyword">const</span> UObject* InAsset, <span class="keyword">bool</span> bAllowBlueprintClass = <span class="literal">false</span>)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetAssetsByPackageName</span><span class="params">(FName PackageName, TArray&lt;FAssetData&gt;&amp; OutAssetData, <span class="keyword">bool</span> bIncludeOnlyOnDiskAssets = <span class="literal">false</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetAssetsByPath</span><span class="params">(FName PackagePath, TArray&lt;FAssetData&gt;&amp; OutAssetData, <span class="keyword">bool</span> bRecursive = <span class="literal">false</span>, <span class="keyword">bool</span> bIncludeOnlyOnDiskAssets = <span class="literal">false</span>)</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetAssetsByClass</span><span class="params">(FName ClassName, TArray&lt;FAssetData&gt;&amp; OutAssetData, <span class="keyword">bool</span> bSearchSubClasses = <span class="literal">false</span>)</span> <span class="keyword">const</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>上面三个方法根据不同方式来获取对应的资源</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">GetSubPaths</span><span class="params">(<span class="keyword">const</span> FString&amp; InBasePath, TArray&lt;FString&gt;&amp; OutPathList, <span class="keyword">bool</span> bInRecurse)</span> <span class="keyword">const</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>基于一个基础路径获取子路径,比较有用</p>
+<hr>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetReferencers</span><span class="params">(FName PackageName, TArray&lt;FName&gt;&amp; OutReferencers, EAssetRegistryDependencyType::Type InReferenceType = EAssetRegistryDependencyType::Packages)</span> <span class="keyword">const</span></span>;</span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GetDependencies</span><span class="params">(FName PackageName, TArray&lt;FName&gt;&amp; OutDependencies, EAssetRegistryDependencyType::Type InDependencyType = EAssetRegistryDependencyType::Packages)</span> <span class="keyword">const</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>获取引用和依赖关系,也很有用</p>
+<hr>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">SearchAllAssets</span><span class="params">(<span class="keyword">bool</span> bSynchronousSearch)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">ScanFilesSynchronous</span><span class="params">(<span class="keyword">const</span> TArray&lt;FString&gt;&amp; InFilePaths, <span class="keyword">bool</span> bForceRescan = <span class="literal">false</span>)</span></span>;</span><br><span class="line">	<span class="function"><span class="keyword">void</span> <span class="title">ScanPathsSynchronous</span><span class="params">(<span class="keyword">const</span> TArray&lt;FString&gt;&amp; InPaths, <span class="keyword">bool</span> bForceRescan = <span class="literal">false</span>)</span></span>;</span><br><span class="line"><span class="comment">//等等</span></span><br></pre></td></tr></table></figure>
+
+<p>扫描/搜索文件,不需要返回值,因为扫描以后文件就保存在<code>FAssetRegistryState</code>内了</p>
+]]></content>
+      <categories>
+        <category>engine</category>
+      </categories>
+      <tags>
+        <tag>模块分析</tag>
+        <tag>资源</tag>
+      </tags>
+  </entry>
+  <entry>
     <title>《Multiplayer RPG Template》Documentation</title>
     <url>/2020/05/19/%E8%B6%854%E8%AF%B4%E6%98%8E%E6%96%87%E6%A1%A3EN/</url>
     <content><![CDATA[<blockquote>
@@ -5656,93 +5656,6 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>教程</tag>
         <tag>实战</tag>
-      </tags>
-  </entry>
-  <entry>
-    <title>路径点优化</title>
-    <url>/2020/06/12/%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96/</url>
-    <content><![CDATA[<blockquote>
-<p>本文介绍路径点的优化方式，或者叫做多线段优化、轨迹点优化</p>
-<p>根据设定阈值，去掉路径点中的部分多余点，以达到方便传输的目的</p>
-<p>本文用UE4蓝图和C++蓝图函数库的2个方式解释</p>
-<p><strong>注:多种方法可以叠加使用</strong></p>
-</blockquote>
-<p>本算法提供了基于UE4的Demo，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/EdZ7WHvq8mdHm2b0xRcJtWsBnhqVdqBx07E_Tr_s7mshDQ?e=8lhWkm">PC</a>，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/ET-Wm3V8br1PuSrS0qUnwekBLP5bGpnZqZ8cGb3tGSLK-w?e=Y7wQmT">安卓</a></p>
-<p><a href="https://github.com/VJien/PathOptimazation">GitHub工程下载</a></p>
-<p>Demo演示动图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_10.gif"></p>
-<a id="more"></a>
-
-
-
-<h3 id="径向距离算法"><a href="#径向距离算法" class="headerlink" title="径向距离算法"></a>径向距离算法</h3><blockquote>
-<p>又称为临近点优化，比较暴力的算法，效率高，精准度尚可</p>
-<p>目的：去掉太接近的点</p>
-</blockquote>
-<p>如果路径点中的相邻两点的距离小于设定的阈值，则舍去其中一个点。首先，以笔迹中的第一个点为基准点，计算第二个点与第一个点之间的距离，如果此距离小于给定的阈值，则舍去第二个点；如果此距离大于给定的阈值，则保留第二个点，并以其为新的基准点。然后再拿第三个点来与基准点判断距离，如此向后循环。</p>
-<p>先贴代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//径向距离优化，小于distance的点会被优化</span></span><br><span class="line">	UFUNCTION(BlueprintCallable,Category=<span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance=<span class="number">50</span>)</span></span>;</span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,  TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num()&lt;<span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey= InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt; InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ((vKey- InPath[i]).Size()&gt; Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">			vKey = InPath[i];</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ((InPath.Last()-vKey).Size()&lt;=Distance)<span class="comment">//处理最后一个点</span></span><br><span class="line">	&#123;</span><br><span class="line">		OutPath.Pop();</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_1.jpg"></p>
-<h3 id="曲率算法"><a href="#曲率算法" class="headerlink" title="曲率算法"></a>曲率算法</h3><blockquote>
-<p>去除大于设定曲率阈值的角度的点</p>
-<p>目的：去除角度偏移过大的线段</p>
-</blockquote>
-<p>设定3个点：p1,p2,p3</p>
-<p>方向向量：前置向量v1=p2-p1,后置向量v2=p3-p2</p>
-<p>v1和v2的夹角angle即我们需要与阈值比较的角度，如果大于阈值，那么点p2就不满足条件而被移除</p>
-<p>这里带来了一个问题，即移除了p2以后，下一次计算的时候后置向量v2保持不变即当前点指向下一个点；但是前置向量怎么选择是一个问题，所以我们分别用了<code>T124,T134,T234</code>来分别3种计算方式，3种方式取前置向量的方式分别是</p>
-<ul>
-<li>T124：前置向量v1=p2-p1，即保持原样</li>
-<li>T134：v1=p3-p1，即跳过被移除点</li>
-<li>T234：v1=p3-p2，即跟后置向量保持统一节奏</li>
-</ul>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_6.jpg"></p>
-<p>三种方式计算方式大同小异，下面先贴代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">ECurvatureType</span>:</span>uint8</span><br><span class="line">&#123;</span><br><span class="line">	T124,</span><br><span class="line">	T134,</span><br><span class="line">	T234</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//曲率优化，大于角度angle的点会被优化，分为3个模式，推荐使用T134</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type=ECurvatureType::T134, <span class="keyword">float</span> Angle = <span class="number">90</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type, <span class="keyword">float</span> Angle <span class="comment">/*= 90*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(p1);</span><br><span class="line">	FVector p2, p3, dirFWD, dirBWD;</span><br><span class="line">	<span class="keyword">bool</span> b124Found = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">if</span> (b124Found||type!=ECurvatureType::T124)</span><br><span class="line">		&#123;</span><br><span class="line">			dirFWD = p2 - p1;</span><br><span class="line">		&#125;</span><br><span class="line">		dirBWD = p3 - p2;</span><br><span class="line">		<span class="keyword">if</span> (AngleBetween(dirBWD, dirFWD) &lt;= Angle)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">			b124Found = <span class="literal">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			b124Found = <span class="literal">false</span>;</span><br><span class="line">			<span class="keyword">if</span> (type==ECurvatureType::T234)</span><br><span class="line">			&#123;</span><br><span class="line">				p1 = p2;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">UFlibAlgorithm::AngleBetween</span><span class="params">(FVector A, FVector B)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A.Normalize();</span><br><span class="line">	B.Normalize();</span><br><span class="line">	<span class="keyword">return</span> UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(A, B));</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
-
-
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1.jpg"></p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1pathOpt_3_2.jpg"></p>
-<blockquote>
-<p>从结果测试发现，效果 T134&gt;T124&gt;T234</p>
-</blockquote>
-<h3 id="垂直距离算法"><a href="#垂直距离算法" class="headerlink" title="垂直距离算法"></a>垂直距离算法</h3><blockquote>
-<p>将点-线段的距离作为误差判据。对于每个顶点p，需要计算它与线段[p-1， p+1]的垂直距离，距离比给定误差小的点都将被移除。</p>
-<p>目的:去除垂直距离偏移过大的点</p>
-</blockquote>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_5.jpg"></p>
-<p>如图，如果蓝色线段即垂直距离大于设定阈值，则左右两天线段会被优化成红色线段</p>
-<p>代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//垂直距离优化，大于distance的点会被优化</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	FVector p1, p2, p3;</span><br><span class="line">	p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(p2, p1, p3 - p1);</span><br><span class="line">		<span class="keyword">if</span> (dis&lt;=Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_2.jpg"></p>
-<blockquote>
-<p>其实参考曲率优化方式，这个方式也可以考虑3种前置向量即本代码中<code>p1</code>的选择问题，本代码种应该是类似T234的方式，有兴趣的可以自己尝试其他几个方式</p>
-</blockquote>
-<h3 id="道格拉斯-普克算法"><a href="#道格拉斯-普克算法" class="headerlink" title="道格拉斯-普克算法"></a>道格拉斯-普克算法</h3><blockquote>
-<p> 一种迭代适应点算法，它将曲线近似表示为一系列点，并减少点的数量。</p>
-<p>算法的基本思路是：对每一条曲线的首末点虚连一条直线，求所有点与直线的距离，并找出最大距离值 dmax ，用 dmax 与阈值 D 相比。若 dmax &lt; D ，这条曲线上的中间点全部舍去；若 dmax ≥ D ，则保留 dmax 对应的坐标点，并以该点为界，把曲线分为两部分，对这两部分循环使用该方法。<br>此算法在时间复杂度和空间复杂度要明显高于其它两种，但是它的效果较好</p>
-</blockquote>
-<p>先来一个动图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_7.gif"></p>
-<p>贴代码</p>
-<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	达格拉斯多普优化，使用迭代计算</span></span><br><span class="line"><span class="comment">	效率相对低但是精度高</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	int32 idx, first, last;</span><br><span class="line">	first = idx = <span class="number">0</span>;</span><br><span class="line">	last = InPath.Num() - <span class="number">1</span>;</span><br><span class="line">	TArray&lt;<span class="keyword">bool</span>&gt; Markers;</span><br><span class="line">	Markers.AddUninitialized(last + <span class="number">1</span>);</span><br><span class="line">	Markers[<span class="number">0</span>] = <span class="literal">true</span>;</span><br><span class="line">	Markers.Last() = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">float</span> maxDis = <span class="number">0</span>;</span><br><span class="line">	TArray&lt;int32&gt; <span class="built_in">stack</span>;</span><br><span class="line">	<span class="keyword">while</span> (first&gt;=<span class="number">0</span> &amp;&amp; last&gt;=<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		maxDis = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">for</span> (int32 i=first+<span class="number">1</span>;i&lt;last;i++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(InPath[i], InPath[first], InPath[last] - InPath[first]);</span><br><span class="line">			<span class="keyword">if</span> (dis&gt;maxDis)</span><br><span class="line">			&#123;</span><br><span class="line">				idx = i;</span><br><span class="line">				maxDis = dis;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (maxDis&gt;Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			Markers[idx] = <span class="literal">true</span>;</span><br><span class="line">			<span class="built_in">stack</span>.Add(first);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(last);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num()&gt;<span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num() &gt; <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">0</span>;i&lt;Markers.Num();i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (Markers[i])</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<p>蓝图</p>
-<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_4.jpg"></p>
-]]></content>
-      <categories>
-        <category>math</category>
-      </categories>
-      <tags>
-        <tag>算法</tag>
       </tags>
   </entry>
   <entry>
@@ -5872,6 +5785,93 @@ piecewise_linear_distribution分段线性分布</code></pre>
       <tags>
         <tag>教程</tag>
         <tag>案例</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title>路径点优化</title>
+    <url>/2020/06/12/%E8%B7%AF%E5%BE%84%E4%BC%98%E5%8C%96/</url>
+    <content><![CDATA[<blockquote>
+<p>本文介绍路径点的优化方式，或者叫做多线段优化、轨迹点优化</p>
+<p>根据设定阈值，去掉路径点中的部分多余点，以达到方便传输的目的</p>
+<p>本文用UE4蓝图和C++蓝图函数库的2个方式解释</p>
+<p><strong>注:多种方法可以叠加使用</strong></p>
+</blockquote>
+<p>本算法提供了基于UE4的Demo，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/EdZ7WHvq8mdHm2b0xRcJtWsBnhqVdqBx07E_Tr_s7mshDQ?e=8lhWkm">PC</a>，<a href="https://xshniteducn-my.sharepoint.com/:u:/g/personal/15040920722_xs_hnit_edu_cn/ET-Wm3V8br1PuSrS0qUnwekBLP5bGpnZqZ8cGb3tGSLK-w?e=Y7wQmT">安卓</a></p>
+<p><a href="https://github.com/VJien/PathOptimazation">GitHub工程下载</a></p>
+<p>Demo演示动图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_10.gif"></p>
+<a id="more"></a>
+
+
+
+<h3 id="径向距离算法"><a href="#径向距离算法" class="headerlink" title="径向距离算法"></a>径向距离算法</h3><blockquote>
+<p>又称为临近点优化，比较暴力的算法，效率高，精准度尚可</p>
+<p>目的：去掉太接近的点</p>
+</blockquote>
+<p>如果路径点中的相邻两点的距离小于设定的阈值，则舍去其中一个点。首先，以笔迹中的第一个点为基准点，计算第二个点与第一个点之间的距离，如果此距离小于给定的阈值，则舍去第二个点；如果此距离大于给定的阈值，则保留第二个点，并以其为新的基准点。然后再拿第三个点来与基准点判断距离，如此向后循环。</p>
+<p>先贴代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//径向距离优化，小于distance的点会被优化</span></span><br><span class="line">	UFUNCTION(BlueprintCallable,Category=<span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">		<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance=<span class="number">50</span>)</span></span>;</span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::RadialDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath,  TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num()&lt;<span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey= InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt; InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> ((vKey- InPath[i]).Size()&gt; Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">			vKey = InPath[i];</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">if</span> ((InPath.Last()-vKey).Size()&lt;=Distance)<span class="comment">//处理最后一个点</span></span><br><span class="line">	&#123;</span><br><span class="line">		OutPath.Pop();</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_1.jpg"></p>
+<h3 id="曲率算法"><a href="#曲率算法" class="headerlink" title="曲率算法"></a>曲率算法</h3><blockquote>
+<p>去除大于设定曲率阈值的角度的点</p>
+<p>目的：去除角度偏移过大的线段</p>
+</blockquote>
+<p>设定3个点：p1,p2,p3</p>
+<p>方向向量：前置向量v1=p2-p1,后置向量v2=p3-p2</p>
+<p>v1和v2的夹角angle即我们需要与阈值比较的角度，如果大于阈值，那么点p2就不满足条件而被移除</p>
+<p>这里带来了一个问题，即移除了p2以后，下一次计算的时候后置向量v2保持不变即当前点指向下一个点；但是前置向量怎么选择是一个问题，所以我们分别用了<code>T124,T134,T234</code>来分别3种计算方式，3种方式取前置向量的方式分别是</p>
+<ul>
+<li>T124：前置向量v1=p2-p1，即保持原样</li>
+<li>T134：v1=p3-p1，即跳过被移除点</li>
+<li>T234：v1=p3-p2，即跟后置向量保持统一节奏</li>
+</ul>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_6.jpg"></p>
+<p>三种方式计算方式大同小异，下面先贴代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">UENUM(BlueprintType)</span><br><span class="line"><span class="class"><span class="keyword">enum</span> <span class="keyword">class</span> <span class="title">ECurvatureType</span>:</span>uint8</span><br><span class="line">&#123;</span><br><span class="line">	T124,</span><br><span class="line">	T134,</span><br><span class="line">	T234</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">//曲率优化，大于角度angle的点会被优化，分为3个模式，推荐使用T134</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type=ECurvatureType::T134, <span class="keyword">float</span> Angle = <span class="number">90</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::CurvatureOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, ECurvatureType type, <span class="keyword">float</span> Angle <span class="comment">/*= 90*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(p1);</span><br><span class="line">	FVector p2, p3, dirFWD, dirBWD;</span><br><span class="line">	<span class="keyword">bool</span> b124Found = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">if</span> (b124Found||type!=ECurvatureType::T124)</span><br><span class="line">		&#123;</span><br><span class="line">			dirFWD = p2 - p1;</span><br><span class="line">		&#125;</span><br><span class="line">		dirBWD = p3 - p2;</span><br><span class="line">		<span class="keyword">if</span> (AngleBetween(dirBWD, dirFWD) &lt;= Angle)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">			b124Found = <span class="literal">true</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			b124Found = <span class="literal">false</span>;</span><br><span class="line">			<span class="keyword">if</span> (type==ECurvatureType::T234)</span><br><span class="line">			&#123;</span><br><span class="line">				p1 = p2;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">	</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">float</span> <span class="title">UFlibAlgorithm::AngleBetween</span><span class="params">(FVector A, FVector B)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	A.Normalize();</span><br><span class="line">	B.Normalize();</span><br><span class="line">	<span class="keyword">return</span> UKismetMathLibrary::DegAcos(UKismetMathLibrary::Dot_VectorVector(A, B));</span><br><span class="line">	</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1.jpg"></p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_3_1pathOpt_3_2.jpg"></p>
+<blockquote>
+<p>从结果测试发现，效果 T134&gt;T124&gt;T234</p>
+</blockquote>
+<h3 id="垂直距离算法"><a href="#垂直距离算法" class="headerlink" title="垂直距离算法"></a>垂直距离算法</h3><blockquote>
+<p>将点-线段的距离作为误差判据。对于每个顶点p，需要计算它与线段[p-1， p+1]的垂直距离，距离比给定误差小的点都将被移除。</p>
+<p>目的:去除垂直距离偏移过大的点</p>
+</blockquote>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_5.jpg"></p>
+<p>如图，如果蓝色线段即垂直距离大于设定阈值，则左右两天线段会被优化成红色线段</p>
+<p>代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">//垂直距离优化，大于distance的点会被优化</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::PerpendicularDistanceOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	FVector vKey = InPath[<span class="number">0</span>];</span><br><span class="line">	OutPath.Add(vKey);</span><br><span class="line">	FVector p1, p2, p3;</span><br><span class="line">	p1 = InPath[<span class="number">0</span>];</span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">1</span>;i&lt;InPath.Num()<span class="number">-1</span>;i++)</span><br><span class="line">	&#123;</span><br><span class="line">		p2 = InPath[i];</span><br><span class="line">		p3 = InPath[i + <span class="number">1</span>];</span><br><span class="line">		<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(p2, p1, p3 - p1);</span><br><span class="line">		<span class="keyword">if</span> (dis&lt;=Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(p2);</span><br><span class="line">			p1 = p2;</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	OutPath.Add(InPath.Last());</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_2.jpg"></p>
+<blockquote>
+<p>其实参考曲率优化方式，这个方式也可以考虑3种前置向量即本代码中<code>p1</code>的选择问题，本代码种应该是类似T234的方式，有兴趣的可以自己尝试其他几个方式</p>
+</blockquote>
+<h3 id="道格拉斯-普克算法"><a href="#道格拉斯-普克算法" class="headerlink" title="道格拉斯-普克算法"></a>道格拉斯-普克算法</h3><blockquote>
+<p> 一种迭代适应点算法，它将曲线近似表示为一系列点，并减少点的数量。</p>
+<p>算法的基本思路是：对每一条曲线的首末点虚连一条直线，求所有点与直线的距离，并找出最大距离值 dmax ，用 dmax 与阈值 D 相比。若 dmax &lt; D ，这条曲线上的中间点全部舍去；若 dmax ≥ D ，则保留 dmax 对应的坐标点，并以该点为界，把曲线分为两部分，对这两部分循环使用该方法。<br>此算法在时间复杂度和空间复杂度要明显高于其它两种，但是它的效果较好</p>
+</blockquote>
+<p>先来一个动图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_7.gif"></p>
+<p>贴代码</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line"><span class="comment">/*</span></span><br><span class="line"><span class="comment">	达格拉斯多普优化，使用迭代计算</span></span><br><span class="line"><span class="comment">	效率相对低但是精度高</span></span><br><span class="line"><span class="comment">	*/</span></span><br><span class="line">UFUNCTION(BlueprintCallable, Category = <span class="string">&quot;UFlibAlgorithm|PathPointOptimization&quot;</span>)</span><br><span class="line">	<span class="function"><span class="keyword">static</span> <span class="keyword">bool</span> <span class="title">DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance = <span class="number">50</span>)</span></span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">UFlibAlgorithm::DouglasPeuckerOptimization</span><span class="params">(<span class="keyword">const</span> TArray&lt;FVector&gt;&amp; InPath, TArray&lt;FVector&gt;&amp; OutPath, <span class="keyword">float</span> Distance <span class="comment">/*= 50*/</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">if</span> (InPath.Num() &lt; <span class="number">3</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		OutPath = InPath;</span><br><span class="line">		<span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">	&#125;</span><br><span class="line">	int32 idx, first, last;</span><br><span class="line">	first = idx = <span class="number">0</span>;</span><br><span class="line">	last = InPath.Num() - <span class="number">1</span>;</span><br><span class="line">	TArray&lt;<span class="keyword">bool</span>&gt; Markers;</span><br><span class="line">	Markers.AddUninitialized(last + <span class="number">1</span>);</span><br><span class="line">	Markers[<span class="number">0</span>] = <span class="literal">true</span>;</span><br><span class="line">	Markers.Last() = <span class="literal">true</span>;</span><br><span class="line">	<span class="keyword">float</span> maxDis = <span class="number">0</span>;</span><br><span class="line">	TArray&lt;int32&gt; <span class="built_in">stack</span>;</span><br><span class="line">	<span class="keyword">while</span> (first&gt;=<span class="number">0</span> &amp;&amp; last&gt;=<span class="number">0</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		maxDis = <span class="number">0</span>;</span><br><span class="line">		<span class="keyword">for</span> (int32 i=first+<span class="number">1</span>;i&lt;last;i++)</span><br><span class="line">		&#123;</span><br><span class="line">			<span class="keyword">float</span> dis = UKismetMathLibrary::GetPointDistanceToLine(InPath[i], InPath[first], InPath[last] - InPath[first]);</span><br><span class="line">			<span class="keyword">if</span> (dis&gt;maxDis)</span><br><span class="line">			&#123;</span><br><span class="line">				idx = i;</span><br><span class="line">				maxDis = dis;</span><br><span class="line">			&#125;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (maxDis&gt;Distance)</span><br><span class="line">		&#123;</span><br><span class="line">			Markers[idx] = <span class="literal">true</span>;</span><br><span class="line">			<span class="built_in">stack</span>.Add(first);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(idx);</span><br><span class="line">			<span class="built_in">stack</span>.Add(last);</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num()&gt;<span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			last = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">if</span> (<span class="built_in">stack</span>.Num() &gt; <span class="number">0</span>)</span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="built_in">stack</span>.Pop();</span><br><span class="line">		&#125;</span><br><span class="line">		<span class="keyword">else</span></span><br><span class="line">		&#123;</span><br><span class="line">			first = <span class="number">-1</span>;</span><br><span class="line">		&#125;</span><br><span class="line"></span><br><span class="line">	&#125;</span><br><span class="line"></span><br><span class="line">	<span class="keyword">for</span> (int32 i=<span class="number">0</span>;i&lt;Markers.Num();i++)</span><br><span class="line">	&#123;</span><br><span class="line">		<span class="keyword">if</span> (Markers[i])</span><br><span class="line">		&#123;</span><br><span class="line">			OutPath.Add(InPath[i]);</span><br><span class="line">		&#125;</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>蓝图</p>
+<p><img src="https://img.supervj.top/img/PathOptimization/pathOpt_4.jpg"></p>
+]]></content>
+      <categories>
+        <category>math</category>
+      </categories>
+      <tags>
+        <tag>算法</tag>
       </tags>
   </entry>
   <entry>
