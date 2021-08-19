@@ -10092,4 +10092,63 @@ piecewise_linear_distribution分段线性分布</code></pre>
         <tag>学习笔记</tag>
       </tags>
   </entry>
+  <entry>
+    <title>编辑器扩展：自定义预览试图</title>
+    <url>/2021/08/19/%E7%BC%96%E8%BE%91%E5%99%A8%E6%89%A9%E5%B1%95%EF%BC%9A%E8%87%AA%E5%AE%9A%E4%B9%89%E9%A2%84%E8%A7%88%E8%AF%95%E5%9B%BE/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://img.supervj.top//img/image-20210819094640216.png" alt="image-20210819094640216"></p>
+<p>最近因为项目需要打算做一个简易的插槽编辑器, 因为传统的插槽编辑都需要打开每个静态模型单独编辑, 操作相对比较麻烦, 那么首先需要创建一个自定义的预览试图, 本文先从这个开始</p>
+<a id="more"></a>
+
+
+
+<h2 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h2><p>首选创建一个插件， 类型随意， 如果先效率高一点简易选择 <code>Editor Toolbar Button</code>, 这样就直接可以通过一个工具栏按钮启动插件</p>
+<p>关于这个按钮， 我个人习惯还是把他放到工具栏最前面，也就是要重写默认模块文件<code>RegisterMenus()</code>方法里的内容， 如下</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//工具栏</span></span><br><span class="line">TSharedPtr&lt;FExtender&gt; ToolBarExtender = MakeShareable(<span class="keyword">new</span> FExtender());</span><br><span class="line">ToolBarExtender-&gt;AddToolBarExtension(<span class="string">&quot;File&quot;</span>,</span><br><span class="line">                                     EExtensionHook::Before, PluginCommands, FToolBarExtensionDelegate::CreateLambda(</span><br><span class="line">                                         [<span class="keyword">this</span>](FToolBarBuilder&amp; Builder)</span><br><span class="line">                                         &#123;</span><br><span class="line">                                             Builder.AddToolBarButton(FSimpleSocketEditorCommands::Get().PluginAction);</span><br><span class="line">                                         &#125;</span><br><span class="line">                                     ));</span><br><span class="line"></span><br><span class="line">LevelEditorModule.GetToolBarExtensibilityManager()-&gt;AddExtender(ToolBarExtender);</span><br></pre></td></tr></table></figure>
+
+<p>这样就把按钮放到了<code>File</code>类型的前面, 即最靠前的地方</p>
+<p><img src="https://img.supervj.top//img/image-20210819095058833.png" alt="image-20210819095058833"></p>
+<h2 id="编辑器创建"><a href="#编辑器创建" class="headerlink" title="编辑器创建"></a>编辑器创建</h2><p>这样默认点击插件按钮出来的就是一个消息窗口， 我们需要参考<code>Standeralone</code>模式的插件来创建一个窗口</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FSimpleSocketEditorModule::MapActions</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    PluginCommands = MakeShareable(<span class="keyword">new</span> FUICommandList);</span><br><span class="line">    PluginCommands-&gt;MapAction(</span><br><span class="line">        FSimpleSocketEditorCommands::Get().PluginAction,</span><br><span class="line">        FExecuteAction::CreateRaw(<span class="keyword">this</span>, &amp;FSimpleSocketEditorModule::PluginButtonClicked),</span><br><span class="line">        FCanExecuteAction());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FSimpleSocketEditorModule::PluginButtonClicked</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	FGlobalTabmanager::Get()-&gt;TryInvokeTab(SimpleSocketEditorTabName);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FGlobalTabmanager::Get()-&gt;RegisterNomadTabSpawner(SimpleSocketEditorTabName, FOnSpawnTab::CreateRaw(<span class="keyword">this</span>, &amp;FSimpleSocketEditorModule::OnSpawnPluginTab))</span><br><span class="line">		.SetDisplayName(LOCTEXT(<span class="string">&quot;SocketEditorTitil&quot;</span>, <span class="string">&quot;Socket Editor&quot;</span>))</span><br><span class="line">		.SetMenuType(ETabSpawnerMenuType::Hidden);</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">TSharedRef&lt;SDockTab&gt; <span class="title">FSimpleSocketEditorModule::OnSpawnPluginTab</span><span class="params">(<span class="keyword">const</span> FSpawnTabArgs&amp; SpawnTabArgs)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> SNew(SDockTab)</span><br><span class="line">		.TabRole(ETabRole::NomadTab)</span><br><span class="line">		[</span><br><span class="line">			SNew(SSHud_SimpleSocket)</span><br><span class="line">		];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>层层相关, 最后打开一个我们自定义的<code>Slate</code>控件</p>
+<blockquote>
+<p>其实一般情况会创建一个类似资源编辑器的类来作为编辑器视图类, 比如<code>FStaticMeshEditor</code>, 或者如我之前文章<a href="https://supervj.top/2021/04/21/%E5%88%9B%E5%BB%BA%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BC%96%E8%BE%91%E5%99%A8/?highlight=%E8%87%AA%E5%AE%9A%E4%B9%89%E7%BC%96%E8%BE%91%E5%99%A8">创建自定义编辑器</a>写的那种资源编辑器, 但是这里我们就任性一次, 用<code>Slate</code>的方式硬怼出来一个编辑器</p>
+</blockquote>
+<h2 id="视图类"><a href="#视图类" class="headerlink" title="视图类"></a>视图类</h2><p>然后就是视图相关的类了,  这里有好几个类可以扩展,  虽然都不是必须的, 我们先从最主要的类开始扩展,这个继承自<code>SEditorViewport</code>的类, 他就是我们视图界面的<code>Slate</code>类</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">SEditorViewport_SimpleSocket</span> :</span> <span class="keyword">public</span> SEditorViewport, <span class="keyword">public</span> FGCObject, <span class="keyword">public</span> ICommonEditorViewportToolbarInfoProvider</span><br><span class="line">&#123;<span class="comment">//.....&#125;</span></span><br></pre></td></tr></table></figure>
+
+<p>我们又额外继承了<code>FGCObject</code>(用于GC管理), <code>ICommonEditorViewportToolbarInfoProvider</code>(界面扩展)</p>
+<p>接下来重写几个重要函数</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">OnFocusViewportToSelection</span><span class="params">()</span><span class="keyword">override</span></span>;<span class="comment">//按键F的实现, 就是聚焦的逻辑</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> TSharedRef&lt;FEditorViewportClient&gt; <span class="title">MakeEditorViewportClient</span><span class="params">()</span> <span class="keyword">override</span></span>;<span class="comment">//界面视图UI的</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> TSharedPtr&lt;SWidget&gt; <span class="title">MakeViewportToolbar</span><span class="params">()</span><span class="keyword">override</span></span>;<span class="comment">//工具栏UI</span></span><br></pre></td></tr></table></figure>
+
+<p>如果想简单的看到视图效果, 我们可以大致像下面一样实现</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function">TSharedRef&lt;FEditorViewportClient&gt; <span class="title">SEditorViewport_SimpleSocket::MakeEditorViewportClient</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">FPreviewScene PreviewScene =  MakeShareable(<span class="keyword">new</span> FPreviewScene());</span><br><span class="line">EditorViewportClient = MakeShareable(<span class="keyword">new</span> FEditorViewportClient(<span class="literal">nullptr</span>, PreviewScene));</span><br><span class="line">	<span class="keyword">return</span> EditorViewportClient.ToSharedRef();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>里面有两个类我们使用了默认类型, 分别是<code>FPreviewScene</code>和<code>FEditorViewportClient</code></p>
+<p>同样的,工具栏也使用默认类型实现即可</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="function">TSharedPtr&lt;SWidget&gt; <span class="title">SEditorViewport_SimpleSocket::MakeViewportToolbar</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	<span class="keyword">return</span> SNew(SCommonEditorViewportToolbarBase, SharedThis(<span class="keyword">this</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>但是这样场景中是黑漆漆一片, 没有任何物体</p>
+<p>所以我们需要对<code>PreviewScene</code>对象添加物体</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">UStaticMesh* mesh =  LoadObject&lt;UStaticMesh&gt;(<span class="literal">NULL</span>, TEXT(<span class="string">&quot;StaticMesh&#x27;/Engine/EngineMeshes/Cube.Cube&#x27;&quot;</span>), <span class="literal">NULL</span>, LOAD_None, <span class="literal">NULL</span>);;</span><br><span class="line">FTransform Transform = FTransform::Identity;</span><br><span class="line">PreviewScene-&gt;AddComponent(PreviewMeshComp, Transform);</span><br></pre></td></tr></table></figure>
+
+<p>这样<code>PreviewScene</code>内就有了一个默认的<code>Cube</code>物体了</p>
+<h2 id="FAdvancedPreviewScene"><a href="#FAdvancedPreviewScene" class="headerlink" title="FAdvancedPreviewScene"></a>FAdvancedPreviewScene</h2><p>至此场景里虽然能对物体进行光照, 但是还是黑漆漆的, 引擎给了我们一个高级的场景类, 多数的预览试图也是用的该类, 即<code>FAdvancedPreviewScene</code></p>
+<p>该对象内有很多参数可以设置, 比如我们可以这样使用</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//.h</span></span><br><span class="line">TSharedPtr&lt;<span class="class"><span class="keyword">class</span> <span class="title">FAdvancedPreviewScene</span>&gt;</span> AdvancedScene;</span><br><span class="line"></span><br><span class="line"><span class="comment">//.cpp</span></span><br><span class="line">FAdvancedPreviewScene::ConstructionValues ConstructValues;	<span class="comment">//预览场景参数</span></span><br><span class="line">ConstructValues.SetCreatePhysicsScene(<span class="literal">false</span>);				<span class="comment">//关闭物理场景</span></span><br><span class="line">ConstructValues.ShouldSimulatePhysics(<span class="literal">false</span>);				<span class="comment">//关闭物理模拟</span></span><br><span class="line">ConstructValues.LightBrightness = <span class="number">3</span>;						<span class="comment">//设置光照强度</span></span><br><span class="line">ConstructValues.SkyBrightness = <span class="number">1</span>;							<span class="comment">//设置天空光强度</span></span><br><span class="line">ConstructValues.bEditor = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">AdvancedScene = MakeShareable(<span class="keyword">new</span> FAdvancedPreviewScene(ConstructValues));</span><br><span class="line"></span><br><span class="line"><span class="comment">//添加天空光组件</span></span><br><span class="line">USkyLightComponent* Skylight = NewObject&lt;USkyLightComponent&gt;();</span><br><span class="line">AdvancedScene-&gt;AddComponent(Skylight, FTransform::Identity);</span><br><span class="line"></span><br><span class="line"><span class="comment">//设置地面</span></span><br><span class="line">AdvancedScene-&gt;SetFloorVisibility(<span class="literal">false</span>);		<span class="comment">//显示地面，默认就是显示</span></span><br><span class="line">AdvancedScene-&gt;SetFloorOffset(<span class="number">100.f</span>);		<span class="comment">//设置地面高度偏移，正数是往下偏移</span></span><br><span class="line"><span class="comment">//设置方向光</span></span><br><span class="line">AdvancedScene-&gt;DirectionalLight-&gt;SetMobility(EComponentMobility::Movable);</span><br><span class="line">AdvancedScene-&gt;DirectionalLight-&gt;CastShadows = <span class="literal">true</span>;				<span class="comment">//启用阴影</span></span><br><span class="line">AdvancedScene-&gt;DirectionalLight-&gt;CastStaticShadows = <span class="literal">true</span>;</span><br><span class="line">AdvancedScene-&gt;DirectionalLight-&gt;CastDynamicShadows = <span class="literal">true</span>;</span><br><span class="line">AdvancedScene-&gt;DirectionalLight-&gt;SetIntensity(<span class="number">3</span>);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>这样就能完成指定图片那种光照效果了</p>
+]]></content>
+      <categories>
+        <category>editor</category>
+      </categories>
+  </entry>
 </search>
