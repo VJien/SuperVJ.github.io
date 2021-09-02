@@ -10213,7 +10213,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
       </tags>
   </entry>
   <entry>
-    <title>动画：Strider Warping</title>
+    <title>动画：脚步适配/Strider Warping</title>
     <url>/2021/08/26/%E5%8A%A8%E7%94%BB%EF%BC%9AStrideWarping/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>以前我们在处理Locomotion的滑步情况一般都会调整动画速率来达到看上去还凑合的效果, 然而在速度缩放值超过一定范围以后, 展现的情况就非常诡异了, 这个时候就需要通过其他方法来达到这一目的</p>
 <p>下面是<a href="https://www.youtube.com/watch?v=1UOY-FMm-xo&t=2592s">Paragon Feature Examples: Animation Techniques </a>里面展示的两者的区别</p>
