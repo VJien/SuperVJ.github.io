@@ -10212,4 +10212,97 @@ piecewise_linear_distribution分段线性分布</code></pre>
         <tag>socket</tag>
       </tags>
   </entry>
+  <entry>
+    <title>动画：Strider Warping</title>
+    <url>/2021/08/26/%E5%8A%A8%E7%94%BB%EF%BC%9AStrideWarping/</url>
+    <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>以前我们在处理Locomotion的滑步情况一般都会调整动画速率来达到看上去还凑合的效果, 然而在速度缩放值超过一定范围以后, 展现的情况就非常诡异了, 这个时候就需要通过其他方法来达到这一目的</p>
+<p>下面是<a href="https://www.youtube.com/watch?v=1UOY-FMm-xo&t=2592s">Paragon Feature Examples: Animation Techniques </a>里面展示的两者的区别</p>
+<p><img src="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_08_30_14_14_07_398.gif" alt="录制_2021_08_30_14_14_07_398"></p>
+<a id="more"></a>
+
+
+
+<p>UE5中有一个对应的动画节点<code>FAnimNode_StrideWarping</code>,  但是我发现这个节点有错误(望打脸), 先把他移植到UE4,再慢慢讲</p>
+<p><img src="https://img.supervj.top//img/image-20210830142057182.png" alt="image-20210830142057182"></p>
+<h2 id="脚步适配-StrideWarping"><a href="#脚步适配-StrideWarping" class="headerlink" title="脚步适配(StrideWarping)"></a>脚步适配(StrideWarping)</h2><p>从上面的动图可以看到, 脚步适配其实就是让脚步迈的更大/更小来取代动画速率, 那么执行的操作就比较类似用IK来控制脚步的落点的感觉, 但是如果用<code>TwoBone IK</code>来实施起来会发现比较困难, 还是建议到c++中用动画节点来完成</p>
+<p>知乎大佬有一篇文章用<code>Control Rig</code>来模拟这个过程, 实际上效果会有点差别, 在步伐放大以后的效果比较差</p>
+<p><a href="https://zhuanlan.zhihu.com/p/363656339">传送门</a></p>
+<p>一句话概括脚步适配的计算</p>
+<blockquote>
+<p>脚步位置 = 初始的位置 + 初始的位置沿着脚步平面运动方向的偏移 * 缩放值</p>
+</blockquote>
+<p>看一下<code>FAnimNode_StrideWarping</code>节点的参数</p>
+<p><img src="https://img.supervj.top//img/image-20210830143736595.png" alt="image-20210830143736595"></p>
+<p>参数比较多,  而且没有注释, 果然只是beta版本</p>
+<blockquote>
+<p>在动画蓝图模式下调试此节点的CMD命令是   <code>a.AnimNode.StrideWarping.Debug 1</code></p>
+</blockquote>
+<h3 id="脚步缩放"><a href="#脚步缩放" class="headerlink" title="脚步缩放"></a>脚步缩放</h3><p>下面这段代码在我看来有问题</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="comment">//臀部朝下的射线与(IK骨骼与地面组成的平面)的交点</span></span><br><span class="line"><span class="keyword">const</span> FVector StrideWarpingPlaneOrigin = (FMath::Abs(GravityDir | FloorPlaneNormal) &gt; DELTA) ? FMath::LinePlaneIntersection(HipBoneLocation, HipBoneLocation + GravityDir, IKFootLocation, FloorPlaneNormal) : IKFootLocation;</span><br><span class="line"></span><br><span class="line"><span class="comment">// IK骨骼位置投影到(前者交点与设定的平面法线的交点), 该点为缩放起始点</span></span><br><span class="line"><span class="keyword">const</span> FVector ScaleOrigin = FVector::PointPlaneProject(IKFootLocation, StrideWarpingPlaneOrigin, StrideWarpingPlaneNormal);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 最后的位置就是[ 缩放起始点 +  缩放起始点到更新的脚步IK位置的方向 * 缩放值 ]</span></span><br><span class="line"><span class="keyword">const</span> FVector WarpedLocation = ScaleOrigin + (IKFootLocation - ScaleOrigin) * ActualStrideScaling;</span><br><span class="line">FootData.IKBoneTransform.SetLocation(WarpedLocation);</span><br></pre></td></tr></table></figure>
+
+<p>按照我的理解,我们的目的是根据<code>foot_l</code>骨骼的位置变换来设置<code>ik_foot_l</code>的实时位置, 那么上面代码的<code>StrideWarpingPlaneOrigin</code>做的是大腿顶部的位置投影到IK平面, 这个可以有, 然后把IK骨骼位置投影到适配的平面作为起始点, 这个也可以理解, 那么<code>(IKFootLocation - ScaleOrigin)</code>这个操作就有点不理解了, 这俩位置都是固定, 是否应该把<code>IKFootLocation </code>改成<code>FKFootLocation </code>?</p>
+<p>那么先按照现有的代码配置<code>FeetDefinitions</code>参数的时候, 理所当然的想到是这样设置的</p>
+<p><img src="https://img.supervj.top//img/image-20210830143933520.png" alt="image-20210830143933520"></p>
+<p>然而如何尝试都是原地踏步运动, 看下图的右腿</p>
+<img src="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_08_30_14_40_43_902.gif" alt="录制_2021_08_30_14_40_43_902" style="zoom:50%;" />
+
+
+
+
+
+<p>于是, 重点来了, 手动魔改了一下代码</p>
+<p>首先<code>FStrideWarpingFootData</code>加了一个FK位置信息的成员变量</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">FStrideWarpingFootData</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	GENERATED_USTRUCT_BODY()</span><br><span class="line"></span><br><span class="line">	FCompactPoseBoneIndex IKFootBoneIndex;</span><br><span class="line">	FCompactPoseBoneIndex FKFootBoneIndex;</span><br><span class="line">	FCompactPoseBoneIndex HipBoneIndex;</span><br><span class="line">	FTransform IKBoneTransform;</span><br><span class="line">	<span class="comment">//新</span></span><br><span class="line">	FTransform FKBoneTransform;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>然后就是主要计算部分</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span>&amp; FootData : FeetData)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">const</span> FVector IKFootLocation = FootData.IKBoneTransform.GetLocation();</span><br><span class="line">  </span><br><span class="line">    <span class="keyword">const</span> FVector FKFootLocation = FootData.FKBoneTransform.GetLocation(); </span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> FVector HipBoneLocation = Output.Pose.GetComponentSpaceTransform(FootData.HipBoneIndex).GetLocation();</span><br><span class="line"></span><br><span class="line">    FVector StrideWarpingPlaneOrigin = (FMath::Abs(GravityDir | FloorPlaneNormal) &gt; DELTA) ? FMath::LinePlaneIntersection(HipBoneLocation, HipBoneLocation + GravityDir, FKFootLocation, FloorPlaneNormal) : IKFootLocation;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> FVector ScaleOrigin = FVector::PointPlaneProject(FKFootLocation, StrideWarpingPlaneOrigin, StrideWarpingPlaneNormal);</span><br><span class="line"></span><br><span class="line"><span class="comment">//这里直接拿Y轴来计算, 实际上应该是可配置的</span></span><br><span class="line">    FVector WarpedLocation;</span><br><span class="line">    WarpedLocation.Y = ScaleOrigin.Y + (FKFootLocation- ScaleOrigin).Y * ActualStrideScaling;</span><br><span class="line">    WarpedLocation.Z = FKFootLocation.Z;</span><br><span class="line">    WarpedLocation.X = FKFootLocation.X;</span><br><span class="line">    FootData.IKBoneTransform.SetLocation(WarpedLocation);</span><br><span class="line">    FootData.IKBoneTransform.SetRotation(FootData.FKBoneTransform.GetRotation());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>得到结果</p>
+<p><img src="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_09_01_15_02_27_139.gif" alt="录制_2021_09_01_15_02_27_139"></p>
+<p>效果还可以, <code>pelvis</code>位置校正的那一块沿用了旧的代码</p>
+<h3 id="盆骨校正"><a href="#盆骨校正" class="headerlink" title="盆骨校正"></a>盆骨校正</h3><p>因为只缩放脚步, 步子迈的大了, <code>pelvis</code>位置必然会需要下降, 不然人要不就腾空, 要不就脚步被IK拉直了,  这里大致思路就是利用脚步位置到盆骨位置的距离值来校正盆骨位置</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">FVector AdjustedPelvisLocation = InitialPelvisLocation;</span><br><span class="line">&#123;</span><br><span class="line">    check(IKFeetLocation.Num() &gt; <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">float</span> PerFootWeight = (<span class="number">1.f</span> / <span class="keyword">float</span>(IKFeetLocation.Num()));</span><br><span class="line"></span><br><span class="line">    int32 Iterations = FMath::Clamp(PelvisAdjustmentMaxIter, <span class="number">1</span>, <span class="number">10</span>);</span><br><span class="line">    <span class="keyword">while</span> (Iterations-- &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">const</span> FVector PreAdjustmentLocation = AdjustedPelvisLocation;</span><br><span class="line">        AdjustedPelvisLocation = FVector::ZeroVector;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">for</span> (int32 Index = <span class="number">0</span>; Index &lt; IKFeetLocation.Num(); Index++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">const</span> FVector IdealPelvisLoc = IKFeetLocation[Index] + (PreAdjustmentLocation - IKFeetLocation[Index]).GetSafeNormal() * FKFeetDistToPelvis[Index];</span><br><span class="line">            AdjustedPelvisLocation += IdealPelvisLoc * PerFootWeight;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面代码简单理解为 <code>pelvis</code>骨骼朝着按照一定迭代次数脚步骨骼偏移</p>
+<p>然后是做一个插值计算</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">const</span> FVector TargetAdjustment = (AdjustedPelvisLocation - InitialPelvisLocation);</span><br><span class="line">PelvisAdjustmentInterp.Update(TargetAdjustment, CachedDeltaTime);</span><br><span class="line"></span><br><span class="line"><span class="keyword">const</span> FVector SmoothAdjustedPelvisLocation = InitialPelvisLocation + FMath::Lerp(FVector::ZeroVector, PelvisAdjustmentInterp.GetPosition(), PelvisPostAdjustmentAlpha);</span><br><span class="line">PelvisTransform.SetLocation(SmoothAdjustedPelvisLocation);</span><br></pre></td></tr></table></figure>
+
+
+
+<p>对比一下有没有偏移的效果</p>
+<p><img src="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_09_02_09_18_39_771.gif" alt="录制_2021_09_02_09_18_39_771"></p>
+<p>靠后靠下一点的是应用了盆骨偏移的</p>
+<h3 id="大腿骨校正"><a href="#大腿骨校正" class="headerlink" title="大腿骨校正"></a>大腿骨校正</h3><p>盆骨偏移了以后, 那么大腿骨也要跟着偏移一下, 不然姿势就会变得非常奇怪, 利用从盆骨得到的偏移量应用到大腿骨</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line">AdjustedHipTransform.AddToTranslation(PelvisOffset);</span><br><span class="line"><span class="comment">//...............</span></span><br><span class="line">AdjustedHipTransform.SetRotation(DeltaRotation * AdjustedHipTransform.GetRotation());</span><br></pre></td></tr></table></figure>
+
+<p>因为旋转了大腿骨， 所以在不适用脚步IK的情况下也可以有比较好的表现</p>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p><img src="C:\Users\Administrator\AppData\Roaming\Typora\typora-user-images\image-20210902102034513.png" alt="image-20210902102034513"></p>
+<p>上图是开启了debug模式的所有debug图形</p>
+<p>先看两条线</p>
+<ul>
+<li>绿色线表示的是IK骨骼到校正后的大腿骨的连线</li>
+<li>红色线是FK骨骼到校正之前的大腿骨的连线</li>
+</ul>
+<p>然后看盆骨附近的连城一条线的3个球</p>
+<ul>
+<li>红色球表示盆骨默认位置</li>
+<li>绿色是计算后的<code>AdjustedPelvisLocation</code>位置</li>
+<li>蓝色是插值以后的中间值</li>
+</ul>
+<p>中轴线上的2个黄色球表示脚步适配的起始点位置</p>
+<h2 id="其他方案"><a href="#其他方案" class="headerlink" title="其他方案"></a>其他方案</h2><p>虚幻商城还有其他第三方的插件也实现了脚步适配效果， 个人觉得<a href="https://www.unrealengine.com/marketplace/zh-CN/product/strider-animation-warping">Strider - Animation Warping</a>是个可行方案, 不过需要搭配脚步IK使用</p>
+<p>效果如下</p>
+<p><img src="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_09_02_11_14_00_733.gif" alt="录制_2021_09_02_11_14_00_733"></p>
+<p>在缩放大于1.5的时候有点奇怪</p>
+<hr>
+<p>还有免费的过期好久的插件<a href="https://www.unrealengine.com/marketplace/zh-CN/product/animgraphnode">Custom Speed &amp; Orientation Warping</a></p>
+<p>原理都差不多, 无非就是算法有区别, 不过这个插件我试了一下也是有问题的,  不想细究了, 谁有兴趣谁去整一波</p>
+]]></content>
+      <categories>
+        <category>animation</category>
+      </categories>
+      <tags>
+        <tag>动画</tag>
+      </tags>
+  </entry>
 </search>
