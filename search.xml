@@ -10346,7 +10346,7 @@ piecewise_linear_distribution分段线性分布</code></pre>
   </entry>
   <entry>
     <title>动画_DistanceMatching</title>
-    <url>/2021/09/08/%E5%8A%A8%E7%94%BB%EF%BC%9ADistanceMatching/</url>
+    <url>/2021/09/08/%E5%8A%A8%E7%94%BBDistanceMatching/</url>
     <content><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p><img src="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_09_08_17_10_51_748.gif" alt="录制_2021_09_08_17_10_51_748"></p>
 <p><code>Distance Matching</code>用于解决角色启动和停止的时候的滑步问题,  理论上我们可以用<code>RootMotion</code>的方式保证启动和停止的滑步问题, 但是动画序列的同步是个问题, 所以生产环境下一般会用程序化的位移来解决滑步问题</p>
 <p><a href="https://www.youtube.com/watch?v=1UOY-FMm-xo&t=2592s">Paragon Feature Examples: Animation Techniques </a>里有讲到相关技术,  本文就简单的对此技术进行研究</p>
@@ -10374,11 +10374,19 @@ piecewise_linear_distribution分段线性分布</code></pre>
 <p>在动画实例的<code>Tick</code>中, 我们先在有速度状态下刷新<strong>预估位置</strong><code>DistanceMatchingLocation</code>, 然后通过这个位置来获取并动态的设置起步和停步动画的播放时间</p>
 <figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (IsAccelerating)</span><br><span class="line">&#123;</span><br><span class="line">    Time = UAnimExtensionBlueprintLibrary::GetDistanceCurveTime(JogStartAnimSequence, Distance);</span><br><span class="line">    Target = &amp;JogDistanceCurveStartTime;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    Time = UAnimExtensionBlueprintLibrary::GetDistanceCurveTime(JogStopAnimSequence, -Distance);</span><br><span class="line">    Target = &amp;JogDistanceCurveStopTime;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>然后为了把动画播放完, 需要对时间进行累积</p>
+<figure class="highlight cpp"><table><tr><td class="code"><pre><span class="line"><span class="keyword">if</span> (Time &gt; *Target)</span><br><span class="line">&#123;</span><br><span class="line">    *Target = Time;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    *Target += DeltaTimeX;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
 
 
-<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p><code>DistanceMatching</code>效果需要修改<code>CharacterMovementComponent</code>组件的一些参数, 比如<code>BrakingDecelerationWalking</code>(参考500)需要适当改小一点, 不然减速太快根本也不需要播放停步动作, 强行播放就造成滑步 ; 需要减小<code>BrakingFrictionFactor</code>(参考0.05)或者打开<code>UseSeparateBrakingFriction</code>并设置<code>BrakingFriction</code>参数(参考0.1) </p>
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><ol>
+<li><code>DistanceMatching</code>效果需要修改<code>CharacterMovementComponent</code>组件的一些参数, 比如<code>BrakingDecelerationWalking</code>(参考500)需要适当改小一点, 不然减速太快根本也不需要播放停步动作, 强行播放就造成滑步 ; 需要减小<code>BrakingFrictionFactor</code>(参考0.05)或者打开<code>UseSeparateBrakingFriction</code>并设置<code>BrakingFriction</code>参数(参考0.1) </li>
+</ol>
+<ol start="2">
+<li>起步动作还有优化空间, 现在遇到的问题是, 如果速度改变过大, 因为需要保证不滑步, 起步动作看上去就是修改了动画速率的感觉</li>
+</ol>
 <p><a href="https://github.com/VJien/AnimationExtension">插件地址</a></p>
 ]]></content>
       <categories>

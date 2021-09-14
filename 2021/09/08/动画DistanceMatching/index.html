@@ -28,7 +28,7 @@
 <meta name="description" content="前言 Distance Matching用于解决角色启动和停止的时候的滑步问题,  理论上我们可以用RootMotion的方式保证启动和停止的滑步问题, 但是动画序列的同步是个问题, 所以生产环境下一般会用程序化的位移来解决滑步问题 Paragon Feature Examples: Animation Techniques 里有讲到相关技术,  本文就简单的对此技术进行研究">
 <meta property="og:type" content="article">
 <meta property="og:title" content="动画_DistanceMatching">
-<meta property="og:url" content="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BB%EF%BC%9ADistanceMatching/index.html">
+<meta property="og:url" content="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BBDistanceMatching/index.html">
 <meta property="og:site_name" content="东哥的博客">
 <meta property="og:description" content="前言 Distance Matching用于解决角色启动和停止的时候的滑步问题,  理论上我们可以用RootMotion的方式保证启动和停止的滑步问题, 但是动画序列的同步是个问题, 所以生产环境下一般会用程序化的位移来解决滑步问题 Paragon Feature Examples: Animation Techniques 里有讲到相关技术,  本文就简单的对此技术进行研究">
 <meta property="og:locale" content="zh_CN">
@@ -37,14 +37,14 @@
 <meta property="og:image" content="https://img.supervj.top//img/image-20210908165935431.png">
 <meta property="og:image" content="https://img.supervj.top//img/image-20210908170152836.png">
 <meta property="article:published_time" content="2021-09-07T16:00:00.000Z">
-<meta property="article:modified_time" content="2021-09-08T09:58:16.669Z">
+<meta property="article:modified_time" content="2021-09-14T06:36:22.600Z">
 <meta property="article:author" content="VJ东">
 <meta property="article:tag" content="动画">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://img.supervj.top//img/%E5%BD%95%E5%88%B6_2021_09_08_17_10_51_748.gif">
 
 
-<link rel="canonical" href="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BB%EF%BC%9ADistanceMatching/">
+<link rel="canonical" href="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BBDistanceMatching/">
 
 
 <script class="page-configurations">
@@ -274,7 +274,7 @@
   
 
   <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BB%EF%BC%9ADistanceMatching/">
+    <link itemprop="mainEntityOfPage" href="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BBDistanceMatching/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="https://img.supervj.top/imgHEAD_Icon.png">
@@ -297,10 +297,16 @@
         <i class="far fa-calendar"></i>
       </span>
       <span class="post-meta-item-text">发表于</span>
-      
 
-      <time title="创建时间：2021-09-08 00:00:00 / 修改时间：17:58:16" itemprop="dateCreated datePublished" datetime="2021-09-08T00:00:00+08:00">2021-09-08</time>
+      <time title="创建时间：2021-09-08 00:00:00" itemprop="dateCreated datePublished" datetime="2021-09-08T00:00:00+08:00">2021-09-08</time>
     </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">更新于</span>
+        <time title="修改时间：2021-09-14 14:36:22" itemprop="dateModified" datetime="2021-09-14T14:36:22+08:00">2021-09-14</time>
+      </span>
     <span class="post-meta-item">
       <span class="post-meta-item-icon">
         <i class="far fa-folder"></i>
@@ -328,8 +334,8 @@
       <span class="post-meta-item-text">Changyan：</span>
     
     
-      <a title="changyan" href="/2021/09/08/%E5%8A%A8%E7%94%BB%EF%BC%9ADistanceMatching/#SOHUCS" itemprop="discussionUrl">
-        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2021/09/08/动画：DistanceMatching/" itemprop="commentCount"></span>
+      <a title="changyan" href="/2021/09/08/%E5%8A%A8%E7%94%BBDistanceMatching/#SOHUCS" itemprop="discussionUrl">
+        <span id="changyan_count_unit" class="post-comments-count hc-comment-count" data-xid="2021/09/08/动画DistanceMatching/" itemprop="commentCount"></span>
       </a>
     
   </span>
@@ -342,7 +348,7 @@
         <i class="far fa-file-word"></i>
       </span>
       <span class="post-meta-item-text">本文字数：</span>
-      <span>4.5k</span>
+      <span>4.6k</span>
     </span>
     <span class="post-meta-item" title="阅读时长">
       <span class="post-meta-item-icon">
@@ -387,11 +393,19 @@
 <p>在动画实例的<code>Tick</code>中, 我们先在有速度状态下刷新<strong>预估位置</strong><code>DistanceMatchingLocation</code>, 然后通过这个位置来获取并动态的设置起步和停步动画的播放时间</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (IsAccelerating)</span><br><span class="line">&#123;</span><br><span class="line">    Time = UAnimExtensionBlueprintLibrary::GetDistanceCurveTime(JogStartAnimSequence, Distance);</span><br><span class="line">    Target = &amp;JogDistanceCurveStartTime;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    Time = UAnimExtensionBlueprintLibrary::GetDistanceCurveTime(JogStopAnimSequence, -Distance);</span><br><span class="line">    Target = &amp;JogDistanceCurveStopTime;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+<p>然后为了把动画播放完, 需要对时间进行累积</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (Time &gt; *Target)</span><br><span class="line">&#123;</span><br><span class="line">    *Target = Time;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">&#123;</span><br><span class="line">    *Target += DeltaTimeX;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
 
 
-<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p><code>DistanceMatching</code>效果需要修改<code>CharacterMovementComponent</code>组件的一些参数, 比如<code>BrakingDecelerationWalking</code>(参考500)需要适当改小一点, 不然减速太快根本也不需要播放停步动作, 强行播放就造成滑步 ; 需要减小<code>BrakingFrictionFactor</code>(参考0.05)或者打开<code>UseSeparateBrakingFriction</code>并设置<code>BrakingFriction</code>参数(参考0.1) </p>
+
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><ol>
+<li><code>DistanceMatching</code>效果需要修改<code>CharacterMovementComponent</code>组件的一些参数, 比如<code>BrakingDecelerationWalking</code>(参考500)需要适当改小一点, 不然减速太快根本也不需要播放停步动作, 强行播放就造成滑步 ; 需要减小<code>BrakingFrictionFactor</code>(参考0.05)或者打开<code>UseSeparateBrakingFriction</code>并设置<code>BrakingFriction</code>参数(参考0.1) </li>
+</ol>
+<ol start="2">
+<li>起步动作还有优化空间, 现在遇到的问题是, 如果速度改变过大, 因为需要保证不滑步, 起步动作看上去就是修改了动画速率的感觉</li>
+</ol>
 <p><a target="_blank" rel="noopener" href="https://github.com/VJien/AnimationExtension">插件地址</a></p>
 
     </div>
@@ -428,7 +442,7 @@
   </li>
   <li class="post-copyright-link">
       <strong>本文链接：</strong>
-      <a href="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BB%EF%BC%9ADistanceMatching/" title="动画_DistanceMatching">http://supervj.top/2021/09/08/动画：DistanceMatching/</a>
+      <a href="http://supervj.top/2021/09/08/%E5%8A%A8%E7%94%BBDistanceMatching/" title="动画_DistanceMatching">http://supervj.top/2021/09/08/动画DistanceMatching/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
